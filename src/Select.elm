@@ -1,8 +1,8 @@
-module Select exposing (State, initState, selectIdentifier, single, view)
+module Select exposing (Msg, State, initState, selectIdentifier, single, view)
 
 import Browser.Dom as Dom
 import Css
-import Html.Styled as Styled exposing (Html, div)
+import Html.Styled as Styled exposing (Html, div, text)
 import Html.Styled.Attributes as StyledAttribs
 
 
@@ -174,8 +174,12 @@ selectIdentifier id_ =
     SelectId id_
 
 
-view : Config item -> SelectId -> Html msg
+view : Config item -> SelectId -> Html (Msg item)
 view (Config config) selectId =
+    let
+        (State state_) =
+            config.state
+    in
     div [ StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ] ]
         [ -- container
           div
@@ -202,6 +206,27 @@ view (Config config) selectId =
 
                     else
                         []
+
+                resolvePlaceholder =
+                    case config.variant of
+                        Multi _ [] ->
+                            viewPlaceholder config
+
+                        Multi _ _ ->
+                            text ""
+
+                        Single (Just v) ->
+                            viewSelectedPlaceholder v
+
+                        Single Nothing ->
+                            viewPlaceholder config
+
+                buildPlaceholder =
+                    if isEmptyInputValue state_.inputValue then
+                        resolvePlaceholder
+
+                    else
+                        text ""
               in
               div
                 [ StyledAttribs.css
@@ -217,6 +242,69 @@ view (Config config) selectId =
                         ++ withDisabledStyles
                     )
                 ]
-                []
+                [ buildPlaceholder ]
             ]
         ]
+
+
+viewPlaceholder : Configuration item -> Html (Msg item)
+viewPlaceholder config =
+    div
+        [ -- basePlaceholder
+          -- TODO: add typography styles
+          StyledAttribs.css
+            basePlaceholder
+        ]
+        [ text config.placeholder ]
+
+
+viewSelectedPlaceholder : MenuItem item -> Html (Msg item)
+viewSelectedPlaceholder item =
+    let
+        addedStyles =
+            [ Css.maxWidth (Css.calc (Css.pct 100) Css.minus (Css.px 8))
+            , Css.textOverflow Css.ellipsis
+            , Css.whiteSpace Css.noWrap
+            , Css.overflow Css.hidden
+            ]
+    in
+    div
+        [ StyledAttribs.css
+            (basePlaceholder
+                ++ bold
+                ++ addedStyles
+            )
+        ]
+        [ text item.label ]
+
+
+
+-- CHECKERS
+
+
+isEmptyInputValue : Maybe String -> Bool
+isEmptyInputValue inputValue =
+    String.isEmpty (Maybe.withDefault "" inputValue)
+
+
+
+-- STYLES
+
+
+basePlaceholder : List Css.Style
+basePlaceholder =
+    [ Css.marginLeft (Css.px 2)
+    , Css.marginRight (Css.px 2)
+    , Css.top (Css.pct 50)
+    , Css.position Css.absolute
+    , Css.boxSizing Css.borderBox
+    , Css.transform (Css.translateY (Css.pct -50))
+    , Css.opacity (Css.num 0.5)
+    ]
+
+
+bold : List Css.Style
+bold =
+    [ Css.color (Css.hex "##35374A")
+    , Css.fontWeight (Css.int 400)
+    ]

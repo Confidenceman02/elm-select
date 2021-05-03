@@ -5,12 +5,16 @@ import Html.Styled as Styled exposing (Html)
 import Select exposing (initState, selectIdentifier)
 
 
-init : ( Select.State, Cmd msg )
+type Msg
+    = SelectMsg (Select.Msg String)
+
+
+init : ( Select.State, Cmd Msg )
 init =
     ( initState, Cmd.none )
 
 
-main : Program () Select.State msg
+main : Program () Select.State Msg
 main =
     Browser.element
         { init = always init
@@ -20,6 +24,6 @@ main =
         }
 
 
-view : Select.State -> Html msg
+view : Select.State -> Html Msg
 view _ =
-    Select.view (Select.single Nothing) (selectIdentifier "SingleSelectExample")
+    Styled.map SelectMsg <| Select.view (Select.single Nothing) (selectIdentifier "SingleSelectExample")
