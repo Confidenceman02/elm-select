@@ -2,8 +2,14 @@ module Select exposing (Msg, State, initState, selectIdentifier, single, view)
 
 import Browser.Dom as Dom
 import Css
-import Html.Styled as Styled exposing (Html, div, text)
-import Html.Styled.Attributes as StyledAttribs
+import Events
+import Html.Styled exposing (Html, div, input, text)
+import Html.Styled.Attributes as StyledAttribs exposing (id, readonly, style, tabindex, value)
+import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn)
+import Html.Styled.Lazy exposing (lazy)
+import Json.Decode as Decode
+import List.Extra as ListExtra
+import SelectInput
 
 
 type Config item
@@ -78,6 +84,29 @@ type MenuItemElement
 
 type MenuListElement
     = MenuListElement Dom.Element
+
+
+
+-- VIEW FUNCTiON DATA
+-- These data structures make using 'lazy' function a breeze
+
+
+type alias ViewSelectInputData item =
+    { id : String
+    , maybeInputValue : Maybe String
+    , maybeActiveTarget : Maybe (MenuItem item)
+    , totalViewableMenuItems : Int
+    , menuOpen : Bool
+    , usePorts : Bool
+    }
+
+
+type alias ViewDummyInputData item =
+    { id : String
+    , maybeTargetItem : Maybe (MenuItem item)
+    , totalViewableMenuItems : Int
+    , menuOpen : Bool
+    }
 
 
 type alias Configuration item =
@@ -179,6 +208,19 @@ view (Config config) selectId =
     let
         (State state_) =
             config.state
+
+        enterSelectTargetItem =
+            if state_.menuOpen && not (List.isEmpty viewableMenuItems) then
+                ListExtra.getAt state_.activeTargetIndex viewableMenuItems
+
+            else
+                Nothing
+
+        totalMenuItems =
+            List.length viewableMenuItems
+
+        viewableMenuItems =
+            buildMenuItems config state_
     in
     div [ StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ] ]
         [ -- container
@@ -227,6 +269,24 @@ view (Config config) selectId =
 
                     else
                         text ""
+
+                buildInput =
+                    if not config.disabled then
+                        if config.searchable then
+                            lazy viewSelectInput
+                                (ViewSelectInputData (getSelectId selectId) state_.inputValue enterSelectTargetItem totalMenuItems state_.menuOpen state_.usePorts)
+
+                        else
+                            lazy viewDummyInput
+                                (ViewDummyInputData
+                                    (getSelectId selectId)
+                                    enterSelectTargetItem
+                                    totalMenuItems
+                                    state_.menuOpen
+                                )
+
+                    else
+                        text ""
               in
               div
                 [ StyledAttribs.css
@@ -242,7 +302,7 @@ view (Config config) selectId =
                         ++ withDisabledStyles
                     )
                 ]
-                [ buildPlaceholder ]
+                [ buildPlaceholder, buildInput ]
             ]
         ]
 
@@ -278,6 +338,127 @@ viewSelectedPlaceholder item =
         [ text item.label ]
 
 
+viewSelectInput : ViewSelectInputData item -> Html (Msg item)
+viewSelectInput viewSelectInputData =
+    let
+        enterKeydownDecoder =
+            -- There will always be a target item if the menu is
+            -- open and not empty
+            case viewSelectInputData.maybeActiveTarget of
+                Just mi ->
+                    [ Events.isEnter (EnterSelect mi.item) ]
+
+                Nothing ->
+                    []
+
+        resolveInputValue =
+            Maybe.withDefault "" viewSelectInputData.maybeInputValue
+
+        spaceKeydownDecoder decoders =
+            if canBeSpaceToggled viewSelectInputData.menuOpen viewSelectInputData.maybeInputValue then
+                Events.isSpace (ToggleMenuAtKey <| SelectId viewSelectInputData.id) :: decoders
+
+            else
+                decoders
+
+        whenArrowEvents =
+            if viewSelectInputData.menuOpen && 0 == viewSelectInputData.totalViewableMenuItems then
+                []
+
+            else
+                [ Events.isDownArrow (KeyboardDown (SelectId viewSelectInputData.id) viewSelectInputData.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp (SelectId viewSelectInputData.id) viewSelectInputData.totalViewableMenuItems)
+                ]
+
+        resolveInputWidth selectInputConfig =
+            if viewSelectInputData.usePorts then
+                -- Fixed because javascript controls its width via ports
+                SelectInput.inputSizing SelectInput.Fixed selectInputConfig
+
+            else
+                SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
+    in
+    SelectInput.view
+        (SelectInput.default
+            |> SelectInput.onInput (InputChanged <| SelectId viewSelectInputData.id)
+            |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId viewSelectInputData.id))
+            |> SelectInput.onFocusMsg (InputReceivedFocused (Just <| SelectId viewSelectInputData.id))
+            |> SelectInput.currentValue resolveInputValue
+            |> SelectInput.onMousedown InputMousedowned
+            |> resolveInputWidth
+            |> (SelectInput.preventKeydownOn <|
+                    (enterKeydownDecoder |> spaceKeydownDecoder)
+                        ++ [ Events.isEscape CloseMenu
+                           ]
+                        ++ whenArrowEvents
+               )
+        )
+        viewSelectInputData.id
+
+
+viewDummyInput : ViewDummyInputData item -> Html (Msg item)
+viewDummyInput viewDummyInputData =
+    let
+        whenEnterEvent =
+            -- There will always be a target item if the menu is
+            -- open and not empty
+            case viewDummyInputData.maybeTargetItem of
+                Just menuItem ->
+                    [ Events.isEnter (EnterSelect menuItem.item) ]
+
+                Nothing ->
+                    []
+
+        whenArrowEvents =
+            if viewDummyInputData.menuOpen && 0 == viewDummyInputData.totalViewableMenuItems then
+                []
+
+            else
+                [ Events.isDownArrow (KeyboardDown (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
+                ]
+    in
+    input
+        [ style "label" "dummyInput"
+        , style "background" "0"
+        , style "border" "0"
+        , style "font-size" "inherit"
+        , style "outline" "0"
+        , style "padding" "0"
+        , style "width" "1px"
+        , style "color" "transparent"
+        , readonly True
+        , value ""
+        , tabindex 0
+        , id ("dummy-input-" ++ viewDummyInputData.id)
+        , onFocus (InputReceivedFocused Nothing)
+        , onBlur (OnInputBlurred Nothing)
+        , preventDefaultOn "keydown" <|
+            Decode.map
+                (\msg -> ( msg, True ))
+                (Decode.oneOf
+                    ([ Events.isSpace (ToggleMenuAtKey <| SelectId viewDummyInputData.id)
+                     , Events.isEscape CloseMenu
+                     , Events.isDownArrow (KeyboardDown (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
+                     , Events.isUpArrow (KeyboardUp (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
+                     ]
+                        ++ whenEnterEvent
+                        ++ whenArrowEvents
+                    )
+                )
+        ]
+        []
+
+
+
+-- GETTERS
+
+
+getSelectId : SelectId -> String
+getSelectId (SelectId id_) =
+    id_
+
+
 
 -- CHECKERS
 
@@ -285,6 +466,61 @@ viewSelectedPlaceholder item =
 isEmptyInputValue : Maybe String -> Bool
 isEmptyInputValue inputValue =
     String.isEmpty (Maybe.withDefault "" inputValue)
+
+
+canBeSpaceToggled : Bool -> Maybe String -> Bool
+canBeSpaceToggled menuOpen inputValue =
+    not menuOpen && isEmptyInputValue inputValue
+
+
+
+-- BUILDERS
+
+
+buildMenuItems : Configuration item -> SelectState -> List (MenuItem item)
+buildMenuItems config state_ =
+    case config.variant of
+        Single _ ->
+            if config.searchable then
+                List.filter (filterMenuItem state_.inputValue) config.menuItems
+
+            else
+                config.menuItems
+
+        Multi _ maybeSelectedMenuItems ->
+            if config.searchable then
+                List.filter (filterMenuItem state_.inputValue) config.menuItems
+                    |> filterMultiSelectedItems maybeSelectedMenuItems
+
+            else
+                config.menuItems
+                    |> filterMultiSelectedItems maybeSelectedMenuItems
+
+
+
+-- FILTERS
+
+
+filterMenuItem : Maybe String -> MenuItem item -> Bool
+filterMenuItem maybeQuery item =
+    case maybeQuery of
+        Nothing ->
+            True
+
+        Just "" ->
+            True
+
+        Just query ->
+            String.contains (String.toLower query) <| String.toLower item.label
+
+
+filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
+filterMultiSelectedItems selectedItems currentMenuItems =
+    if List.isEmpty selectedItems then
+        currentMenuItems
+
+    else
+        List.filter (\i -> not (List.member i selectedItems)) currentMenuItems
 
 
 
