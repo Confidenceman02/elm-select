@@ -1,4 +1,4 @@
-module Select exposing (Msg, State, initState, selectIdentifier, single, view)
+module Select exposing (Msg, State, initState, selectIdentifier, single, state, update, view)
 
 import Browser.Dom as Dom
 import Css
@@ -8,8 +8,11 @@ import Html.Styled.Attributes as StyledAttribs exposing (id, readonly, style, ta
 import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
+import Json.Encode as Encode
 import List.Extra as ListExtra
+import Ports as Ports
 import SelectInput
+import Task
 
 
 type Config item
@@ -109,6 +112,10 @@ type alias ViewDummyInputData item =
     }
 
 
+type alias MenuListBoundaries =
+    ( Float, Float )
+
+
 type alias Configuration item =
     { variant : Variant item
     , isLoading : Bool
@@ -145,6 +152,10 @@ type alias MenuItem item =
     }
 
 
+
+-- DEFAULTS
+
+
 initState : State
 initState =
     State
@@ -176,6 +187,15 @@ defaults =
 
 
 
+-- MODIFIERS
+
+
+state : State -> Config item -> Config item
+state state_ (Config config) =
+    Config { config | state = state_ }
+
+
+
 -- VARIANT
 
 
@@ -201,6 +221,309 @@ type alias MultiSelectTagConfig =
 selectIdentifier : String -> SelectId
 selectIdentifier id_ =
     SelectId id_
+
+
+
+-- UPDATE
+
+
+update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
+update msg (State state_) =
+    case msg of
+        EnterSelect item ->
+            let
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+            in
+            ( Just (Select item)
+            , State
+                { stateWithClosedMenu
+                    | initialMousedown = NothingMousedown
+                    , inputValue = Nothing
+                }
+            , cmdWithClosedMenu
+            )
+
+        HoverFocused i ->
+            ( Nothing, State { state_ | activeTargetIndex = i }, Cmd.none )
+
+        InputChanged _ inputValue ->
+            let
+                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                    update OpenMenu (State state_)
+            in
+            ( Just (InputChange inputValue), State { stateWithOpenMenu | inputValue = Just inputValue }, cmdWithOpenMenu )
+
+        InputReceivedFocused maybeSelectId ->
+            case maybeSelectId of
+                Just selectId ->
+                    let
+                        ports =
+                            if state_.usePorts then
+                                Ports.kaizenConnectSelectInputDynamicWidth <| buildEncodedValueForPorts selectId
+
+                            else
+                                Cmd.none
+                    in
+                    ( Nothing, State { state_ | controlFocused = True }, ports )
+
+                Nothing ->
+                    ( Nothing, State { state_ | controlFocused = True }, Cmd.none )
+
+        SelectedItem item ->
+            let
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+            in
+            ( Just (Select item)
+            , State
+                { stateWithClosedMenu
+                    | initialMousedown = NothingMousedown
+                    , inputValue = Nothing
+                }
+            , cmdWithClosedMenu
+            )
+
+        DeselectedMultiItem deselectedItem ->
+            ( Just (Deselect deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+
+        -- focusing the input is usually the last thing that happens after all the mousedown events.
+        -- Its important to ensure we have a NothingInitClicked so that if the user clicks outside of the
+        -- container it will close the menu and un focus the container. OnInputBlurred treats ContainerInitClick and
+        -- MutiItemInitClick as special cases to avoid flickering when an input gets blurred then focused again.
+        OnInputFocused focusResult ->
+            case focusResult of
+                Ok () ->
+                    ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+
+                Err _ ->
+                    ( Nothing, State state_, Cmd.none )
+
+        FocusMenuViewport selectId (Ok ( menuListElem, menuItemElem )) ->
+            let
+                ( viewportFocusCmd, newViewportY ) =
+                    menuItemOrientationInViewport menuListElem menuItemElem
+                        |> setMenuViewportPosition selectId state_.menuListScrollTop menuListElem menuItemElem
+            in
+            ( Nothing, State { state_ | menuViewportFocusNodes = Just ( menuListElem, menuItemElem ), menuListScrollTop = newViewportY }, viewportFocusCmd )
+
+        -- If the menu list element was not found it likely has no viewable menu items.
+        -- In this case the menu does not render therefore no id is present on menu element.
+        FocusMenuViewport _ (Err _) ->
+            ( Nothing, State { state_ | menuViewportFocusNodes = Nothing }, Cmd.none )
+
+        DoNothing ->
+            ( Nothing, State state_, Cmd.none )
+
+        OnInputBlurred maybeSelectId ->
+            let
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+
+                ( updatedState, updatedCmds ) =
+                    case state_.initialMousedown of
+                        ContainerMousedown ->
+                            ( { state_ | inputValue = Nothing }, ports )
+
+                        MultiItemMousedown _ ->
+                            ( state_, Cmd.none )
+
+                        _ ->
+                            ( { stateWithClosedMenu
+                                | initialMousedown = NothingMousedown
+                                , controlFocused = False
+                                , inputValue = Nothing
+                              }
+                            , Cmd.batch [ cmdWithClosedMenu, ports ]
+                            )
+
+                ports =
+                    case maybeSelectId of
+                        Just id_ ->
+                            if state_.usePorts then
+                                Ports.kaizenDisconnectSelectInputDynamicWidth <| buildEncodedValueForPorts id_
+
+                            else
+                                Cmd.none
+
+                        Nothing ->
+                            Cmd.none
+            in
+            ( Nothing
+            , State updatedState
+            , updatedCmds
+            )
+
+        MenuItemClickFocus i ->
+            ( Nothing, State { state_ | initialMousedown = MenuItemMousedown i }, Cmd.none )
+
+        MultiItemFocus index ->
+            ( Nothing, State { state_ | initialMousedown = MultiItemMousedown index }, Cmd.none )
+
+        InputMousedowned ->
+            ( Nothing, State { state_ | initialMousedown = InputMousedown }, Cmd.none )
+
+        ClearFocusedItem ->
+            ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+
+        SearchableSelectContainerClicked (SelectId id) ->
+            let
+                inputId =
+                    SelectInput.inputId id
+
+                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                    update OpenMenu (State state_)
+
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+
+                ( updatedState, updatedCmds ) =
+                    case state_.initialMousedown of
+                        -- A mousedown on a multi tag dismissible icon has been registered. This will
+                        -- bubble and fire the the mousedown on the container div which toggles the menu.
+                        -- To avoid the annoyance of opening and closing the menu whenever a multi tag item is dismissed
+                        -- we just want to leave the menu open which it will be when it reaches here.
+                        MultiItemMousedown _ ->
+                            ( state_, Cmd.none )
+
+                        -- This is set by a mousedown event in the input. Because the container mousedown will also fire
+                        -- as a result of bubbling we want to ensure that the preventDefault on the container is set to
+                        -- false and allow the input to do all the native click things i.e. double click to select text.
+                        -- If the initClicked values are InputInitClick || NothingInitClick we will not preventDefault.
+                        InputMousedown ->
+                            ( { stateWithOpenMenu | initialMousedown = NothingMousedown }, cmdWithOpenMenu )
+
+                        -- When no container children i.e. tag, input, have initiated a click, then this means a click on the container itself
+                        -- has been initiated.
+                        NothingMousedown ->
+                            if state_.menuOpen then
+                                ( { stateWithClosedMenu | initialMousedown = ContainerMousedown }, cmdWithClosedMenu )
+
+                            else
+                                ( { stateWithOpenMenu | initialMousedown = ContainerMousedown }, cmdWithOpenMenu )
+
+                        ContainerMousedown ->
+                            if state_.menuOpen then
+                                ( { stateWithClosedMenu | initialMousedown = NothingMousedown }, cmdWithClosedMenu )
+
+                            else
+                                ( { stateWithOpenMenu | initialMousedown = NothingMousedown }, cmdWithOpenMenu )
+
+                        _ ->
+                            if state_.menuOpen then
+                                ( stateWithClosedMenu, cmdWithClosedMenu )
+
+                            else
+                                ( stateWithOpenMenu, cmdWithOpenMenu )
+            in
+            ( Nothing, State { updatedState | controlFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus inputId) ] )
+
+        UnsearchableSelectContainerClicked (SelectId id) ->
+            let
+                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                    update OpenMenu (State state_)
+
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+
+                ( updatedState, updatedCmd ) =
+                    if state_.menuOpen then
+                        ( stateWithClosedMenu, cmdWithClosedMenu )
+
+                    else
+                        ( stateWithOpenMenu, cmdWithOpenMenu )
+            in
+            ( Nothing, State { updatedState | controlFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus (dummyInputId <| SelectId id)) ] )
+
+        ToggleMenuAtKey _ ->
+            let
+                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                    update OpenMenu (State state_)
+
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+
+                ( updatedState, updatedCmd ) =
+                    if state_.menuOpen then
+                        ( stateWithClosedMenu, cmdWithClosedMenu )
+
+                    else
+                        ( stateWithOpenMenu, cmdWithOpenMenu )
+            in
+            ( Nothing, State { updatedState | controlFocused = True }, updatedCmd )
+
+        KeyboardDown selectId totalTargetCount ->
+            let
+                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                    update OpenMenu (State state_)
+
+                nextActiveTargetIndex =
+                    calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Down
+
+                nodeQueryForViewportFocus =
+                    if shouldQueryNextTargetElement nextActiveTargetIndex state_ then
+                        queryNodesForViewportFocus selectId nextActiveTargetIndex
+
+                    else
+                        Cmd.none
+
+                ( updatedState, updatedCmd ) =
+                    if state_.menuOpen then
+                        ( { state_ | activeTargetIndex = nextActiveTargetIndex, menuNavigation = Keyboard }, nodeQueryForViewportFocus )
+
+                    else
+                        ( { stateWithOpenMenu | menuNavigation = Keyboard }, cmdWithOpenMenu )
+            in
+            ( Nothing, State updatedState, updatedCmd )
+
+        KeyboardUp selectId totalTargetCount ->
+            let
+                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                    update OpenMenu (State state_)
+
+                nextActiveTargetIndex =
+                    calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Up
+
+                nodeQueryForViewportFocus =
+                    if shouldQueryNextTargetElement nextActiveTargetIndex state_ then
+                        queryNodesForViewportFocus selectId nextActiveTargetIndex
+
+                    else
+                        Cmd.none
+
+                ( updatedState, updatedCmd ) =
+                    if state_.menuOpen then
+                        ( { state_ | activeTargetIndex = nextActiveTargetIndex, menuNavigation = Keyboard }, nodeQueryForViewportFocus )
+
+                    else
+                        ( { stateWithOpenMenu | menuNavigation = Keyboard }, cmdWithOpenMenu )
+            in
+            ( Nothing, State updatedState, updatedCmd )
+
+        OpenMenu ->
+            ( Nothing, State { state_ | menuOpen = True, activeTargetIndex = 0 }, Cmd.none )
+
+        CloseMenu ->
+            ( Nothing
+            , State
+                { state_
+                    | menuOpen = False
+                    , activeTargetIndex = 0
+                    , menuViewportFocusNodes = Nothing
+                    , menuListScrollTop = 0
+                    , menuNavigation = Mouse
+                }
+            , Cmd.none
+            )
+
+        MenuListScrollTop position ->
+            ( Nothing, State { state_ | menuListScrollTop = position }, Cmd.none )
+
+        SetMouseMenuNavigation ->
+            ( Nothing, State { state_ | menuNavigation = Mouse }, Cmd.none )
+
+        SingleSelectClearButtonPressed ->
+            ( Just DeselectSingleSelectItem, State state_, Cmd.none )
 
 
 view : Config item -> SelectId -> Html (Msg item)
@@ -388,9 +711,9 @@ viewSelectInput viewSelectInputData =
             |> resolveInputWidth
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
-                        ++ [ Events.isEscape CloseMenu
-                           ]
-                        ++ whenArrowEvents
+                        ++ (Events.isEscape CloseMenu
+                                :: whenArrowEvents
+                           )
                )
         )
         viewSelectInputData.id
@@ -454,6 +777,26 @@ viewDummyInput viewDummyInputData =
 -- GETTERS
 
 
+dummyInputId : SelectId -> String
+dummyInputId selectId =
+    dummyInputIdPrefix ++ getSelectId selectId
+
+
+dummyInputIdPrefix : String
+dummyInputIdPrefix =
+    "dummy-input-"
+
+
+menuItemId : SelectId -> Int -> String
+menuItemId selectId index =
+    "select-menu-item-" ++ String.fromInt index ++ "-" ++ getSelectId selectId
+
+
+menuListId : SelectId -> String
+menuListId selectId =
+    "select-menu-list-" ++ getSelectId selectId
+
+
 getSelectId : SelectId -> String
 getSelectId (SelectId id_) =
     id_
@@ -463,14 +806,58 @@ getSelectId (SelectId id_) =
 -- CHECKERS
 
 
+isMenuItemWithinTopBoundary : MenuItemElement -> Float -> Bool
+isMenuItemWithinTopBoundary (MenuItemElement menuItemElement) topBoundary =
+    topBoundary <= menuItemElement.element.y
+
+
+isMenuItemWithinBottomBoundary : MenuItemElement -> Float -> Bool
+isMenuItemWithinBottomBoundary (MenuItemElement menuItemElement) bottomBoundary =
+    (menuItemElement.element.y + menuItemElement.element.height) <= bottomBoundary
+
+
 isEmptyInputValue : Maybe String -> Bool
 isEmptyInputValue inputValue =
     String.isEmpty (Maybe.withDefault "" inputValue)
 
 
+shouldQueryNextTargetElement : Int -> SelectState -> Bool
+shouldQueryNextTargetElement nextTargetIndex state_ =
+    nextTargetIndex /= state_.activeTargetIndex
+
+
 canBeSpaceToggled : Bool -> Maybe String -> Bool
 canBeSpaceToggled menuOpen inputValue =
     not menuOpen && isEmptyInputValue inputValue
+
+
+calculateNextActiveTarget : Int -> Int -> Direction -> Int
+calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
+    case direction of
+        Up ->
+            if currentTargetIndex == 0 then
+                0
+
+            else if totalTargetCount < currentTargetIndex + 1 then
+                0
+
+            else
+                currentTargetIndex - 1
+
+        Down ->
+            if currentTargetIndex + 1 == totalTargetCount then
+                currentTargetIndex
+
+            else if totalTargetCount < currentTargetIndex + 1 then
+                0
+
+            else
+                currentTargetIndex + 1
+
+
+calculateMenuBoundaries : MenuListElement -> MenuListBoundaries
+calculateMenuBoundaries (MenuListElement menuListElem) =
+    ( menuListElem.element.y, menuListElem.element.y + menuListElem.element.height )
 
 
 
@@ -495,6 +882,19 @@ buildMenuItems config state_ =
             else
                 config.menuItems
                     |> filterMultiSelectedItems maybeSelectedMenuItems
+
+
+buildEncodedValueForPorts : SelectId -> Encode.Value
+buildEncodedValueForPorts (SelectId id_) =
+    let
+        ( sizerId, inputId ) =
+            ( SelectInput.sizerId id_, SelectInput.inputId id_ )
+    in
+    Encode.object
+        [ ( "sizerId", Encode.string sizerId )
+        , ( "inputId", Encode.string inputId )
+        , ( "defaultInputWidth", Encode.int SelectInput.defaultWidth )
+        ]
 
 
 
@@ -523,8 +923,74 @@ filterMultiSelectedItems selectedItems currentMenuItems =
         List.filter (\i -> not (List.member i selectedItems)) currentMenuItems
 
 
+menuItemOrientationInViewport : MenuListElement -> MenuItemElement -> MenuItemVisibility
+menuItemOrientationInViewport menuListElem menuItemElem =
+    let
+        ( topBoundary, bottomBoundary ) =
+            calculateMenuBoundaries menuListElem
+    in
+    case ( isMenuItemWithinTopBoundary menuItemElem topBoundary, isMenuItemWithinBottomBoundary menuItemElem bottomBoundary ) of
+        ( True, True ) ->
+            Within
+
+        ( False, True ) ->
+            Above
+
+        ( True, False ) ->
+            Below
+
+        ( False, False ) ->
+            Both
+
+
+queryMenuListElement : SelectId -> Task.Task Dom.Error Dom.Element
+queryMenuListElement selectId =
+    Dom.getElement (menuListId selectId)
+
+
+queryNodesForViewportFocus : SelectId -> Int -> Cmd (Msg item)
+queryNodesForViewportFocus selectId menuItemIndex =
+    Task.attempt (FocusMenuViewport selectId) <|
+        Task.map2 (\menuListElem menuItemElem -> ( MenuListElement menuListElem, MenuItemElement menuItemElem ))
+            (queryMenuListElement selectId)
+            (queryActiveTargetElement selectId menuItemIndex)
+
+
+queryActiveTargetElement : SelectId -> Int -> Task.Task Dom.Error Dom.Element
+queryActiveTargetElement selectId index =
+    Dom.getElement (menuItemId selectId index)
+
+
 
 -- STYLES
+
+
+setMenuViewportPosition : SelectId -> Float -> MenuListElement -> MenuItemElement -> MenuItemVisibility -> ( Cmd (Msg item), Float )
+setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem) (MenuItemElement menuItemElem) menuItemVisibility =
+    case menuItemVisibility of
+        Within ->
+            ( Cmd.none, menuListViewport )
+
+        Above ->
+            let
+                menuItemDistanceAbove =
+                    menuListElem.element.y - menuItemElem.element.y
+            in
+            ( Task.attempt (\_ -> DoNothing) <| Dom.setViewportOf (menuListId selectId) 0 (menuListViewport - menuItemDistanceAbove), menuListViewport - menuItemDistanceAbove )
+
+        Below ->
+            let
+                menuItemDistanceBelow =
+                    (menuItemElem.element.y + menuItemElem.element.height) - (menuListElem.element.y + menuListElem.element.height)
+            in
+            ( Task.attempt (\_ -> DoNothing) <| Dom.setViewportOf (menuListId selectId) 0 (menuListViewport + menuItemDistanceBelow), menuListViewport + menuItemDistanceBelow )
+
+        Both ->
+            let
+                menuItemDistanceAbove =
+                    menuListElem.element.y - menuItemElem.element.y
+            in
+            ( Task.attempt (\_ -> DoNothing) <| Dom.setViewportOf (menuListId selectId) 0 (menuListViewport - menuItemDistanceAbove), menuListViewport - menuItemDistanceAbove )
 
 
 basePlaceholder : List Css.Style
