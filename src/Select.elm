@@ -1,11 +1,14 @@
-module Select exposing (Msg, State, initState, selectIdentifier, single, state, update, view)
+module Select exposing (MenuItem, Msg, State, initState, menuItems, placeholder, selectIdentifier, single, state, update, view)
 
 import Browser.Dom as Dom
 import Css
 import Events
-import Html.Styled exposing (Html, div, input, text)
+import Html.Styled exposing (Html, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (id, readonly, style, tabindex, value)
-import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn)
+import Html.Styled.Attributes.Aria exposing (role)
+import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
+import Html.Styled.Extra exposing (viewIf)
+import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -92,6 +95,28 @@ type MenuListElement
 
 -- VIEW FUNCTiON DATA
 -- These data structures make using 'lazy' function a breeze
+
+
+type alias ViewMenuItemData item =
+    { index : Int
+    , itemSelected : Bool
+    , isClickFocused : Bool
+    , menuItemIsTarget : Bool
+    , selectId : SelectId
+    , menuItem : MenuItem item
+    , menuNavigation : MenuNavigation
+    , initialMousedown : InitialMousedown
+    }
+
+
+type alias ViewMenuData item =
+    { variant : Variant item
+    , selectId : SelectId
+    , viewableMenuItems : List (MenuItem item)
+    , initialMousedown : InitialMousedown
+    , activeTargetIndex : Int
+    , menuNavigation : MenuNavigation
+    }
 
 
 type alias ViewSelectInputData item =
@@ -190,9 +215,19 @@ defaults =
 -- MODIFIERS
 
 
+placeholder : String -> Config item -> Config item
+placeholder plc (Config config) =
+    Config { config | placeholder = plc }
+
+
 state : State -> Config item -> Config item
 state state_ (Config config) =
     Config { config | state = state_ }
+
+
+menuItems : List (MenuItem item) -> Config item -> Config item
+menuItems items (Config config) =
+    Config { config | menuItems = items }
 
 
 
@@ -544,11 +579,34 @@ view (Config config) selectId =
 
         viewableMenuItems =
             buildMenuItems config state_
+
+        preventDefault =
+            if config.searchable then
+                case state_.initialMousedown of
+                    NothingMousedown ->
+                        False
+
+                    InputMousedown ->
+                        False
+
+                    _ ->
+                        True
+
+            else
+                True
+
+        resolveContainerMsg =
+            if config.searchable then
+                SearchableSelectContainerClicked selectId
+
+            else
+                UnsearchableSelectContainerClicked selectId
     in
     div [ StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ] ]
         [ -- container
           div
-            [ StyledAttribs.css
+            ([ -- control
+               StyledAttribs.css
                 [ Css.alignItems Css.center
                 , Css.backgroundColor (Css.hex "#FFFFFF")
                 , Css.cursor Css.default
@@ -562,7 +620,23 @@ view (Config config) selectId =
                 , Css.borderRadius (Css.px 7)
                 , Css.outline Css.zero
                 ]
-            ]
+             ]
+                ++ (if config.disabled then
+                        []
+
+                    else
+                        [ preventDefaultOn "mousedown" <|
+                            Decode.map
+                                (\msg ->
+                                    ( msg
+                                    , preventDefault
+                                    )
+                                )
+                            <|
+                                Decode.succeed resolveContainerMsg
+                        ]
+                   )
+            )
             [ -- valueContainer
               let
                 withDisabledStyles =
@@ -571,6 +645,13 @@ view (Config config) selectId =
 
                     else
                         []
+
+                resolveLoadingSpinner =
+                    if config.isLoading && config.searchable then
+                        viewLoading
+
+                    else
+                        text ""
 
                 resolvePlaceholder =
                     case config.variant of
@@ -610,6 +691,31 @@ view (Config config) selectId =
 
                     else
                         text ""
+
+                clearButtonVisible =
+                    if config.clearable && not config.disabled then
+                        case config.variant of
+                            Multi _ _ ->
+                                -- clearable is only applicable to Single Select
+                                False
+
+                            Single maybeSelectedItem ->
+                                case maybeSelectedItem of
+                                    Just _ ->
+                                        True
+
+                                    Nothing ->
+                                        False
+
+                    else
+                        False
+
+                resolveIconButtonStyles =
+                    if config.disabled then
+                        [ Css.height (Css.px 20) ]
+
+                    else
+                        [ Css.height (Css.px 20), Css.cursor Css.pointer ]
               in
               div
                 [ StyledAttribs.css
@@ -625,16 +731,200 @@ view (Config config) selectId =
                         ++ withDisabledStyles
                     )
                 ]
-                [ buildPlaceholder, buildInput ]
+                [ buildPlaceholder
+                , buildInput
+                , div [ StyledAttribs.css [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ] ]
+                    [ div [ StyledAttribs.css [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ] ]
+                        [ resolveLoadingSpinner
+                        , if clearButtonVisible then
+                            viewClearButton
+
+                          else
+                            text ""
+                        , span
+                            [ StyledAttribs.css resolveIconButtonStyles ]
+                            [-- TODO Create chevron
+                             -- Icon.view Icon.presentation
+                             --   (svgAsset "@kaizen/component-library/icons/chevron-down.icon.svg")
+                             --   |> Html.map never
+                            ]
+                        ]
+                    ]
+                ]
+            , viewIf state_.menuOpen
+                (lazy viewMenu
+                    (ViewMenuData
+                        config.variant
+                        selectId
+                        viewableMenuItems
+                        state_.initialMousedown
+                        state_.activeTargetIndex
+                        state_.menuNavigation
+                    )
+                )
             ]
         ]
+
+
+viewMenu : ViewMenuData item -> Html (Msg item)
+viewMenu viewMenuData =
+    let
+        resolveMouseover =
+            if viewMenuData.menuNavigation == Keyboard then
+                [ on "mousemove" <| Decode.succeed SetMouseMenuNavigation ]
+
+            else
+                []
+    in
+    viewIf (hasMenuItems viewMenuData.viewableMenuItems)
+        (div
+            ([ StyledAttribs.css
+                [ Css.top (Css.pct 100)
+                , Css.backgroundColor (Css.hex "#FFFFFF")
+                , Css.marginBottom (Css.px 8)
+                , Css.position Css.absolute
+                , Css.width (Css.pct 100)
+                , Css.boxSizing Css.borderBox
+                , Css.border3 (Css.px 6) Css.solid Css.transparent
+                , Css.borderRadius (Css.px 7)
+                , Css.marginTop (Css.px menuMarginTop)
+                , Css.zIndex (Css.int 1)
+                ]
+             ]
+                ++ resolveMouseover
+            )
+            [ Keyed.node "div"
+                [-- styles.class .menuList
+                 -- , id (menuListId viewMenuData.selectId)
+                 -- , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+                ]
+                (List.indexedMap
+                    (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
+                    viewMenuData.viewableMenuItems
+                )
+            ]
+        )
+
+
+viewclearbutton : Html (Msg item)
+viewclearbutton =
+    -- TODO create clear button
+    text ""
+
+
+
+-- span [ styles.class .clearbuttonwrapper ]
+--     [ button.view
+--         (button.iconbutton
+--             (svgasset "@kaizen/component-library/icons/clear.icon.svg")
+--             |> button.onclick singleselectclearbuttonpressed
+--         )
+--         "clear"
+--     ]
+
+
+viewLoading : Html msg
+viewLoading =
+    -- todo create loading spinner
+    text ""
+
+
+
+-- span [ styles.class .iconbutton ]
+--     [ icon.view icon.presentation
+--         (svgasset "@kaizen/component-library/icons/spinner.icon.svg")
+--         |> Html.map never
+--     ]
+
+
+viewMenuItem : ViewMenuItemData item -> ( String, Html (Msg item) )
+viewMenuItem viewMenuItemData =
+    ( String.fromInt viewMenuItemData.index
+    , lazy
+        (\data ->
+            let
+                resolveMouseLeave =
+                    if data.isClickFocused then
+                        [ on "mouseleave" <| Decode.succeed ClearFocusedItem ]
+
+                    else
+                        []
+
+                resolveMouseUp =
+                    case data.initialMousedown of
+                        MenuItemMousedown _ ->
+                            [ on "mouseup" <| Decode.succeed (SelectedItem data.menuItem.item) ]
+
+                        _ ->
+                            []
+            in
+            div
+                ([ role "listitem"
+                 , tabindex -1
+                 , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
+                 , on "mouseover" <| Decode.succeed (HoverFocused data.index)
+                 , id (menuItemId data.selectId data.index)
+                 , -- .option
+                   StyledAttribs.css
+                    [ Css.backgroundColor Css.transparent
+                    , Css.color Css.inherit
+                    , Css.cursor Css.default
+                    , Css.display Css.block
+                    , Css.fontSize Css.inherit
+                    , Css.width (Css.pct 100)
+                    , Css.property "user-select" "none"
+                    , Css.boxSizing Css.borderBox
+                    , Css.borderRadius (Css.px 4)
+
+                    -- kaizen uses a calc here
+                    , Css.padding2 (Css.px 8) (Css.px 8)
+                    , Css.outline Css.none
+
+                    -- TODO Handle when it's a target but not selected
+                    -- TODO Handle when it's clicked focused but not selected
+                    -- TODO Handle when it's selected
+                    -- TODO Prevent pointer when keyboard navigating
+                    , Css.color (Css.hex "#000000")
+                    ]
+
+                 -- styles.classList
+                 -- [ ( .option, True )
+                 -- , ( .isSelected, data.itemSelected )
+                 -- , ( .isFocused, data.isClickFocused )
+                 -- , ( .isTarget, data.menuItemIsTarget )
+                 -- , ( .preventPointer, data.menuNavigation == Keyboard )
+                 -- ]
+                 ]
+                    ++ resolveMouseLeave
+                    ++ resolveMouseUp
+                )
+                [ text data.menuItem.label ]
+        )
+        viewMenuItemData
+    )
+
+
+viewClearButton : Html msg
+viewClearButton =
+    text ""
+
+
+
+-- span [ styles.class .clearButtonWrapper ]
+--     [ Button.view
+--         (Button.iconButton
+--             (svgAsset "@kaizen/component-library/icons/clear.icon.svg")
+--             |> Button.onClick SingleSelectClearButtonPressed
+--         )
+--         "clear"
+--     ]
 
 
 viewPlaceholder : Configuration item -> Html (Msg item)
 viewPlaceholder config =
     div
-        [ -- basePlaceholder
-          -- TODO: add typography styles
+        [ -- baseplaceholder
+          -- todo: add typography styles
           StyledAttribs.css
             basePlaceholder
         ]
@@ -665,7 +955,7 @@ viewSelectInput : ViewSelectInputData item -> Html (Msg item)
 viewSelectInput viewSelectInputData =
     let
         enterKeydownDecoder =
-            -- There will always be a target item if the menu is
+            -- there will always be a target item if the menu is
             -- open and not empty
             case viewSelectInputData.maybeActiveTarget of
                 Just mi ->
@@ -695,7 +985,7 @@ viewSelectInput viewSelectInputData =
 
         resolveInputWidth selectInputConfig =
             if viewSelectInputData.usePorts then
-                -- Fixed because javascript controls its width via ports
+                -- fixed because javascript controls its width via ports
                 SelectInput.inputSizing SelectInput.Fixed selectInputConfig
 
             else
@@ -723,11 +1013,11 @@ viewDummyInput : ViewDummyInputData item -> Html (Msg item)
 viewDummyInput viewDummyInputData =
     let
         whenEnterEvent =
-            -- There will always be a target item if the menu is
+            -- there will always be a target item if the menu is
             -- open and not empty
             case viewDummyInputData.maybeTargetItem of
-                Just menuItem ->
-                    [ Events.isEnter (EnterSelect menuItem.item) ]
+                Just menuitem ->
+                    [ Events.isEnter (EnterSelect menuitem.item) ]
 
                 Nothing ->
                     []
@@ -742,7 +1032,7 @@ viewDummyInput viewDummyInputData =
                 ]
     in
     input
-        [ style "label" "dummyInput"
+        [ style "label" "dummyinput"
         , style "background" "0"
         , style "border" "0"
         , style "font-size" "inherit"
@@ -774,7 +1064,7 @@ viewDummyInput viewDummyInputData =
 
 
 
--- GETTERS
+-- getters
 
 
 dummyInputId : SelectId -> String
@@ -804,6 +1094,37 @@ getSelectId (SelectId id_) =
 
 
 -- CHECKERS
+
+
+hasMenuItems : List (MenuItem item) -> Bool
+hasMenuItems items =
+    0 /= List.length items
+
+
+isSelected : MenuItem item -> Maybe (MenuItem item) -> Bool
+isSelected menuItem maybeSelectedItem =
+    case maybeSelectedItem of
+        Just item ->
+            item == menuItem
+
+        Nothing ->
+            False
+
+
+isMenuItemClickFocused : InitialMousedown -> Int -> Bool
+isMenuItemClickFocused initialMousedown i =
+    case initialMousedown of
+        MenuItemMousedown int ->
+            int == i
+
+        _ ->
+            -- if menuitem is not focused we dont care about what is at this stage
+            False
+
+
+isTarget : Int -> Int -> Bool
+isTarget activeTargetIndex i =
+    activeTargetIndex == i
 
 
 isMenuItemWithinTopBoundary : MenuItemElement -> Float -> Bool
@@ -884,6 +1205,18 @@ buildMenuItems config state_ =
                     |> filterMultiSelectedItems maybeSelectedMenuItems
 
 
+buildMenuItem : SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
+buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
+    case variant of
+        Single maybeSelectedItem ->
+            viewMenuItem <|
+                ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown
+
+        Multi _ _ ->
+            viewMenuItem <|
+                ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown
+
+
 buildEncodedValueForPorts : SelectId -> Encode.Value
 buildEncodedValueForPorts (SelectId id_) =
     let
@@ -961,10 +1294,6 @@ queryActiveTargetElement selectId index =
     Dom.getElement (menuItemId selectId index)
 
 
-
--- STYLES
-
-
 setMenuViewportPosition : SelectId -> Float -> MenuListElement -> MenuItemElement -> MenuItemVisibility -> ( Cmd (Msg item), Float )
 setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem) (MenuItemElement menuItemElem) menuItemVisibility =
     case menuItemVisibility of
@@ -1003,6 +1332,15 @@ basePlaceholder =
     , Css.transform (Css.translateY (Css.pct -50))
     , Css.opacity (Css.num 0.5)
     ]
+
+
+
+-- STYLES
+
+
+menuMarginTop : Float
+menuMarginTop =
+    8
 
 
 bold : List Css.Style

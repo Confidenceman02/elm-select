@@ -2,19 +2,25 @@ module Single exposing (..)
 
 import Browser
 import Html.Styled as Styled exposing (Html)
-import Select exposing (initState, selectIdentifier, update)
+import Select exposing (MenuItem, initState, selectIdentifier, update)
 
 
 type Msg
     = SelectMsg (Select.Msg String)
 
 
-init : ( Select.State, Cmd Msg )
+type alias Model =
+    { selectState : Select.State
+    , items : List (MenuItem String)
+    }
+
+
+init : ( Model, Cmd Msg )
 init =
-    ( initState, Cmd.none )
+    ( { selectState = initState, items = [ { item = "Something", label = "Something" } ] }, Cmd.none )
 
 
-main : Program () Select.State Msg
+main : Program () Model Msg
 main =
     Browser.element
         { init = always init
@@ -24,17 +30,24 @@ main =
         }
 
 
-update : Msg -> Select.State -> ( Select.State, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SelectMsg sm ->
             let
                 ( _, updatedState, cmds ) =
-                    Select.update sm model
+                    Select.update sm model.selectState
             in
-            ( updatedState, Cmd.map SelectMsg cmds )
+            ( { model | selectState = updatedState }, Cmd.map SelectMsg cmds )
 
 
-view : Select.State -> Html Msg
+view : Model -> Html Msg
 view m =
-    Styled.map SelectMsg <| Select.view (Select.single Nothing |> Select.state m) (selectIdentifier "SingleSelectExample")
+    Styled.map SelectMsg <|
+        Select.view
+            (Select.single Nothing
+                |> Select.state m.selectState
+                |> Select.menuItems m.items
+                |> Select.placeholder "placeholder"
+            )
+            (selectIdentifier "SingleSelectExample")
