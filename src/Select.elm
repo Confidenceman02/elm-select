@@ -13,6 +13,8 @@ import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import SelectInput
+import Svg.Styled exposing (path, svg)
+import Svg.Styled.Attributes exposing (d, height, viewBox)
 import Task
 
 
@@ -278,7 +280,7 @@ update msg (State state_) =
             )
 
         HoverFocused i ->
-            ( Nothing, State { state_ | activeTargetIndex = i }, Cmd.none ) |> Debug.log "HOVER FOCUSED"
+            ( Nothing, State { state_ | activeTargetIndex = i }, Cmd.none )
 
         InputChanged _ inputValue ->
             let
@@ -308,8 +310,6 @@ update msg (State state_) =
                 }
             , cmdWithClosedMenu
             )
-                |> Debug.log
-                    "SelectedItem"
 
         DeselectedMultiItem deselectedItem ->
             ( Just (Deselect deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
@@ -342,7 +342,7 @@ update msg (State state_) =
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
 
-        OnInputBlurred maybeSelectId ->
+        OnInputBlurred _ ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
@@ -378,10 +378,9 @@ update msg (State state_) =
             , State updatedState
             , updatedCmds
             )
-                |> Debug.log "ONINPUTBLURRED"
 
         MenuItemClickFocus i ->
-            ( Nothing, State { state_ | initialMousedown = MenuItemMousedown i }, Cmd.none ) |> Debug.log "MENUITEMCLICKFOCUS"
+            ( Nothing, State { state_ | initialMousedown = MenuItemMousedown i }, Cmd.none )
 
         MultiItemFocus index ->
             ( Nothing, State { state_ | initialMousedown = MultiItemMousedown index }, Cmd.none )
@@ -390,7 +389,7 @@ update msg (State state_) =
             ( Nothing, State { state_ | initialMousedown = InputMousedown }, Cmd.none )
 
         ClearFocusedItem ->
-            ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none ) |> Debug.log "CLEARFOCUSEDITEM"
+            ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
 
         SearchableSelectContainerClicked (SelectId id) ->
             let
@@ -749,10 +748,11 @@ view (Config config) selectId =
                         text ""
                     , span
                         [ StyledAttribs.css resolveIconButtonStyles ]
-                        [-- TODO Create chevron
-                         -- Icon.view Icon.presentation
-                         --   (svgAsset "@kaizen/component-library/icons/chevron-down.icon.svg")
-                         --   |> Html.map never
+                        [ -- TODO Create chevron
+                          -- Icon.view Icon.presentation
+                          --   (svgAsset "@kaizen/component-library/icons/chevron-down.icon.svg")
+                          --   |> Html.map never
+                          svg [ height "20", viewBox "0 0 20 20" ] [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
                         ]
                     ]
                 ]
