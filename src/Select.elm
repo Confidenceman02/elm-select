@@ -291,7 +291,7 @@ update msg (State state_) =
 
         InputReceivedFocused maybeSelectId ->
             case maybeSelectId of
-                Just selectId ->
+                Just _ ->
                     ( Nothing, State { state_ | controlFocused = True }, Cmd.none )
 
                 Nothing ->
@@ -363,16 +363,6 @@ update msg (State state_) =
                               }
                             , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
                             )
-
-                -- ports =
-                --     case maybeSelectId of
-                --         Just id_ ->
-                --             if state_.usePorts then
-                --                 Ports.kaizenDisconnectSelectInputDynamicWidth <| buildEncodedValueForPorts id_
-                --             else
-                --                 Cmd.none
-                --         Nothing ->
-                --             Cmd.none
             in
             ( Nothing
             , State updatedState

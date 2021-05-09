@@ -22,9 +22,10 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Something", label = "Something" }
-            , { item = "Something else", label = "Something else" }
-            , { item = "Ok then", label = "Ok then" }
+            [ { item = "Elm", label = "Elm" }
+            , { item = "Is", label = "Is" }
+            , { item = "Really", label = "Really" }
+            , { item = "Great", label = "Great" }
             ]
       , selectedItem = Nothing
       }
