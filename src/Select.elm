@@ -11,7 +11,6 @@ import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
-import Json.Encode as Encode
 import List.Extra as ListExtra
 import SelectInput
 import Task
@@ -596,22 +595,35 @@ view (Config config) selectId =
     in
     div [ StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ] ]
         [ -- container
+          let
+            controlFocusedStyles =
+                if state_.controlFocused then
+                    [ Css.borderColor (Css.hex "#0168b3") ]
+
+                else
+                    []
+          in
           div
             ([ -- control
                StyledAttribs.css
-                [ Css.alignItems Css.center
-                , Css.backgroundColor (Css.hex "#FFFFFF")
-                , Css.cursor Css.default
-                , Css.displayFlex
-                , Css.flexWrap Css.wrap
-                , Css.justifyContent Css.spaceBetween
-                , Css.minHeight (Css.px 48)
-                , Css.position Css.relative
-                , Css.boxSizing Css.borderBox
-                , Css.border3 (Css.px 2) Css.solid (Css.hex "#898BA9")
-                , Css.borderRadius (Css.px 7)
-                , Css.outline Css.zero
-                ]
+                ([ Css.alignItems Css.center
+                 , Css.backgroundColor (Css.hex "#FFFFFF")
+                 , Css.cursor Css.default
+                 , Css.displayFlex
+                 , Css.flexWrap Css.wrap
+                 , Css.justifyContent Css.spaceBetween
+                 , Css.minHeight (Css.px 48)
+                 , Css.position Css.relative
+                 , Css.boxSizing Css.borderBox
+                 , Css.border3 (Css.px 2) Css.solid (Css.hex "#898BA9")
+                 , Css.borderRadius (Css.px 7)
+                 , Css.outline Css.zero
+
+                 -- TODO add hover styles
+                 , Css.hover [ Css.backgroundColor (Css.hex "#F0F1F4"), Css.borderColor (Css.hex "#4B4D68") ]
+                 ]
+                    ++ controlFocusedStyles
+                )
              ]
                 ++ (if config.disabled then
                         []
@@ -1224,20 +1236,18 @@ buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation
                 ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown
 
 
-buildEncodedValueForPorts : SelectId -> Encode.Value
-buildEncodedValueForPorts (SelectId id_) =
-    let
-        ( sizerId, inputId ) =
-            ( SelectInput.sizerId id_, SelectInput.inputId id_ )
-    in
-    Encode.object
-        [ ( "sizerId", Encode.string sizerId )
-        , ( "inputId", Encode.string inputId )
-        , ( "defaultInputWidth", Encode.int SelectInput.defaultWidth )
-        ]
 
-
-
+-- buildEncodedValueForPorts : SelectId -> Encode.Value
+-- buildEncodedValueForPorts (SelectId id_) =
+--     let
+--         ( sizerId, inputId ) =
+--             ( SelectInput.sizerId id_, SelectInput.inputId id_ )
+--     in
+--     Encode.object
+--         [ ( "sizerId", Encode.string sizerId )
+--         , ( "inputId", Encode.string inputId )
+--         , ( "defaultInputWidth", Encode.int SelectInput.defaultWidth )
+--         ]
 -- FILTERS
 
 
