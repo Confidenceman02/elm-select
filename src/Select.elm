@@ -877,34 +877,60 @@ viewMenuItem viewMenuItemData =
 
                         _ ->
                             []
+
+                withTargetStyles =
+                    if data.menuItemIsTarget && not data.itemSelected then
+                        [ Css.color (Css.hex "#0168B3"), Css.backgroundColor (Css.hex "#E6F0F7") ]
+
+                    else
+                        []
+
+                withIsClickedStyles =
+                    if data.isClickFocused then
+                        [ Css.backgroundColor (Css.hex "#E6F0F7") ]
+
+                    else
+                        []
+
+                withIsSelectedStyles =
+                    if data.itemSelected then
+                        [ Css.backgroundColor (Css.hex "#E6F0F7"), Css.hover [ Css.color (Css.hex "#0168B3") ] ]
+
+                    else
+                        []
             in
+            -- option
             div
                 ([ role "listitem"
                  , tabindex -1
                  , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
                  , on "mouseover" <| Decode.succeed (HoverFocused data.index)
                  , id (menuItemId data.selectId data.index)
-                 , -- .option
-                   StyledAttribs.css
-                    [ Css.backgroundColor Css.transparent
-                    , Css.color Css.inherit
-                    , Css.cursor Css.default
-                    , Css.display Css.block
-                    , Css.fontSize Css.inherit
-                    , Css.width (Css.pct 100)
-                    , Css.property "user-select" "none"
-                    , Css.boxSizing Css.borderBox
+                 , StyledAttribs.css
+                    ([ Css.backgroundColor Css.transparent
+                     , Css.color Css.inherit
+                     , Css.cursor Css.default
+                     , Css.display Css.block
+                     , Css.fontSize Css.inherit
+                     , Css.width (Css.pct 100)
+                     , Css.property "user-select" "none"
+                     , Css.boxSizing Css.borderBox
+                     , Css.borderRadius (Css.px 4)
 
-                    -- kaizen uses a calc here
-                    , Css.padding2 (Css.px 8) (Css.px 8)
-                    , Css.outline Css.none
+                     -- kaizen uses a calc here
+                     , Css.padding2 (Css.px 8) (Css.px 8)
+                     , Css.outline Css.none
 
-                    -- TODO Handle when it's a target but not selected
-                    -- TODO Handle when it's clicked focused but not selected
-                    -- TODO Handle when it's selected
-                    -- TODO Prevent pointer when keyboard navigating
-                    , Css.color (Css.hex "#000000")
-                    ]
+                     -- TODO Handle when it's a target but not selected
+                     -- TODO Handle when it's clicked focused but not selected
+                     -- TODO Handle when it's selected
+                     -- TODO Prevent pointer when keyboard navigating
+                     , Css.color (Css.hex "#000000")
+                     ]
+                        ++ withTargetStyles
+                        ++ withIsClickedStyles
+                        ++ withIsSelectedStyles
+                    )
 
                  -- styles.classList
                  -- [ ( .option, True )

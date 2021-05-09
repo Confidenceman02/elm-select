@@ -20,7 +20,16 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState, items = [ { item = "Something", label = "Something" }, { item = "Something else", label = "Something else" } ], selectedItem = Nothing }, Cmd.none )
+    ( { selectState = initState
+      , items =
+            [ { item = "Something", label = "Something" }
+            , { item = "Something else", label = "Something else" }
+            , { item = "Ok then", label = "Ok then" }
+            ]
+      , selectedItem = Nothing
+      }
+    , Cmd.none
+    )
 
 
 main : Program () Model Msg
