@@ -748,11 +748,7 @@ view (Config config) selectId =
                         text ""
                     , span
                         [ StyledAttribs.css resolveIconButtonStyles ]
-                        [ -- TODO Create chevron
-                          -- Icon.view Icon.presentation
-                          --   (svgAsset "@kaizen/component-library/icons/chevron-down.icon.svg")
-                          --   |> Html.map never
-                          svg [ height "20", viewBox "0 0 20 20" ] [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
+                        [ svg [ height "20", viewBox "0 0 20 20" ] [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
                         ]
                     ]
                 ]
