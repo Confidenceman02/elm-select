@@ -1,7 +1,9 @@
 module Single exposing (..)
 
 import Browser
-import Html.Styled as Styled exposing (Html)
+import Css
+import Html.Styled as Styled exposing (Html, div)
+import Html.Styled.Attributes as StyledAttribs
 import Select exposing (MenuItem, initState, selectIdentifier, update)
 
 
@@ -12,12 +14,13 @@ type Msg
 type alias Model =
     { selectState : Select.State
     , items : List (MenuItem String)
+    , selectedItem : Maybe String
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState, items = [ { item = "Something", label = "Something" } ] }, Cmd.none )
+    ( { selectState = initState, items = [ { item = "Something", label = "Something" }, { item = "Something else", label = "Something else" } ], selectedItem = Nothing }, Cmd.none )
 
 
 main : Program () Model Msg
@@ -35,19 +38,45 @@ update msg model =
     case msg of
         SelectMsg sm ->
             let
-                ( _, updatedState, cmds ) =
+                ( maybeAction, selectState, cmds ) =
                     Select.update sm model.selectState
+
+                updatedSelectedItem =
+                    case maybeAction of
+                        Just (Select.Select i) ->
+                            Just i |> Debug.log "Selected"
+
+                        _ ->
+                            model.selectedItem
             in
-            ( { model | selectState = updatedState }, Cmd.map SelectMsg cmds )
+            ( { model | selectState = selectState, selectedItem = updatedSelectedItem }, Cmd.map SelectMsg cmds )
 
 
 view : Model -> Html Msg
 view m =
-    Styled.map SelectMsg <|
-        Select.view
-            (Select.single Nothing
-                |> Select.state m.selectState
-                |> Select.menuItems m.items
-                |> Select.placeholder "placeholder"
-            )
-            (selectIdentifier "SingleSelectExample")
+    let
+        selectedItem =
+            case m.selectedItem of
+                Just i ->
+                    Just { item = i, label = i }
+
+                _ ->
+                    Nothing
+    in
+    div
+        [ StyledAttribs.css
+            [ Css.marginTop (Css.px 20)
+            , Css.width (Css.pct 50)
+            , Css.marginLeft Css.auto
+            , Css.marginRight Css.auto
+            ]
+        ]
+        [ Styled.map SelectMsg <|
+            Select.view
+                (Select.single selectedItem
+                    |> Select.state m.selectState
+                    |> Select.menuItems m.items
+                    |> Select.placeholder "Placeholder"
+                )
+                (selectIdentifier "SingleSelectExample")
+        ]

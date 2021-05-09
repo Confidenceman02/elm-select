@@ -1,4 +1,4 @@
-module Select exposing (MenuItem, Msg, State, initState, menuItems, placeholder, selectIdentifier, single, state, update, view)
+module Select exposing (Action(..), MenuItem, Msg, State, initState, menuItems, placeholder, selectIdentifier, single, state, update, view)
 
 import Browser.Dom as Dom
 import Css
@@ -13,7 +13,6 @@ import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import List.Extra as ListExtra
-import Ports as Ports
 import SelectInput
 import Task
 
@@ -280,7 +279,7 @@ update msg (State state_) =
             )
 
         HoverFocused i ->
-            ( Nothing, State { state_ | activeTargetIndex = i }, Cmd.none )
+            ( Nothing, State { state_ | activeTargetIndex = i }, Cmd.none ) |> Debug.log "HOVER FOCUSED"
 
         InputChanged _ inputValue ->
             let
@@ -292,15 +291,7 @@ update msg (State state_) =
         InputReceivedFocused maybeSelectId ->
             case maybeSelectId of
                 Just selectId ->
-                    let
-                        ports =
-                            if state_.usePorts then
-                                Ports.kaizenConnectSelectInputDynamicWidth <| buildEncodedValueForPorts selectId
-
-                            else
-                                Cmd.none
-                    in
-                    ( Nothing, State { state_ | controlFocused = True }, ports )
+                    ( Nothing, State { state_ | controlFocused = True }, Cmd.none )
 
                 Nothing ->
                     ( Nothing, State { state_ | controlFocused = True }, Cmd.none )
@@ -318,6 +309,8 @@ update msg (State state_) =
                 }
             , cmdWithClosedMenu
             )
+                |> Debug.log
+                    "SelectedItem"
 
         DeselectedMultiItem deselectedItem ->
             ( Just (Deselect deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
@@ -358,7 +351,7 @@ update msg (State state_) =
                 ( updatedState, updatedCmds ) =
                     case state_.initialMousedown of
                         ContainerMousedown ->
-                            ( { state_ | inputValue = Nothing }, ports )
+                            ( { state_ | inputValue = Nothing }, Cmd.none )
 
                         MultiItemMousedown _ ->
                             ( state_, Cmd.none )
@@ -369,28 +362,27 @@ update msg (State state_) =
                                 , controlFocused = False
                                 , inputValue = Nothing
                               }
-                            , Cmd.batch [ cmdWithClosedMenu, ports ]
+                            , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
                             )
 
-                ports =
-                    case maybeSelectId of
-                        Just id_ ->
-                            if state_.usePorts then
-                                Ports.kaizenDisconnectSelectInputDynamicWidth <| buildEncodedValueForPorts id_
-
-                            else
-                                Cmd.none
-
-                        Nothing ->
-                            Cmd.none
+                -- ports =
+                --     case maybeSelectId of
+                --         Just id_ ->
+                --             if state_.usePorts then
+                --                 Ports.kaizenDisconnectSelectInputDynamicWidth <| buildEncodedValueForPorts id_
+                --             else
+                --                 Cmd.none
+                --         Nothing ->
+                --             Cmd.none
             in
             ( Nothing
             , State updatedState
             , updatedCmds
             )
+                |> Debug.log "ONINPUTBLURRED"
 
         MenuItemClickFocus i ->
-            ( Nothing, State { state_ | initialMousedown = MenuItemMousedown i }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = MenuItemMousedown i }, Cmd.none ) |> Debug.log "MENUITEMCLICKFOCUS"
 
         MultiItemFocus index ->
             ( Nothing, State { state_ | initialMousedown = MultiItemMousedown index }, Cmd.none )
@@ -399,7 +391,7 @@ update msg (State state_) =
             ( Nothing, State { state_ | initialMousedown = InputMousedown }, Cmd.none )
 
         ClearFocusedItem ->
-            ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none ) |> Debug.log "CLEARFOCUSEDITEM"
 
         SearchableSelectContainerClicked (SelectId id) ->
             let
@@ -646,13 +638,6 @@ view (Config config) selectId =
                     else
                         []
 
-                resolveLoadingSpinner =
-                    if config.isLoading && config.searchable then
-                        viewLoading
-
-                    else
-                        text ""
-
                 resolvePlaceholder =
                     case config.variant of
                         Multi _ [] ->
@@ -691,6 +676,31 @@ view (Config config) selectId =
 
                     else
                         text ""
+              in
+              div
+                [ StyledAttribs.css
+                    ([ Css.displayFlex
+                     , Css.flexWrap Css.wrap
+                     , Css.position Css.relative
+                     , Css.alignItems Css.center
+                     , Css.boxSizing Css.borderBox
+                     , Css.flex (Css.int 1)
+                     , Css.padding2 (Css.px 2) (Css.px 8)
+                     , Css.overflow Css.hidden
+                     ]
+                        ++ withDisabledStyles
+                    )
+                ]
+                [ buildPlaceholder
+                , buildInput
+                ]
+            , let
+                resolveLoadingSpinner =
+                    if config.isLoading && config.searchable then
+                        viewLoading
+
+                    else
+                        text ""
 
                 clearButtonVisible =
                     if config.clearable && not config.disabled then
@@ -717,52 +727,35 @@ view (Config config) selectId =
                     else
                         [ Css.height (Css.px 20), Css.cursor Css.pointer ]
               in
-              div
-                [ StyledAttribs.css
-                    ([ Css.displayFlex
-                     , Css.flexWrap Css.wrap
-                     , Css.position Css.relative
-                     , Css.alignItems Css.center
-                     , Css.boxSizing Css.borderBox
-                     , Css.flex (Css.int 1)
-                     , Css.padding2 (Css.px 2) (Css.px 8)
-                     , Css.overflow Css.hidden
-                     ]
-                        ++ withDisabledStyles
-                    )
-                ]
-                [ buildPlaceholder
-                , buildInput
-                , div [ StyledAttribs.css [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ] ]
-                    [ div [ StyledAttribs.css [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ] ]
-                        [ resolveLoadingSpinner
-                        , if clearButtonVisible then
-                            viewClearButton
+              div [ StyledAttribs.css [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ] ]
+                [ div [ StyledAttribs.css [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ] ]
+                    [ resolveLoadingSpinner
+                    , if clearButtonVisible then
+                        viewClearButton
 
-                          else
-                            text ""
-                        , span
-                            [ StyledAttribs.css resolveIconButtonStyles ]
-                            [-- TODO Create chevron
-                             -- Icon.view Icon.presentation
-                             --   (svgAsset "@kaizen/component-library/icons/chevron-down.icon.svg")
-                             --   |> Html.map never
-                            ]
+                      else
+                        text ""
+                    , span
+                        [ StyledAttribs.css resolveIconButtonStyles ]
+                        [-- TODO Create chevron
+                         -- Icon.view Icon.presentation
+                         --   (svgAsset "@kaizen/component-library/icons/chevron-down.icon.svg")
+                         --   |> Html.map never
                         ]
                     ]
                 ]
-            , viewIf state_.menuOpen
-                (lazy viewMenu
-                    (ViewMenuData
-                        config.variant
-                        selectId
-                        viewableMenuItems
-                        state_.initialMousedown
-                        state_.activeTargetIndex
-                        state_.menuNavigation
-                    )
-                )
             ]
+        , viewIf state_.menuOpen
+            (lazy viewMenu
+                (ViewMenuData
+                    config.variant
+                    selectId
+                    viewableMenuItems
+                    state_.initialMousedown
+                    state_.activeTargetIndex
+                    state_.menuNavigation
+                )
+            )
         ]
 
 
@@ -778,6 +771,7 @@ viewMenu viewMenuData =
     in
     viewIf (hasMenuItems viewMenuData.viewableMenuItems)
         (div
+            -- menu
             ([ StyledAttribs.css
                 [ Css.top (Css.pct 100)
                 , Css.backgroundColor (Css.hex "#FFFFFF")
@@ -786,17 +780,31 @@ viewMenu viewMenuData =
                 , Css.width (Css.pct 100)
                 , Css.boxSizing Css.borderBox
                 , Css.border3 (Css.px 6) Css.solid Css.transparent
+                , Css.borderRadius (Css.px 4)
+
+                -- , Css.border3 (Css.px 6) Css.solid Css.transparent
                 , Css.borderRadius (Css.px 7)
+                , Css.boxShadow4 (Css.px 0) (Css.px 0) (Css.px 12) (Css.rgba 0 0 0 0.19)
                 , Css.marginTop (Css.px menuMarginTop)
                 , Css.zIndex (Css.int 1)
                 ]
              ]
                 ++ resolveMouseover
             )
-            [ Keyed.node "div"
-                [-- styles.class .menuList
-                 -- , id (menuListId viewMenuData.selectId)
-                 -- , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+            [ -- menuList
+              Keyed.node "div"
+                [ StyledAttribs.css
+                    [ Css.maxHeight (Css.px 215)
+                    , Css.overflowY Css.auto
+                    , Css.paddingBottom (Css.px 6)
+                    , Css.paddingTop (Css.px 4)
+                    , Css.boxSizing Css.borderBox
+                    , Css.position Css.relative
+                    ]
+
+                -- styles.class .menuList
+                -- , id (menuListId viewMenuData.selectId)
+                -- , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
                 ]
                 (List.indexedMap
                     (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
@@ -874,7 +882,6 @@ viewMenuItem viewMenuItemData =
                     , Css.width (Css.pct 100)
                     , Css.property "user-select" "none"
                     , Css.boxSizing Css.borderBox
-                    , Css.borderRadius (Css.px 4)
 
                     -- kaizen uses a calc here
                     , Css.padding2 (Css.px 8) (Css.px 8)
@@ -926,7 +933,7 @@ viewPlaceholder config =
         [ -- baseplaceholder
           -- todo: add typography styles
           StyledAttribs.css
-            basePlaceholder
+            placeholderStyles
         ]
         [ text config.placeholder ]
 
@@ -1330,8 +1337,15 @@ basePlaceholder =
     , Css.position Css.absolute
     , Css.boxSizing Css.borderBox
     , Css.transform (Css.translateY (Css.pct -50))
-    , Css.opacity (Css.num 0.5)
+
+    -- TODO handle when disabled
+    -- , Css.opacity (Css.num 0.5)
     ]
+
+
+placeholderStyles : List Css.Style
+placeholderStyles =
+    Css.opacity (Css.num 0.5) :: basePlaceholder
 
 
 
@@ -1345,6 +1359,6 @@ menuMarginTop =
 
 bold : List Css.Style
 bold =
-    [ Css.color (Css.hex "##35374A")
+    [ Css.color (Css.hex "#35374A")
     , Css.fontWeight (Css.int 400)
     ]
