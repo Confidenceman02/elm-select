@@ -1,12 +1,11 @@
 {
     "type": "package",
     "name": "Confidenceman02/elm-select",
-    "summary": "Accessible select using combobox method",
+    "summary": "A Handsome configurable select inspired by Culture Amp's Kaizen select.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
-        "Select",
-        "SelectInput"
+        "Select"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
