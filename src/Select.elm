@@ -125,7 +125,6 @@ type alias ViewSelectInputData item =
     , maybeActiveTarget : Maybe (MenuItem item)
     , totalViewableMenuItems : Int
     , menuOpen : Bool
-    , usePorts : Bool
     }
 
 
@@ -162,7 +161,6 @@ type alias SelectState =
     , menuViewportFocusNodes : Maybe ( MenuListElement, MenuItemElement )
     , menuListScrollTop : Float
     , menuNavigation : MenuNavigation
-    , usePorts : Bool
     }
 
 
@@ -194,7 +192,6 @@ initState =
         , menuViewportFocusNodes = Nothing
         , menuListScrollTop = 0
         , menuNavigation = Mouse
-        , usePorts = False
         }
 
 
@@ -664,7 +661,7 @@ view (Config config) selectId =
                     if not config.disabled then
                         if config.searchable then
                             lazy viewSelectInput
-                                (ViewSelectInputData (getSelectId selectId) state_.inputValue enterSelectTargetItem totalMenuItems state_.menuOpen state_.usePorts)
+                                (ViewSelectInputData (getSelectId selectId) state_.inputValue enterSelectTargetItem totalMenuItems state_.menuOpen)
 
                         else
                             lazy viewDummyInput
@@ -1015,12 +1012,12 @@ viewSelectInput viewSelectInputData =
                 ]
 
         resolveInputWidth selectInputConfig =
-            if viewSelectInputData.usePorts then
-                -- fixed because javascript controls its width via ports
-                SelectInput.inputSizing SelectInput.Fixed selectInputConfig
-
-            else
-                SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
+            -- TODO resolve how to use JS to handle input sizing
+            -- if viewSelectInputData.usePorts then
+            --     -- fixed because javascript controls its width via ports
+            --     SelectInput.inputSizing SelectInput.Fixed selectInputConfig
+            -- else
+            SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
     in
     SelectInput.view
         (SelectInput.default
@@ -1359,9 +1356,6 @@ basePlaceholder =
     , Css.position Css.absolute
     , Css.boxSizing Css.borderBox
     , Css.transform (Css.translateY (Css.pct -50))
-
-    -- TODO handle when disabled
-    -- , Css.opacity (Css.num 0.5)
     ]
 
 
