@@ -14,17 +14,33 @@ First lets think about how we would dynamically resize an input tag as someone t
 2. We would query the element for its size or decode its dimension information from an onchange event.
 3. We would update the size of the input.
 
-The issue lies in step two. Both Querying the DOM and the onchange event are slow ways to achieve this and both will produce a noticable lag as someone types in the select search input.
+Both Querying the DOM and the onchange event are slow ways to dynamically size the input whilst someone types.
+This lag is even more obvious if the person typing is a top notch typist!
 
-The react-select component gets around this by using references. 
-Kaizen select dispatches a port and leverages a mutation observer to handle the resizing. Both these methods are blazingly fast compared to the DOM query or event handler in our thought experiment.
+The react-select component gets around this by using references (fast). 
+Kaizen select dispatches a port and leverages a mutation observer to handle the resizing (fast). 
 
-If you dont want use a a JS optimization thats totally ok! Elm-select handles dynamic width by using the [size atribute](https://www.w3schools.com/tags/att_size.asp) when you have not specified you want to use the js optimization There are some drawbacks by using the size attribute but for most purposes will work just fine.
+The solution elm-select takes is more like the Kaizen method under the hood minus the ports. 
+
+If you don't want use a JS optimization thats totally ok! Elm-select handles dynamic width via the [size atribute](https://www.w3schools.com/tags/att_size.asp) by default. There are some drawbacks to using the size attribute as it's really not intended to be used that way.
 
 __Opt in to JS optimization__
 ```elm
-Something
+
+{selectState = initState |> jsOptimise True}
 ```
+
+```javascript
+
+-- index.js 
+import { Elm } from "./src/Main";
+import dynamicSelectInput from "elm-select"
+
+dynamicSelectInput()
+
+Elm.Main.init({node, flags})
+```
+This will handle any number of selects on the same page.
 
 ## Usage
 __Set an initial state__ in your model.
