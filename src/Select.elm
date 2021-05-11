@@ -147,8 +147,8 @@ type alias Configuration item =
     , menuItems : List (MenuItem item)
     , searchable : Bool
     , placeholder : String
-    , clearable : Bool
     , disabled : Bool
+    , clearable : Bool
     }
 
 
@@ -725,15 +725,34 @@ view (Config config) selectId =
                     else
                         [ Css.height (Css.px 20), Css.cursor Css.pointer ]
               in
-              div [ StyledAttribs.css [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ] ]
-                [ div [ StyledAttribs.css [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ] ]
+              -- indicators
+              div
+                [ StyledAttribs.css
+                    [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
+                ]
+                [ -- indicatorSeprator
+                  span
+                    [ StyledAttribs.css
+                        [ Css.alignSelf Css.stretch
+                        , Css.backgroundColor (Css.rgb 204 204 204)
+                        , Css.marginBottom (Css.px 8)
+                        , Css.marginTop (Css.px 8)
+                        , Css.width (Css.px 1)
+                        , Css.boxSizing Css.borderBox
+                        ]
+                    ]
+                    []
+                , -- indicatorContainer
+                  div
+                    [ StyledAttribs.css [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ] ]
                     [ resolveLoadingSpinner
                     , if clearButtonVisible then
                         viewClearButton
 
                       else
                         text ""
-                    , span
+                    , -- selectDropdown
+                      span
                         [ StyledAttribs.css resolveIconButtonStyles ]
                         [ svg [ height "20", viewBox "0 0 20 20" ] [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
                         ]
@@ -934,7 +953,16 @@ viewMenuItem viewMenuItemData =
 
 viewClearButton : Html msg
 viewClearButton =
-    text ""
+    -- clearButtonWrapper
+    span
+        [ StyledAttribs.css
+            [ Css.color (Css.hex "#4B4D68")
+            , Css.height (Css.px 20)
+            , Css.position Css.relative
+            , Css.top (Css.px -14)
+            ]
+        ]
+        []
 
 
 
@@ -1356,6 +1384,9 @@ basePlaceholder =
     , Css.position Css.absolute
     , Css.boxSizing Css.borderBox
     , Css.transform (Css.translateY (Css.pct -50))
+
+    -- TODO handle when disabled
+    -- , Css.opacity (Css.num 0.5)
     ]
 
 
@@ -1366,6 +1397,17 @@ placeholderStyles =
 
 
 -- STYLES
+
+
+iconStyles : List Css.Style
+iconStyles =
+    [ Css.displayFlex
+    , Css.backgroundColor Css.transparent
+    , Css.padding (Css.px 0)
+    , Css.borderColor (Css.rgba 0 0 0 0)
+    , Css.border (Css.px 0)
+    , Css.color Css.inherit
+    ]
 
 
 menuMarginTop : Float
