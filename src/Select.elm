@@ -1,4 +1,4 @@
-module Select exposing (Action(..), MenuItem, Msg, State, initState, menuItems, placeholder, selectIdentifier, single, state, update, view)
+module Select exposing (Action(..), MenuItem, Msg, State, clearable, initState, menuItems, placeholder, selectIdentifier, single, state, update, view)
 
 import Browser.Dom as Dom
 import Css
@@ -225,6 +225,11 @@ state state_ (Config config) =
 menuItems : List (MenuItem item) -> Config item -> Config item
 menuItems items (Config config) =
     Config { config | menuItems = items }
+
+
+clearable : Bool -> Config item -> Config item
+clearable clear (Config config) =
+    Config { config | clearable = clear }
 
 
 
@@ -703,35 +708,24 @@ view (Config config) selectId =
                 clearButtonVisible =
                     if config.clearable && not config.disabled then
                         case config.variant of
-                            Multi _ _ ->
-                                -- clearable is only applicable to Single Select
+                            Single (Just i) ->
+                                True
+
+                            _ ->
                                 False
-
-                            Single maybeSelectedItem ->
-                                case maybeSelectedItem of
-                                    Just _ ->
-                                        True
-
-                                    Nothing ->
-                                        False
 
                     else
                         False
-
-                resolveIconButtonStyles =
-                    if config.disabled then
-                        [ Css.height (Css.px 20) ]
-
-                    else
-                        [ Css.height (Css.px 20), Css.cursor Css.pointer ]
               in
               -- indicators
               div
                 [ StyledAttribs.css
                     [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
                 ]
-                [ -- indicatorSeprator
-                  span
+                [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config ]
+
+                -- indicatorSeprator
+                , span
                     [ StyledAttribs.css
                         [ Css.alignSelf Css.stretch
                         , Css.backgroundColor (Css.rgb 204 204 204)
@@ -744,18 +738,14 @@ view (Config config) selectId =
                     []
                 , -- indicatorContainer
                   div
-                    [ StyledAttribs.css [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ] ]
+                    [ StyledAttribs.css indicatorContainerStyles ]
                     [ resolveLoadingSpinner
                     , if clearButtonVisible then
                         viewClearButton
 
                       else
                         text ""
-                    , -- selectDropdown
-                      span
-                        [ StyledAttribs.css resolveIconButtonStyles ]
-                        [ svg [ height "20", viewBox "0 0 20 20" ] [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
-                        ]
+                    , dropdownIndicator config
                     ]
                 ]
             ]
@@ -1396,7 +1386,57 @@ placeholderStyles =
 
 
 
+-- ICONS
+
+
+clearIndicator : Configuration item -> Html msg
+clearIndicator config =
+    let
+        resolveIconButtonStyles =
+            if config.disabled then
+                [ Css.height (Css.px 20) ]
+
+            else
+                [ Css.height (Css.px 20), Css.cursor Css.pointer ]
+    in
+    span [ StyledAttribs.css resolveIconButtonStyles ]
+        [ svg svgCommonStyles
+            [ path
+                [ d "M10,2 C5.576,2 2,5.576 2,10 C2,14.424 5.576,18 10,18 C14.424,18 18,14.424 18,10 C18,5.576 14.424,2 10,2 L10,2 Z M14,12.872 L12.872,14 L10,11.128 L7.128,14 L6,12.872 L8.872,10 L6,7.128 L7.128,6 L10,8.872 L12.872,6 L14,7.128 L11.128,10 L14,12.872 L14,12.872 Z"
+                ]
+                []
+            ]
+        ]
+
+
+dropdownIndicator : Configuration item -> Html msg
+dropdownIndicator config =
+    let
+        resolveIconButtonStyles =
+            if config.disabled then
+                [ Css.height (Css.px 20) ]
+
+            else
+                [ Css.height (Css.px 20), Css.cursor Css.pointer ]
+    in
+    span
+        [ StyledAttribs.css resolveIconButtonStyles ]
+        [ svg svgCommonStyles [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
+        ]
+
+
+
 -- STYLES
+
+
+indicatorContainerStyles : List Css.Style
+indicatorContainerStyles =
+    [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ]
+
+
+svgCommonStyles : List (Svg.Styled.Attribute msg)
+svgCommonStyles =
+    [ height "20", viewBox "0 0 20 20" ]
 
 
 iconStyles : List Css.Style
