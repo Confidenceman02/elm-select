@@ -3,7 +3,7 @@ module Select exposing (Action(..), MenuItem, Msg, State, clearable, initState, 
 import Browser.Dom as Dom
 import Css
 import Events
-import Html.Styled exposing (Html, div, input, span, text)
+import Html.Styled exposing (Html, button, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (id, readonly, style, tabindex, value)
 import Html.Styled.Attributes.Aria exposing (role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
@@ -62,6 +62,10 @@ type Action item
 
 type State
     = State SelectState
+
+
+
+{- Determines what was mousedowned first within the container -}
 
 
 type InitialMousedown
@@ -1352,7 +1356,8 @@ clearIndicator config =
             else
                 [ Css.height (Css.px 20), Css.cursor Css.pointer ]
     in
-    span [ StyledAttribs.css resolveIconButtonStyles ]
+    button
+        [ StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles) ]
         [ svg svgCommonStyles
             [ path
                 [ d "M10,2 C5.576,2 2,5.576 2,10 C2,14.424 5.576,18 10,18 C14.424,18 18,14.424 18,10 C18,5.576 14.424,2 10,2 L10,2 Z M14,12.872 L12.872,14 L10,11.128 L7.128,14 L6,12.872 L8.872,10 L6,7.128 L7.128,6 L10,8.872 L12.872,6 L14,7.128 L11.128,10 L14,12.872 L14,12.872 Z"
@@ -1392,8 +1397,8 @@ svgCommonStyles =
     [ height "20", viewBox "0 0 20 20" ]
 
 
-iconStyles : List Css.Style
-iconStyles =
+iconButtonStyles : List Css.Style
+iconButtonStyles =
     [ Css.displayFlex
     , Css.backgroundColor Css.transparent
     , Css.padding (Css.px 0)
