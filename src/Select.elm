@@ -740,11 +740,6 @@ view (Config config) selectId =
                   div
                     [ StyledAttribs.css indicatorContainerStyles ]
                     [ resolveLoadingSpinner
-                    , if clearButtonVisible then
-                        viewClearButton
-
-                      else
-                        text ""
                     , dropdownIndicator config
                     ]
                 ]
@@ -816,23 +811,6 @@ viewMenu viewMenuData =
                 )
             ]
         )
-
-
-viewclearbutton : Html (Msg item)
-viewclearbutton =
-    -- TODO create clear button
-    text ""
-
-
-
--- span [ styles.class .clearbuttonwrapper ]
---     [ button.view
---         (button.iconbutton
---             (svgasset "@kaizen/component-library/icons/clear.icon.svg")
---             |> button.onclick singleselectclearbuttonpressed
---         )
---         "clear"
---     ]
 
 
 viewLoading : Html msg
@@ -939,31 +917,6 @@ viewMenuItem viewMenuItemData =
         )
         viewMenuItemData
     )
-
-
-viewClearButton : Html msg
-viewClearButton =
-    -- clearButtonWrapper
-    span
-        [ StyledAttribs.css
-            [ Css.color (Css.hex "#4B4D68")
-            , Css.height (Css.px 20)
-            , Css.position Css.relative
-            , Css.top (Css.px -14)
-            ]
-        ]
-        []
-
-
-
--- span [ styles.class .clearButtonWrapper ]
---     [ Button.view
---         (Button.iconButton
---             (svgAsset "@kaizen/component-library/icons/clear.icon.svg")
---             |> Button.onClick SingleSelectClearButtonPressed
---         )
---         "clear"
---     ]
 
 
 viewPlaceholder : Configuration item -> Html (Msg item)
