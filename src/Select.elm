@@ -6,7 +6,7 @@ import Events
 import Html.Styled exposing (Html, button, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (id, readonly, style, tabindex, value)
 import Html.Styled.Attributes.Aria exposing (role)
-import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
+import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy)
@@ -51,7 +51,6 @@ type Msg item
     | SetMouseMenuNavigation
     | DoNothing
     | SingleSelectClearButtonPressed
-    | ClearButtonFocused
 
 
 type Action item
@@ -546,9 +545,6 @@ update msg (State state_) =
 
         SingleSelectClearButtonPressed ->
             ( Just DeselectSingleSelectItem, State state_, Cmd.none )
-
-        ClearButtonFocused ->
-            ( Nothing, State state_, Cmd.none )
 
 
 view : Config item -> SelectId -> Html (Msg item)
@@ -1361,7 +1357,11 @@ clearIndicator config =
                 [ Css.height (Css.px 20), Css.cursor Css.pointer ]
     in
     button
-        [ onFocus ClearButtonFocused, StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles) ]
+        [ custom "mousedown" <|
+            Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
+                Decode.succeed SingleSelectClearButtonPressed
+        , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
+        ]
         [ svg svgCommonStyles
             [ path
                 [ d "M10,2 C5.576,2 2,5.576 2,10 C2,14.424 5.576,18 10,18 C14.424,18 18,14.424 18,10 C18,5.576 14.424,2 10,2 L10,2 Z M14,12.872 L12.872,14 L10,11.128 L7.128,14 L6,12.872 L8.872,10 L6,7.128 L7.128,6 L10,8.872 L12.872,6 L14,7.128 L11.128,10 L14,12.872 L14,12.872 Z"
