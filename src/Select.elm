@@ -1,4 +1,13 @@
-module Select exposing (Action(..), MenuItem, Msg, State, clearable, initState, menuItems, placeholder, selectIdentifier, single, state, update, view)
+module Select exposing (State, MenuItem, Action(..), clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view)
+
+{-| Select items from a drop-down list.
+
+
+# Set up
+
+@docs State, MenuItem, Action, clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view
+
+-}
 
 import Browser.Dom as Dom
 import Css
@@ -26,6 +35,7 @@ type SelectId
     = SelectId String
 
 
+{-| -}
 type Msg item
     = InputChanged SelectId String
     | InputReceivedFocused (Maybe SelectId)
@@ -53,6 +63,8 @@ type Msg item
     | SingleSelectClearButtonPressed
 
 
+{-| The select actions that your program can react to.
+-}
 type Action item
     = InputChange String
     | Select item
@@ -60,6 +72,7 @@ type Action item
     | DeselectSingleSelectItem
 
 
+{-| -}
 type State
     = State SelectState
 
@@ -173,6 +186,32 @@ type MenuNavigation
     | Mouse
 
 
+{-| The menu item that will be represented in the drop-down list.
+
+The `item` is the type representation of the menu item that will be used in an Action.
+
+The `label` is the text representation that will be shown in the drop-down list.
+
+    type Tool
+        = Screwdriver
+        | Hammer
+        | Drill
+
+    toolItems =
+        [ { item = Screwdriver, label = "Screwdriver" }
+        , { item = Hammer, label = "Hammer" }
+        , { item = Drill, label = " Drill" }
+        ]
+
+    view model =
+        Select.view
+            (single Nothing
+                |> menuItems toolItems
+                |> state model.selectState
+            )
+            (selectIdentifier "SingleSelectExample")
+
+-}
 type alias MenuItem item =
     { item : item
     , label : String
@@ -183,6 +222,7 @@ type alias MenuItem item =
 -- DEFAULTS
 
 
+{-| -}
 initState : State
 initState =
     State
@@ -216,21 +256,25 @@ defaults =
 -- MODIFIERS
 
 
+{-| -}
 placeholder : String -> Config item -> Config item
 placeholder plc (Config config) =
     Config { config | placeholder = plc }
 
 
+{-| -}
 state : State -> Config item -> Config item
 state state_ (Config config) =
     Config { config | state = state_ }
 
 
+{-| -}
 menuItems : List (MenuItem item) -> Config item -> Config item
 menuItems items (Config config) =
     Config { config | menuItems = items }
 
 
+{-| -}
 clearable : Bool -> Config item -> Config item
 clearable clear (Config config) =
     Config { config | clearable = clear }
@@ -245,6 +289,7 @@ type Variant item
     | Multi MultiSelectTagConfig (List (MenuItem item))
 
 
+{-| -}
 single : Maybe (MenuItem item) -> Config item
 single maybeSelectedItem =
     Config { defaults | variant = Single maybeSelectedItem }
@@ -259,6 +304,7 @@ type alias MultiSelectTagConfig =
     { truncationWidth : Maybe Float }
 
 
+{-| -}
 selectIdentifier : String -> SelectId
 selectIdentifier id_ =
     SelectId id_
@@ -268,6 +314,7 @@ selectIdentifier id_ =
 -- UPDATE
 
 
+{-| -}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
@@ -547,6 +594,7 @@ update msg (State state_) =
             ( Just DeselectSingleSelectItem, State state_, Cmd.none )
 
 
+{-| -}
 view : Config item -> SelectId -> Html (Msg item)
 view (Config config) selectId =
     let
