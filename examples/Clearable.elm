@@ -56,6 +56,9 @@ update msg model =
                         Just (Select.Select i) ->
                             Just i |> Debug.log "Selected"
 
+                        Just Select.DeselectSingleSelectItem ->
+                            Nothing
+
                         _ ->
                             model.selectedItem
             in
