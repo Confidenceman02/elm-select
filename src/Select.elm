@@ -161,7 +161,7 @@ type alias SelectState =
     { inputValue : Maybe String
     , menuOpen : Bool
     , initialMousedown : InitialMousedown
-    , controlFocused : Bool
+    , controlUiFocused : Bool
     , activeTargetIndex : Int
     , menuViewportFocusNodes : Maybe ( MenuListElement, MenuItemElement )
     , menuListScrollTop : Float
@@ -190,7 +190,7 @@ initState =
         { inputValue = Nothing
         , menuOpen = False
         , initialMousedown = NothingMousedown
-        , controlFocused = False
+        , controlUiFocused = False
 
         -- Always focus the first menu item by default. This facilitates auto selecting the first item on Enter
         , activeTargetIndex = 0
@@ -299,10 +299,10 @@ update msg (State state_) =
         InputReceivedFocused maybeSelectId ->
             case maybeSelectId of
                 Just _ ->
-                    ( Nothing, State { state_ | controlFocused = True }, Cmd.none )
+                    ( Nothing, State { state_ | controlUiFocused = True }, Cmd.none )
 
                 Nothing ->
-                    ( Nothing, State { state_ | controlFocused = True }, Cmd.none )
+                    ( Nothing, State { state_ | controlUiFocused = True }, Cmd.none )
 
         SelectedItem item ->
             let
@@ -365,7 +365,7 @@ update msg (State state_) =
                         _ ->
                             ( { stateWithClosedMenu
                                 | initialMousedown = NothingMousedown
-                                , controlFocused = False
+                                , controlUiFocused = False
                                 , inputValue = Nothing
                               }
                             , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
@@ -438,7 +438,7 @@ update msg (State state_) =
                             else
                                 ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus inputId) ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus inputId) ] )
 
         UnsearchableSelectContainerClicked (SelectId id) ->
             let
@@ -455,7 +455,7 @@ update msg (State state_) =
                     else
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus (dummyInputId <| SelectId id)) ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus (dummyInputId <| SelectId id)) ] )
 
         ToggleMenuAtKey _ ->
             let
@@ -472,7 +472,7 @@ update msg (State state_) =
                     else
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlFocused = True }, updatedCmd )
+            ( Nothing, State { updatedState | controlUiFocused = True }, updatedCmd )
 
         KeyboardDown selectId totalTargetCount ->
             let
@@ -596,7 +596,7 @@ view (Config config) selectId =
         [ -- container
           let
             controlFocusedStyles =
-                if state_.controlFocused then
+                if state_.controlUiFocused then
                     [ Css.borderColor (Css.hex "#0168b3") ]
 
                 else
