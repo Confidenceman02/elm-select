@@ -60,7 +60,8 @@ type Msg item
     | MenuListScrollTop Float
     | SetMouseMenuNavigation
     | DoNothing
-    | SingleSelectClearButtonPressed
+    | SingleSelectClearButtonMouseDowned
+    | SingleSelectClearButtonKeyDowned SelectId
 
 
 {-| The select actions that your program can react to.
@@ -590,8 +591,15 @@ update msg (State state_) =
         SetMouseMenuNavigation ->
             ( Nothing, State { state_ | menuNavigation = Mouse }, Cmd.none )
 
-        SingleSelectClearButtonPressed ->
+        SingleSelectClearButtonMouseDowned ->
             ( Just DeselectSingleSelectItem, State state_, Cmd.none )
+
+        SingleSelectClearButtonKeyDowned (SelectId id) ->
+            let
+                inputId =
+                    SelectInput.inputId id
+            in
+            ( Just DeselectSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus inputId) )
 
 
 {-| -}
@@ -774,7 +782,7 @@ view (Config config) selectId =
                 [ StyledAttribs.css
                     [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
                 ]
-                [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config ]
+                [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
 
                 -- indicatorSeprator
                 , span
@@ -1394,8 +1402,8 @@ placeholderStyles =
 -- ICONS
 
 
-clearIndicator : Configuration item -> Html (Msg item)
-clearIndicator config =
+clearIndicator : Configuration item -> SelectId -> Html (Msg item)
+clearIndicator config id =
     let
         resolveIconButtonStyles =
             if config.disabled then
@@ -1407,8 +1415,14 @@ clearIndicator config =
     button
         [ custom "mousedown" <|
             Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
-                Decode.succeed SingleSelectClearButtonPressed
+                Decode.succeed SingleSelectClearButtonMouseDowned
         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
+        , on "keydown"
+            (Decode.oneOf
+                [ Events.isSpace (SingleSelectClearButtonKeyDowned id)
+                , Events.isEnter (SingleSelectClearButtonKeyDowned id)
+                ]
+            )
         ]
         [ svg svgCommonStyles
             [ path
