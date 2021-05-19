@@ -86,6 +86,8 @@ __Handle the `Action`__ in your update function.
                         -- Input value has changed
                         Just InputChange value ->
                             -- handle changed input
+                        _ ->
+                          -- no action
             in
             -- (model, Cmd Msg)
 ```

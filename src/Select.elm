@@ -70,7 +70,7 @@ type Action item
     = InputChange String
     | Select item
     | Deselect item
-    | DeselectSingleSelectItem
+    | ClearSingleSelectItem
 
 
 {-| -}
@@ -592,14 +592,14 @@ update msg (State state_) =
             ( Nothing, State { state_ | menuNavigation = Mouse }, Cmd.none )
 
         SingleSelectClearButtonMouseDowned ->
-            ( Just DeselectSingleSelectItem, State state_, Cmd.none )
+            ( Just ClearSingleSelectItem, State state_, Cmd.none )
 
         SingleSelectClearButtonKeyDowned (SelectId id) ->
             let
                 inputId =
                     SelectInput.inputId id
             in
-            ( Just DeselectSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus inputId) )
+            ( Just ClearSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus inputId) )
 
 
 {-| -}
