@@ -69,7 +69,7 @@ type Msg item
 type Action item
     = InputChange String
     | Select item
-    | Deselect item
+    | DeselectMulti item
     | ClearSingleSelectItem
 
 
@@ -366,7 +366,7 @@ update msg (State state_) =
             )
 
         DeselectedMultiItem deselectedItem ->
-            ( Just (Deselect deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+            ( Just (DeselectMulti deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
         -- Its important to ensure we have a NothingInitClicked so that if the user clicks outside of the
