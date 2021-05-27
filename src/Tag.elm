@@ -1,4 +1,4 @@
-module Tag exposing (default, onDismiss, onMousedown, onMouseleave, truncateWidth, view)
+module Tag exposing (default, leftMargin, onDismiss, onMousedown, onMouseleave, truncateWidth, view)
 
 import ClearIcon
 import Css
@@ -17,6 +17,7 @@ type alias Configuration msg =
     , onMousedown : Maybe msg
     , onMouseleave : Maybe msg
     , truncationWidth : Maybe Float
+    , leftMargin : Bool
     }
 
 
@@ -30,11 +31,17 @@ defaults =
     , onMousedown = Nothing
     , onMouseleave = Nothing
     , truncationWidth = Nothing
+    , leftMargin = False
     }
 
 
 
 -- MODIFIERS
+
+
+leftMargin : Bool -> Config msg -> Config msg
+leftMargin pred (Config config) =
+    Config { config | leftMargin = pred }
 
 
 default : Config msg
@@ -64,11 +71,20 @@ truncateWidth width (Config config) =
 
 view : Config msg -> String -> Html msg
 view (Config config) value =
+    let
+        resolveLeftMargin =
+            if config.leftMargin then
+                Css.px 7
+
+            else
+                Css.px 0
+    in
     div
         -- root
         [ StyledAttribs.css
             [ Css.fontSize (Css.rem 0.875)
             , Css.fontWeight (Css.int 400)
+            , Css.marginLeft resolveLeftMargin
 
             -- , Css.letterSpacing Css.normal
             , Css.color (Css.hex "#35374A")
