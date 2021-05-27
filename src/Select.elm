@@ -1,4 +1,7 @@
-module Select exposing (State, MenuItem, Action(..), clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view)
+module Select exposing
+    ( State, MenuItem, Action(..), clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view
+    , multi, multiDefaultConfig
+    )
 
 {-| Select items from a drop-down list.
 
@@ -10,6 +13,7 @@ module Select exposing (State, MenuItem, Action(..), clearable, initState, Msg, 
 -}
 
 import Browser.Dom as Dom
+import ClearIcon
 import Css
 import Events
 import Html.Styled exposing (Html, button, div, input, span, text)
@@ -24,11 +28,16 @@ import List.Extra as ListExtra
 import SelectInput
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, height, viewBox)
+import Tag
 import Task
 
 
 type Config item
     = Config (Configuration item)
+
+
+type MultiSelectConfig
+    = MultiSelectConfig MultiSelectConfiguration
 
 
 type SelectId
@@ -170,6 +179,10 @@ type alias Configuration item =
     }
 
 
+type alias MultiSelectConfiguration =
+    { truncationWidth : Maybe Float }
+
+
 type alias SelectState =
     { inputValue : Maybe String
     , menuOpen : Bool
@@ -253,6 +266,20 @@ defaults =
     }
 
 
+multiDefaults : MultiSelectConfiguration
+multiDefaults =
+    { truncationWidth = Nothing }
+
+
+
+-- MULTI MODIFIERS
+
+
+multiDefaultConfig : MultiSelectConfig
+multiDefaultConfig =
+    MultiSelectConfig multiDefaults
+
+
 
 -- MODIFIERS
 
@@ -287,7 +314,7 @@ clearable clear (Config config) =
 
 type Variant item
     = Single (Maybe (MenuItem item))
-    | Multi MultiSelectTagConfig (List (MenuItem item))
+    | Multi MultiSelectConfig (List (MenuItem item))
 
 
 {-| -}
@@ -296,13 +323,9 @@ single maybeSelectedItem =
     Config { defaults | variant = Single maybeSelectedItem }
 
 
-multi : MultiSelectTagConfig -> List (MenuItem item) -> Config item
+multi : MultiSelectConfig -> List (MenuItem item) -> Config item
 multi multiSelectTagConfig selectedItems =
     Config { defaults | variant = Multi multiSelectTagConfig selectedItems }
-
-
-type alias MultiSelectTagConfig =
-    { truncationWidth : Maybe Float }
 
 
 {-| -}
@@ -701,6 +724,14 @@ view (Config config) selectId =
                     else
                         []
 
+                buildMulti =
+                    case config.variant of
+                        Multi (MultiSelectConfig tagConfig) multiSelectedValues ->
+                            List.indexedMap (viewMultiValue tagConfig state_.initialMousedown) multiSelectedValues
+
+                        Single _ ->
+                            [ text "" ]
+
                 resolvePlaceholder =
                     case config.variant of
                         Multi _ [] ->
@@ -754,7 +785,8 @@ view (Config config) selectId =
                         ++ withDisabledStyles
                     )
                 ]
-                [ buildPlaceholder
+                [ div [ StyledAttribs.css [ Css.marginRight (Css.rem 0.4375) ] ] buildMulti
+                , buildPlaceholder
                 , buildInput
                 ]
             , let
@@ -1122,8 +1154,54 @@ viewDummyInput viewDummyInputData =
         []
 
 
+viewMultiValue : MultiSelectConfiguration -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
+viewMultiValue { truncationWidth } mousedownedItem index menuItem =
+    let
+        isMousedowned =
+            case mousedownedItem of
+                MultiItemMousedown i ->
+                    i == index
 
--- getters
+                _ ->
+                    False
+
+        resolveMouseleave tagConfig =
+            if isMousedowned then
+                Tag.onMouseleave ClearFocusedItem tagConfig
+
+            else
+                tagConfig
+
+        resolveTruncationWidth tagConfig =
+            case truncationWidth of
+                Just width ->
+                    Tag.truncateWidth width tagConfig
+
+                Nothing ->
+                    tagConfig
+
+        resolveVariant =
+            Tag.default
+    in
+    -- Keyed.node "div" [ StyledAttribs.css [ Css.margin (Css.px 2), Css.display Css.inlineBlock ] ] <|
+    --     [ ( "multi-value-" ++ String.fromInt index
+    --       , lazy
+    --             (\mi ->
+    Tag.view
+        (resolveVariant
+            |> Tag.onDismiss (DeselectedMultiItem menuItem.item)
+            |> Tag.onMousedown (MultiItemFocus index)
+            |> resolveTruncationWidth
+            |> resolveMouseleave
+        )
+        menuItem.label
+
+
+
+-- )
+-- menuItem
+-- )
+-- ]
 
 
 dummyInputId : SelectId -> String
@@ -1424,12 +1502,7 @@ clearIndicator config id =
                 ]
             )
         ]
-        [ svg svgCommonStyles
-            [ path
-                [ d "M10,2 C5.576,2 2,5.576 2,10 C2,14.424 5.576,18 10,18 C14.424,18 18,14.424 18,10 C18,5.576 14.424,2 10,2 L10,2 Z M14,12.872 L12.872,14 L10,11.128 L7.128,14 L6,12.872 L8.872,10 L6,7.128 L7.128,6 L10,8.872 L12.872,6 L14,7.128 L11.128,10 L14,12.872 L14,12.872 Z"
-                ]
-                []
-            ]
+        [ ClearIcon.view
         ]
 
 
