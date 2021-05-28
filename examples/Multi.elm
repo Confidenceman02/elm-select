@@ -56,6 +56,9 @@ update msg model =
                         Just (Select.Select i) ->
                             model.selectedItems ++ [ i ]
 
+                        Just (Select.DeselectMulti item) ->
+                            List.filter (\i -> item /= i) model.selectedItems
+
                         _ ->
                             model.selectedItems
             in

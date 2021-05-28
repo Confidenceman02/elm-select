@@ -727,10 +727,21 @@ view (Config config) selectId =
                 buildMulti =
                     case config.variant of
                         Multi (MultiSelectConfig tagConfig) multiSelectedValues ->
-                            List.indexedMap (viewMultiValue tagConfig state_.initialMousedown) multiSelectedValues
+                            let
+                                resolveMultiValueStyles =
+                                    if 0 < List.length multiSelectedValues then
+                                        [ StyledAttribs.css [ Css.marginRight (Css.rem 0.4375) ] ]
+
+                                    else
+                                        []
+                            in
+                            div resolveMultiValueStyles <|
+                                List.indexedMap
+                                    (viewMultiValue tagConfig state_.initialMousedown)
+                                    multiSelectedValues
 
                         Single _ ->
-                            [ text "" ]
+                            text ""
 
                 resolvePlaceholder =
                     case config.variant of
@@ -785,7 +796,7 @@ view (Config config) selectId =
                         ++ withDisabledStyles
                     )
                 ]
-                [ div [ StyledAttribs.css [ Css.marginRight (Css.rem 0.4375) ] ] buildMulti
+                [ buildMulti
                 , buildPlaceholder
                 , buildInput
                 ]
