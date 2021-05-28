@@ -1260,7 +1260,7 @@ viewMultiValue { truncationWidth } mousedownedItem index menuItem =
         (resolveVariant
             |> Tag.onDismiss (DeselectedMultiItem menuItem.item)
             |> Tag.onMousedown (MultiItemFocus index)
-            |> Tag.leftMargin (0 < index)
+            |> Tag.rightMargin True
             |> resolveTruncationWidth
             |> resolveMouseleave
         )
