@@ -1058,14 +1058,6 @@ viewMenuItem viewMenuItemData =
                         ++ withIsClickedStyles
                         ++ withIsSelectedStyles
                     )
-
-                 -- styles.classList
-                 -- [ ( .option, True )
-                 -- , ( .isSelected, data.itemSelected )
-                 -- , ( .isFocused, data.isClickFocused )
-                 -- , ( .isTarget, data.menuItemIsTarget )
-                 -- , ( .preventPointer, data.menuNavigation == Keyboard )
-                 -- ]
                  ]
                     ++ resolveMouseLeave
                     ++ resolveMouseUp
@@ -1415,21 +1407,6 @@ buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation
         Multi _ _ ->
             viewMenuItem <|
                 ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
-
-
-
--- buildEncodedValueForPorts : SelectId -> Encode.Value
--- buildEncodedValueForPorts (SelectId id_) =
---     let
---         ( sizerId, inputId ) =
---             ( SelectInput.sizerId id_, SelectInput.inputId id_ )
---     in
---     Encode.object
---         [ ( "sizerId", Encode.string sizerId )
---         , ( "inputId", Encode.string inputId )
---         , ( "defaultInputWidth", Encode.int SelectInput.defaultWidth )
---         ]
--- FILTERS
 
 
 filterMenuItem : Maybe String -> MenuItem item -> Bool
