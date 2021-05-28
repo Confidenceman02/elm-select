@@ -62,6 +62,7 @@ type Msg item
     | ClearFocusedItem
     | HoverFocused Int
     | EnterSelect item
+    | EnterSelectMulti item SelectId
     | KeyboardDown SelectId Int
     | KeyboardUp SelectId Int
     | OpenMenu
@@ -154,6 +155,7 @@ type alias ViewSelectInputData item =
     , maybeActiveTarget : Maybe (MenuItem item)
     , totalViewableMenuItems : Int
     , menuOpen : Bool
+    , variant : Variant item
     }
 
 
@@ -356,6 +358,23 @@ update msg (State state_) =
                     , inputValue = Nothing
                 }
             , cmdWithClosedMenu
+            )
+
+        EnterSelectMulti item (SelectId id) ->
+            let
+                inputId =
+                    SelectInput.inputId id
+
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+            in
+            ( Just (Select item)
+            , State
+                { stateWithClosedMenu
+                    | initialMousedown = NothingMousedown
+                    , inputValue = Nothing
+                }
+            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus inputId) ]
             )
 
         HoverFocused i ->
@@ -789,7 +808,14 @@ view (Config config) selectId =
                     if not config.disabled then
                         if config.searchable then
                             lazy viewSelectInput
-                                (ViewSelectInputData (getSelectId selectId) state_.inputValue enterSelectTargetItem totalMenuItems state_.menuOpen)
+                                (ViewSelectInputData
+                                    (getSelectId selectId)
+                                    state_.inputValue
+                                    enterSelectTargetItem
+                                    totalMenuItems
+                                    state_.menuOpen
+                                    config.variant
+                                )
 
                         else
                             lazy viewDummyInput
@@ -1084,12 +1110,20 @@ viewSelectedPlaceholder item =
 viewSelectInput : ViewSelectInputData item -> Html (Msg item)
 viewSelectInput viewSelectInputData =
     let
+        resolveEnterMsg mi =
+            case viewSelectInputData.variant of
+                Multi _ _ ->
+                    EnterSelectMulti mi.item (SelectId viewSelectInputData.id)
+
+                _ ->
+                    EnterSelect mi.item
+
         enterKeydownDecoder =
             -- there will always be a target item if the menu is
             -- open and not empty
             case viewSelectInputData.maybeActiveTarget of
                 Just mi ->
-                    [ Events.isEnter (EnterSelect mi.item) ]
+                    [ Events.isEnter (resolveEnterMsg mi) ]
 
                 Nothing ->
                     []
