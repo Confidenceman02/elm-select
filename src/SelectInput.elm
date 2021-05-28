@@ -212,11 +212,15 @@ view (Config config) id_ =
             , style "padding-top" "2px"
             , style "box-sizing" "border-box"
             , style "margin" "2px"
+            , style "display" "inline"
             ]
     in
     div autoSizeInputContainerStyles
         [ input
-            ([ id (inputId id_), value inputValue, type_ "text", attribute "autocomplete" "new-password" ] ++ events ++ inputStyles)
+            ([ id (inputId id_), value inputValue, type_ "text", attribute "autocomplete" "new-password" ]
+                ++ events
+                ++ inputStyles
+            )
             []
 
         -- query the div width to set the input width

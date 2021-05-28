@@ -49,6 +49,7 @@ type Msg item
     = InputChanged SelectId String
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
+    | SelectedItemMulti item SelectId
     | DeselectedMultiItem item
     | SearchableSelectContainerClicked SelectId
     | UnsearchableSelectContainerClicked SelectId
@@ -133,6 +134,7 @@ type alias ViewMenuItemData item =
     , menuItem : MenuItem item
     , menuNavigation : MenuNavigation
     , initialMousedown : InitialMousedown
+    , variant : Variant item
     }
 
 
@@ -386,6 +388,23 @@ update msg (State state_) =
                     , inputValue = Nothing
                 }
             , cmdWithClosedMenu
+            )
+
+        SelectedItemMulti item (SelectId id) ->
+            let
+                inputId =
+                    SelectInput.inputId id
+
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+            in
+            ( Just (Select item)
+            , State
+                { stateWithClosedMenu
+                    | initialMousedown = NothingMousedown
+                    , inputValue = Nothing
+                }
+            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus inputId) ]
             )
 
         DeselectedMultiItem deselectedItem ->
@@ -736,12 +755,14 @@ view (Config config) selectId =
                                         []
                             in
                             div resolveMultiValueStyles <|
-                                List.indexedMap
+                                (List.indexedMap
                                     (viewMultiValue tagConfig state_.initialMousedown)
                                     multiSelectedValues
+                                    ++ [ buildInput ]
+                                )
 
                         Single _ ->
-                            text ""
+                            buildInput
 
                 resolvePlaceholder =
                     case config.variant of
@@ -798,7 +819,6 @@ view (Config config) selectId =
                 ]
                 [ buildMulti
                 , buildPlaceholder
-                , buildInput
                 ]
             , let
                 resolveLoadingSpinner =
@@ -943,10 +963,18 @@ viewMenuItem viewMenuItemData =
                     else
                         []
 
+                resolveMouseUpMsg =
+                    case viewMenuItemData.variant of
+                        Multi _ _ ->
+                            SelectedItemMulti data.menuItem.item viewMenuItemData.selectId
+
+                        _ ->
+                            SelectedItem data.menuItem.item
+
                 resolveMouseUp =
                     case data.initialMousedown of
                         MenuItemMousedown _ ->
-                            [ on "mouseup" <| Decode.succeed (SelectedItem data.menuItem.item) ]
+                            [ on "mouseup" <| Decode.succeed resolveMouseUpMsg ]
 
                         _ ->
                             []
@@ -1194,10 +1222,6 @@ viewMultiValue { truncationWidth } mousedownedItem index menuItem =
         resolveVariant =
             Tag.default
     in
-    -- Keyed.node "div" [ StyledAttribs.css [ Css.margin (Css.px 2), Css.display Css.inlineBlock ] ] <|
-    --     [ ( "multi-value-" ++ String.fromInt index
-    --       , lazy
-    --             (\mi ->
     Tag.view
         (resolveVariant
             |> Tag.onDismiss (DeselectedMultiItem menuItem.item)
@@ -1207,13 +1231,6 @@ viewMultiValue { truncationWidth } mousedownedItem index menuItem =
             |> resolveMouseleave
         )
         menuItem.label
-
-
-
--- )
--- menuItem
--- )
--- ]
 
 
 dummyInputId : SelectId -> String
@@ -1359,11 +1376,11 @@ buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation
     case variant of
         Single maybeSelectedItem ->
             viewMenuItem <|
-                ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown
+                ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
         Multi _ _ ->
             viewMenuItem <|
-                ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown
+                ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
 
 
