@@ -22,6 +22,8 @@ When you opt in to JS optimization, elm-select uses a mutation observer which al
 
 If you don't want use a JS optimization thats totally ok! Elm-select handles dynamic width via the [size atribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/size) by default. The size attribute is not an ideal solution despite the fact it mostly just works. Consider adding the very minimal JS in to your project to get the best performance.
 
+NOTE: It doesn't matter how many `elm-select`'s you render, on the page. The javascript included will detect and handle all of them.
+
 __Opt in to JS optimization__
 ```elm
 
