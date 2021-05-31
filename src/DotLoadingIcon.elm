@@ -1,8 +1,8 @@
-module DotLoadingIcon exposing (..)
+module DotLoadingIcon exposing (view)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (path, svg)
-import Svg.Styled.Attributes exposing (d, height, viewBox)
+import Svg.Styled.Attributes exposing (d, height, viewBox, width)
 
 
 view : Html msg
@@ -22,4 +22,4 @@ view =
 
 svgCommonStyles : List (Svg.Styled.Attribute msg)
 svgCommonStyles =
-    [ height "32", viewBox "0 0 32 8" ]
+    [ width "29", height "5", viewBox "0 0 32 8" ]

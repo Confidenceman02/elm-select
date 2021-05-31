@@ -1,6 +1,6 @@
 module Select exposing
     ( State, MenuItem, Action(..), clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view
-    , disabled, multi, multiDefaultConfig
+    , disabled, loading, multi, multiDefaultConfig
     )
 
 {-| Select items from a drop-down list.
@@ -15,6 +15,7 @@ module Select exposing
 import Browser.Dom as Dom
 import ClearIcon
 import Css
+import DotLoadingIcon
 import Events
 import Html.Styled exposing (Html, button, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (id, readonly, style, tabindex, value)
@@ -315,6 +316,11 @@ clearable clear (Config config) =
 disabled : Bool -> Config item -> Config item
 disabled predicate (Config config) =
     Config { config | disabled = predicate }
+
+
+loading : Bool -> Config item -> Config item
+loading predicate (Config config) =
+    Config { config | isLoading = predicate }
 
 
 
@@ -883,6 +889,7 @@ view (Config config) selectId =
                     [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
                 ]
                 [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
+                , div [ StyledAttribs.css indicatorContainerStyles ] [ resolveLoadingSpinner ]
 
                 -- indicatorSeprator
                 , span
@@ -899,8 +906,7 @@ view (Config config) selectId =
                 , -- indicatorContainer
                   div
                     [ StyledAttribs.css indicatorContainerStyles ]
-                    [ resolveLoadingSpinner
-                    , dropdownIndicator config
+                    [ dropdownIndicator config
                     ]
                 ]
             ]
@@ -1532,7 +1538,7 @@ placeholderStyles =
 viewLoading : Html msg
 viewLoading =
     -- todo create loading spinner
-    text ""
+    DotLoadingIcon.view
 
 
 clearIndicator : Configuration item -> SelectId -> Html (Msg item)
