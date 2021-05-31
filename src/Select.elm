@@ -1349,6 +1349,10 @@ canBeSpaceToggled menuOpen inputValue =
     not menuOpen && isEmptyInputValue inputValue
 
 
+
+-- CALC
+
+
 calculateNextActiveTarget : Int -> Int -> Direction -> Int
 calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
     case direction of
