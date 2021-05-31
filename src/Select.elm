@@ -50,7 +50,7 @@ type Msg item
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
     | SelectedItemMulti item SelectId
-    | DeselectedMultiItem item
+    | DeselectedMultiItem item SelectId
     | SearchableSelectContainerClicked SelectId
     | UnsearchableSelectContainerClicked SelectId
     | ToggleMenuAtKey SelectId
@@ -426,8 +426,12 @@ update msg (State state_) =
             , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus inputId) ]
             )
 
-        DeselectedMultiItem deselectedItem ->
-            ( Just (DeselectMulti deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+        DeselectedMultiItem deselectedItem (SelectId id) ->
+            let
+                inputId =
+                    SelectInput.inputId id
+            in
+            ( Just (DeselectMulti deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Task.attempt OnInputFocused (Dom.focus inputId) )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
         -- Its important to ensure we have a NothingInitClicked so that if the user clicks outside of the
@@ -775,7 +779,7 @@ view (Config config) selectId =
                             in
                             div resolveMultiValueStyles <|
                                 (List.indexedMap
-                                    (viewMultiValue tagConfig state_.initialMousedown)
+                                    (viewMultiValue selectId tagConfig state_.initialMousedown)
                                     multiSelectedValues
                                     ++ [ buildInput ]
                                 )
@@ -1213,8 +1217,8 @@ viewDummyInput viewDummyInputData =
         []
 
 
-viewMultiValue : MultiSelectConfiguration -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
-viewMultiValue { truncationWidth } mousedownedItem index menuItem =
+viewMultiValue : SelectId -> MultiSelectConfiguration -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
+viewMultiValue selectId { truncationWidth } mousedownedItem index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
@@ -1244,7 +1248,7 @@ viewMultiValue { truncationWidth } mousedownedItem index menuItem =
     in
     Tag.view
         (resolveVariant
-            |> Tag.onDismiss (DeselectedMultiItem menuItem.item)
+            |> Tag.onDismiss (DeselectedMultiItem menuItem.item selectId)
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> resolveTruncationWidth
