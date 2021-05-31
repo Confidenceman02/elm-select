@@ -1,6 +1,6 @@
 module Select exposing
     ( State, MenuItem, Action(..), clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view
-    , multi, multiDefaultConfig
+    , disabled, multi, multiDefaultConfig
     )
 
 {-| Select items from a drop-down list.
@@ -310,6 +310,11 @@ menuItems items (Config config) =
 clearable : Bool -> Config item -> Config item
 clearable clear (Config config) =
     Config { config | clearable = clear }
+
+
+disabled : Bool -> Config item -> Config item
+disabled predicate (Config config) =
+    Config { config | disabled = predicate }
 
 
 
@@ -734,9 +739,11 @@ view (Config config) selectId =
                  , Css.border3 (Css.px 2) Css.solid (Css.hex "#898BA9")
                  , Css.borderRadius (Css.px 7)
                  , Css.outline Css.zero
+                 , if config.disabled then
+                    Css.opacity (Css.num 0.3)
 
-                 -- TODO add hover styles
-                 , Css.hover [ Css.backgroundColor (Css.hex "#F0F1F4"), Css.borderColor (Css.hex "#4B4D68") ]
+                   else
+                    Css.hover [ Css.backgroundColor (Css.hex "#F0F1F4"), Css.borderColor (Css.hex "#4B4D68") ]
                  ]
                     ++ controlFocusedStyles
                 )
