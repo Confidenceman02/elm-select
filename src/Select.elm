@@ -962,12 +962,6 @@ viewMenu viewMenuData =
         )
 
 
-viewLoading : Html msg
-viewLoading =
-    -- todo create loading spinner
-    text ""
-
-
 
 -- span [ styles.class .iconbutton ]
 --     [ icon.view icon.presentation
@@ -1518,6 +1512,12 @@ placeholderStyles =
 
 
 -- ICONS
+
+
+viewLoading : Html msg
+viewLoading =
+    -- todo create loading spinner
+    text ""
 
 
 clearIndicator : Configuration item -> SelectId -> Html (Msg item)
