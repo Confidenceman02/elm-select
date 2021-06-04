@@ -131,10 +131,7 @@ viewTextContent config value =
     in
     span
         -- truncate
-        [ StyledAttribs.css
-            ([ Css.marginTop (Css.px -1) ]
-                ++ resolveTruncation
-            )
+        [ StyledAttribs.css (Css.marginTop (Css.px -1) :: resolveTruncation)
         ]
         [ text value ]
 
@@ -160,7 +157,7 @@ viewClear config =
     in
     span
         -- dismissIcon
-        ([ StyledAttribs.css
+        (StyledAttribs.css
             [ Css.position Css.relative
             , Css.displayFlex
             , Css.height (Css.pct 100)
@@ -172,8 +169,7 @@ viewClear config =
             , Css.cursor Css.pointer
             , Css.hover [ Css.color (Css.hex "#4B4D68") ]
             ]
-         ]
-            ++ events
+            :: events
         )
         [ span
             [ -- background
@@ -188,5 +184,12 @@ viewClear config =
                 ]
             ]
             []
-        , div [ StyledAttribs.css [ Css.height (Css.px 16), Css.width (Css.px 16), Css.zIndex (Css.int 1) ] ] [ ClearIcon.view ]
+        , div
+            [ StyledAttribs.css
+                [ Css.height (Css.px 16)
+                , Css.width (Css.px 16)
+                , Css.zIndex (Css.int 1)
+                ]
+            ]
+            [ ClearIcon.view ]
         ]

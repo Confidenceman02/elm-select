@@ -198,7 +198,9 @@ type alias Configuration item =
 
 
 type alias MultiSelectConfiguration =
-    { tagTruncation : Maybe Float, multiTagColor : Maybe Css.Color }
+    { tagTruncation : Maybe Float
+    , multiTagColor : Maybe Css.Color
+    }
 
 
 type alias SelectState =
@@ -768,8 +770,8 @@ view (Config config) selectId =
                     []
           in
           div
-            ([ -- control
-               StyledAttribs.css
+            -- control
+            (StyledAttribs.css
                 ([ Css.alignItems Css.center
                  , Css.backgroundColor (Css.hex "#FFFFFF")
                  , Css.cursor Css.default
@@ -790,8 +792,7 @@ view (Config config) selectId =
                  ]
                     ++ controlFocusedStyles
                 )
-             ]
-                ++ (if config.disabled then
+                :: (if config.disabled then
                         []
 
                     else
@@ -911,7 +912,7 @@ view (Config config) selectId =
                 clearButtonVisible =
                     if config.clearable && not config.disabled then
                         case config.variant of
-                            Single (Just i) ->
+                            Single (Just _) ->
                                 True
 
                             _ ->
@@ -1014,9 +1015,8 @@ viewMenu viewMenuData =
         _ ->
             div
                 -- menu
-                ([ menuStyles
-                 ]
-                    ++ resolveMouseover
+                (menuStyles
+                    :: resolveMouseover
                 )
                 [ -- menuList
                   Keyed.node "div"
@@ -1102,11 +1102,6 @@ viewMenuItem viewMenuItemData =
                      -- kaizen uses a calc here
                      , Css.padding2 (Css.px 8) (Css.px 8)
                      , Css.outline Css.none
-
-                     -- TODO Handle when it's a target but not selected
-                     -- TODO Handle when it's clicked focused but not selected
-                     -- TODO Handle when it's selected
-                     -- TODO Prevent pointer when keyboard navigating
                      , Css.color (Css.hex "#000000")
                      ]
                         ++ withTargetStyles
@@ -1127,7 +1122,6 @@ viewPlaceholder : Configuration item -> Html (Msg item)
 viewPlaceholder config =
     div
         [ -- baseplaceholder
-          -- todo: add typography styles
           StyledAttribs.css
             placeholderStyles
         ]
@@ -1568,9 +1562,6 @@ basePlaceholder =
     , Css.position Css.absolute
     , Css.boxSizing Css.borderBox
     , Css.transform (Css.translateY (Css.pct -50))
-
-    -- TODO handle when disabled
-    -- , Css.opacity (Css.num 0.5)
     ]
 
 
@@ -1585,7 +1576,6 @@ placeholderStyles =
 
 viewLoading : Html msg
 viewLoading =
-    -- todo create loading spinner
     DotLoadingIcon.view
 
 
