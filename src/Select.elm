@@ -1,6 +1,8 @@
 module Select exposing
-    ( State, MenuItem, Action(..), clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view
-    , disabled, loading, multi, multiDefaultConfig
+    ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
+    , single, clearable
+    , multi, truncateMultiTag
+    , disabled, loading, multiDefaultConfig
     )
 
 {-| Select items from a drop-down list.
@@ -186,7 +188,7 @@ type alias Configuration item =
 
 
 type alias MultiSelectConfiguration =
-    { truncationWidth : Maybe Float }
+    { tagTruncation : Maybe Float }
 
 
 type alias SelectState =
@@ -274,7 +276,7 @@ defaults =
 
 multiDefaults : MultiSelectConfiguration
 multiDefaults =
-    { truncationWidth = Nothing }
+    { tagTruncation = Nothing }
 
 
 
@@ -284,6 +286,17 @@ multiDefaults =
 multiDefaultConfig : MultiSelectConfig
 multiDefaultConfig =
     MultiSelectConfig multiDefaults
+
+
+{-| Limit the width of a multi select tag.
+
+Handy for when the selected item text is excessively long.
+Text that breaches the set width will display as an ellipses.
+
+-}
+truncateMultiTag : Float -> MultiSelectConfig -> MultiSelectConfig
+truncateMultiTag w (MultiSelectConfig config) =
+    MultiSelectConfig { config | tagTruncation = Just w }
 
 
 
@@ -333,12 +346,15 @@ type Variant item
     | Multi MultiSelectConfig (List (MenuItem item))
 
 
-{-| -}
+{-| Select a single item.
+-}
 single : Maybe (MenuItem item) -> Config item
 single maybeSelectedItem =
     Config { defaults | variant = Single maybeSelectedItem }
 
 
+{-| Select multiple items.
+-}
 multi : MultiSelectConfig -> List (MenuItem item) -> Config item
 multi multiSelectTagConfig selectedItems =
     Config { defaults | variant = Multi multiSelectTagConfig selectedItems }
@@ -1239,7 +1255,7 @@ viewDummyInput viewDummyInputData =
 
 
 viewMultiValue : SelectId -> MultiSelectConfiguration -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
-viewMultiValue selectId { truncationWidth } mousedownedItem index menuItem =
+viewMultiValue selectId config mousedownedItem index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
@@ -1257,7 +1273,7 @@ viewMultiValue selectId { truncationWidth } mousedownedItem index menuItem =
                 tagConfig
 
         resolveTruncationWidth tagConfig =
-            case truncationWidth of
+            case config.tagTruncation of
                 Just width ->
                     Tag.truncateWidth width tagConfig
 
