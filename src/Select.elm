@@ -1,7 +1,7 @@
 module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
-    , multi, truncateMultiTag
+    , multi, truncateMultiTag, multiTagColor
     , disabled, loading, multiDefaultConfig
     )
 
@@ -10,7 +10,17 @@ module Select exposing
 
 # Set up
 
-@docs State, MenuItem, Action, clearable, initState, Msg, menuItems, placeholder, selectIdentifier, single, state, update, view
+@docs State, MenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
+
+
+# Single select
+
+@docs single, clearable
+
+
+# Multi select
+
+@docs multi, truncateMultiTag, multiTagColor
 
 -}
 
@@ -188,7 +198,7 @@ type alias Configuration item =
 
 
 type alias MultiSelectConfiguration =
-    { tagTruncation : Maybe Float }
+    { tagTruncation : Maybe Float, multiTagColor : Maybe Css.Color }
 
 
 type alias SelectState =
@@ -276,7 +286,7 @@ defaults =
 
 multiDefaults : MultiSelectConfiguration
 multiDefaults =
-    { tagTruncation = Nothing }
+    { tagTruncation = Nothing, multiTagColor = Nothing }
 
 
 
@@ -297,6 +307,16 @@ Text that breaches the set width will display as an ellipses.
 truncateMultiTag : Float -> MultiSelectConfig -> MultiSelectConfig
 truncateMultiTag w (MultiSelectConfig config) =
     MultiSelectConfig { config | tagTruncation = Just w }
+
+
+{-| Set the color for the multi select tag.
+
+        multi (multiDefaultConfig |> multiTagColor (Css.hex "#E1E2EA")
+
+-}
+multiTagColor : Css.Color -> MultiSelectConfig -> MultiSelectConfig
+multiTagColor c (MultiSelectConfig config) =
+    MultiSelectConfig { config | multiTagColor = Just c }
 
 
 
@@ -1282,12 +1302,21 @@ viewMultiValue selectId config mousedownedItem index menuItem =
 
         resolveVariant =
             Tag.default
+
+        withTagColor tagConfig =
+            case config.multiTagColor of
+                Just c ->
+                    Tag.backgroundColor c tagConfig
+
+                _ ->
+                    tagConfig
     in
     Tag.view
         (resolveVariant
             |> Tag.onDismiss (DeselectedMultiItem menuItem.item selectId)
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
+            |> withTagColor
             |> resolveTruncationWidth
             |> resolveMouseleave
         )

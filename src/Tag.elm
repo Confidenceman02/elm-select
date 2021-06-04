@@ -1,4 +1,4 @@
-module Tag exposing (default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
+module Tag exposing (backgroundColor, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
 
 import ClearIcon
 import Css
@@ -18,6 +18,7 @@ type alias Configuration msg =
     , onMouseleave : Maybe msg
     , truncationWidth : Maybe Float
     , rightMargin : Bool
+    , backgroundColor : Css.Color
     }
 
 
@@ -32,6 +33,7 @@ defaults =
     , onMouseleave = Nothing
     , truncationWidth = Nothing
     , rightMargin = False
+    , backgroundColor = Css.hex "#E1E2EA"
     }
 
 
@@ -69,6 +71,11 @@ truncateWidth width (Config config) =
     Config { config | truncationWidth = Just width }
 
 
+backgroundColor : Css.Color -> Config msg -> Config msg
+backgroundColor c (Config config) =
+    Config { config | backgroundColor = c }
+
+
 view : Config msg -> String -> Html msg
 view (Config config) value =
     let
@@ -85,15 +92,13 @@ view (Config config) value =
             [ Css.fontSize (Css.rem 0.875)
             , Css.fontWeight (Css.int 400)
             , Css.marginRight resolveRightMargin
-
-            -- , Css.letterSpacing Css.normal
             , Css.color (Css.hex "#35374A")
             , Css.display Css.inlineBlock
             , Css.border3 (Css.px 2) Css.solid Css.transparent
             , Css.borderRadius (Css.px 16)
             , Css.padding2 (Css.px 0) (Css.px 9.6)
             , Css.boxSizing Css.borderBox
-            , Css.backgroundColor (Css.hex "#E1E2EA")
+            , Css.backgroundColor config.backgroundColor
             , Css.hover [ Css.borderColor (Css.hex "#C4C5D4") ]
             , Css.height (Css.px 30)
             ]
@@ -170,8 +175,7 @@ viewClear config =
          ]
             ++ events
         )
-        [ -- Add svg stuff here
-          span
+        [ span
             [ -- background
               StyledAttribs.css
                 [ Css.position Css.absolute
