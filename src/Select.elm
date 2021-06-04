@@ -147,6 +147,7 @@ type alias ViewMenuData item =
     , initialMousedown : InitialMousedown
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
+    , loading : Bool
     }
 
 
@@ -919,6 +920,7 @@ view (Config config) selectId =
                     state_.initialMousedown
                     state_.activeTargetIndex
                     state_.menuNavigation
+                    config.isLoading
                 )
             )
         ]
@@ -933,11 +935,9 @@ viewMenu viewMenuData =
 
             else
                 []
-    in
-    viewIf (hasMenuItems viewMenuData.viewableMenuItems)
-        (div
-            -- menu
-            ([ StyledAttribs.css
+
+        menuStyles =
+            StyledAttribs.css
                 [ Css.top (Css.pct 100)
                 , Css.backgroundColor (Css.hex "#FFFFFF")
                 , Css.marginBottom (Css.px 8)
@@ -953,38 +953,46 @@ viewMenu viewMenuData =
                 , Css.marginTop (Css.px menuMarginTop)
                 , Css.zIndex (Css.int 1)
                 ]
-             ]
-                ++ resolveMouseover
-            )
-            [ -- menuList
-              Keyed.node "div"
-                [ StyledAttribs.css
-                    [ Css.maxHeight (Css.px 215)
-                    , Css.overflowY Css.auto
-                    , Css.paddingBottom (Css.px 6)
-                    , Css.paddingTop (Css.px 4)
-                    , Css.boxSizing Css.borderBox
-                    , Css.position Css.relative
+
+        menuListStyles =
+            [ Css.maxHeight (Css.px 215)
+            , Css.overflowY Css.auto
+            , Css.paddingBottom (Css.px 6)
+            , Css.paddingTop (Css.px 4)
+            , Css.boxSizing Css.borderBox
+            , Css.position Css.relative
+            ]
+    in
+    case viewMenuData.viewableMenuItems of
+        [] ->
+            if viewMenuData.loading then
+                div [ menuStyles ]
+                    [ div
+                        [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
+                        [ text "Loading..." ]
                     ]
 
-                -- styles.class .menuList
-                -- , id (menuListId viewMenuData.selectId)
-                -- , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
-                ]
-                (List.indexedMap
-                    (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
-                    viewMenuData.viewableMenuItems
+            else
+                text ""
+
+        _ ->
+            div
+                -- menu
+                ([ menuStyles
+                 ]
+                    ++ resolveMouseover
                 )
-            ]
-        )
-
-
-
--- span [ styles.class .iconbutton ]
---     [ icon.view icon.presentation
---         (svgasset "@kaizen/component-library/icons/spinner.icon.svg")
---         |> Html.map never
---     ]
+                [ -- menuList
+                  Keyed.node "div"
+                    [ StyledAttribs.css menuListStyles
+                    , id (menuListId viewMenuData.selectId)
+                    , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+                    ]
+                    (List.indexedMap
+                        (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
+                        viewMenuData.viewableMenuItems
+                    )
+                ]
 
 
 viewMenuItem : ViewMenuItemData item -> ( String, Html (Msg item) )
@@ -1297,11 +1305,6 @@ getSelectId (SelectId id_) =
 
 
 -- CHECKERS
-
-
-hasMenuItems : List (MenuItem item) -> Bool
-hasMenuItems items =
-    0 /= List.length items
 
 
 isSelected : MenuItem item -> Maybe (MenuItem item) -> Bool
