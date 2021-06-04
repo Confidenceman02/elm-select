@@ -1,6 +1,6 @@
 module Events exposing (isDownArrow, isEnter, isEscape, isSpace, isUpArrow, onInputAt)
 
-import Html.Styled as Styled exposing (Attribute)
+import Html.Styled exposing (Attribute)
 import Html.Styled.Events exposing (keyCode, on)
 import Json.Decode as Decode
 
