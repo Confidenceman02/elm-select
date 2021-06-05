@@ -8,7 +8,7 @@
     "strict": true,
     "noImplicitAny": true,
     "resolveJsonModule": true,
-    "lib": ["ES2020"],
+    "lib": ["dom", "ES2020"],
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "skipLibCheck": true,
