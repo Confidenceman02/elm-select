@@ -1,23 +1,31 @@
-name: CI
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+name: Set up
+on: [push, pull_request]
 
 jobs:
-  build:
+  install:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build packages
-        uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: install --ignore-engines
+      - uses: c-hive/gha-yarn-cache@v1
+
+      - name: Install JS dependencies
+        run: yarn install
+
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: c-hive/gha-yarn-cache@v1
+
+      # This should be cached at this point
+      - name: Install JS dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install
 
       - name: elm-analyse
-        uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: elm-analyse
+        run: yarn elm-analyse
