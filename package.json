@@ -4,7 +4,7 @@
   "description": "Accessible select",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "ts:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server"
   },
   "repository": {
@@ -22,10 +22,14 @@
   "homepage": "https://github.com/Confidenceman02/elm-select#readme",
   "devDependencies": {
     "@tsconfig/node12": "^1.0.7",
+    "@types/chai": "^4.2.18",
+    "@types/mocha": "^8.2.2",
+    "chai": "^4.3.4",
     "elm": "^0.19.1-5",
     "elm-analyse": "^0.16.5",
     "elm-format": "^0.8.5",
     "elm-live": "^4.0.0-rc.1",
+    "mocha": "^8.4.0",
     "playwright": "^1.11.1",
     "ts-node": "^10.0.0",
     "typescript": "^4.3.2"
