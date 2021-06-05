@@ -2,9 +2,12 @@
 Select things in style! Inspired and built on top of Culture Amp's [Kaizen design system](https://cultureamp.design) select component. 
 
 ## Why not just use the Kaizen select?
-1. The [Kaizen design system](https://cultureamp.design/) is a wonderful project with both react and elm components/views. To use the elm views in particular requires some tooling in your project. This is partly due to the Kaizen elm views being styled in scss and the way it loads assets. Your project would need to handle the scss by adding adding a transpiler as well as an asset loader. This package takes the scss and svg's and converts it all to standard elm with the help of [rtfeldman/elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/).
+1. The [Kaizen design system](https://cultureamp.design/) is a wonderful project with both react and elm components/views. Because the Kaizen elm select is being styled in scss, your project would need some extra tooling and bundling for things to work correctly. The elm-select package converts all the non elm code to the elm we all know and love. This is achieved largely due to the very excellent [rtfeldman/elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/).
 
 2. The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) is largely a port of the [react select](https://react-select.com/home) project which is a widely used piece of work. Whilst this package matches most of the functionality of [react select]() and [Kaizen select](), it endeavours to implement the [WAI aria](https://www.w3.org/TR/wai-aria-practices/examples/combobox/aria1.1pattern/listbox-combo.html) best practices for selects.
+
+## Accessibility first
+A lot of effort has been put into making the elm-select package as accessible as possible. Heavy focus on automated end to end testing using [playwright](https://playwright.dev/) allows for a progressive improvement in acessibility.
 
 ## Opt in JS optimizations
 The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) has some JS performance optimisations that dynamically size the input width. There are some sensible reasons why this optimization was done.
