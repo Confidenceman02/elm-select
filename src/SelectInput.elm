@@ -41,6 +41,7 @@ type alias Configuration msg =
     , minWidth : Int
     , preventKeydownOn : List (Decode.Decoder msg)
     , inputSizing : InputSizing
+    , dataTestId : String
     }
 
 
@@ -59,6 +60,7 @@ defaults =
     , minWidth = defaultWidth
     , preventKeydownOn = []
     , inputSizing = Dynamic
+    , dataTestId = "selectInput"
     }
 
 
@@ -217,7 +219,7 @@ view (Config config) id_ =
     in
     div autoSizeInputContainerStyles
         [ input
-            ([ id (inputId id_), value inputValue, type_ "text", attribute "autocomplete" "new-password" ]
+            ([ id (inputId id_), value inputValue, type_ "text", attribute "data-test-id" config.dataTestId ]
                 ++ events
                 ++ inputStyles
             )
