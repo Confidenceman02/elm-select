@@ -30,15 +30,32 @@ __Opt in to JS optimization__
 { selectState = initState |> jsOptimize True }
 ```
 
+Import in your index.js file.
 ```javascript
 
 -- index.js 
 import { Elm } from "./src/Main";
-import dynamicElmSelectInput from "elm-select"
-
-dynamicElmSelectInput()
+import "@confidenceman02/elm-select/dynamic"
 
 Elm.Main.init({node, flags})
+```
+
+Alternatively you can import the script directly into your index.html file.
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Viewer</title>
+
+    <script src="/node_modules/@confidenceman02/elm-select/dist/dynamic.min.js"></script>
+  </head>
+  <body>
+    <main></main>
+    <script src="index.js"></script>
+  </body>
+</html>
 ```
 
 ## Usage
