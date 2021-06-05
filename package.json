@@ -1,8 +1,9 @@
 {
-  "name": "elm-select",
+  "name": "@confidenceman02/elm-select",
   "version": "1.0.0",
-  "description": "Accessible select",
-  "main": "index.js",
+  "description": "Helper functions for Confidenceman02/elm-select elm package",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "ts:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server"
@@ -12,9 +13,10 @@
     "url": "git+https://github.com/Confidenceman02/elm-select.git"
   },
   "keywords": [
-    "select"
+    "select",
+    "elm-select"
   ],
-  "author": "",
+  "author": "Confidenceman02",
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/Confidenceman02/elm-select/issues"
