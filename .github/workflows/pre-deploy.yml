@@ -1,5 +1,12 @@
 name: pre-deploy
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - release/*
+  pull_request:
+    branches:
+      - main
 
 jobs:
   pre-deploy:
