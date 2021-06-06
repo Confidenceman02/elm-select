@@ -37,7 +37,8 @@ describe("examples", () => {
 });
 
 describe("List box behaviour", () => {
-  it("list box visible when input text matches item text", async () => {
+  it("list box visible when input text in item text", async () => {
+    await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/Single.elm`);
 
@@ -51,8 +52,32 @@ describe("List box behaviour", () => {
 
     // we can assume that e will match at least something in the list box
     await page.fill("[data-test-id=selectInput]", "e");
+    await page.waitForTimeout(100);
     const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
 
     expect(listBoxVisible).to.be.true;
+  });
+
+  it("list box not visible when escape button pressed", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
+
+    const inputVisible = await page.isVisible("[data-test-id=selectInput]");
+    expect(inputVisible).to.be.true;
+
+    // we can assume that e will match at least something in the list box
+    await page.type("[data-test-id=selectInput]", "e");
+    await page.waitForTimeout(100);
+    const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(listBoxVisible).to.be.true;
+
+    await page.keyboard.press("Escape");
+    const listBoxVisibleAfterEscape = await page.isVisible(
+      "[data-test-id=listBox]"
+    );
+
+    expect(listBoxVisibleAfterEscape).to.be.false;
   });
 });
