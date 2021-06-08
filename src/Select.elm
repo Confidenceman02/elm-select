@@ -805,6 +805,7 @@ view (Config config) selectId =
                                 )
                             <|
                                 Decode.succeed resolveContainerMsg
+                        , attribute "data-test-id" "selectContainer"
                         ]
                    )
             )
