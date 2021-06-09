@@ -1069,6 +1069,13 @@ viewMenuItem viewMenuItemData =
                         _ ->
                             []
 
+                resolveDataTestId =
+                    if data.menuItemIsTarget then
+                        [ attribute "data-test-id" ("listBoxItemTargetFocus" ++ String.fromInt data.index) ]
+
+                    else
+                        []
+
                 withTargetStyles =
                     if data.menuItemIsTarget && not data.itemSelected then
                         [ Css.color (Css.hex "#0168B3"), Css.backgroundColor (Css.hex "#E6F0F7") ]
@@ -1120,6 +1127,7 @@ viewMenuItem viewMenuItemData =
                  ]
                     ++ resolveMouseLeave
                     ++ resolveMouseUp
+                    ++ resolveDataTestId
                 )
                 [ text data.menuItem.label ]
         )
@@ -1319,6 +1327,7 @@ viewMultiValue selectId config mousedownedItem index menuItem =
             |> Tag.onDismiss (DeselectedMultiItem menuItem.item selectId)
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
+            |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
             |> withTagColor
             |> resolveTruncationWidth
             |> resolveMouseleave

@@ -145,3 +145,41 @@ describe("SingleSearchable", () => {
     expect(updatedInputValue).to.eq("");
   });
 });
+
+describe("Keyboard ArrowDown", () => {
+  it("displays list box", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.focus("[data-test-id=selectInput]");
+
+    const listBoxInitiallyVisible = await page.isVisible(
+      "[data-test-id=listBox]"
+    );
+
+    expect(listBoxInitiallyVisible).to.be.false;
+
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(100);
+
+    const listBoxVisibleAfterAction = await page.isVisible(
+      "[data-test-id=listBox]"
+    );
+    expect(listBoxVisibleAfterAction).to.be.true;
+  });
+  // Target focusing refers to the menu item being visually highlighted as the item that will be selected on selection.
+  it("target focuses the first menu item", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.focus("[data-test-id=selectInput]");
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(100);
+
+    const firstItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus0]"
+    );
+
+    expect(firstItemFocused).to.be.true;
+  });
+});

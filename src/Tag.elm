@@ -1,9 +1,9 @@
-module Tag exposing (backgroundColor, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
+module Tag exposing (backgroundColor, dataTestId, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
 
 import ClearIcon
 import Css
 import Html.Styled exposing (Html, div, span, text)
-import Html.Styled.Attributes as StyledAttribs
+import Html.Styled.Attributes as StyledAttribs exposing (attribute)
 import Html.Styled.Events exposing (on, onClick)
 import Json.Decode as Decode
 
@@ -19,6 +19,7 @@ type alias Configuration msg =
     , truncationWidth : Maybe Float
     , rightMargin : Bool
     , backgroundColor : Css.Color
+    , dataTestId : String
     }
 
 
@@ -34,6 +35,7 @@ defaults =
     , truncationWidth = Nothing
     , rightMargin = False
     , backgroundColor = Css.hex "#E1E2EA"
+    , dataTestId = "multiSelectTag"
     }
 
 
@@ -76,6 +78,11 @@ backgroundColor c (Config config) =
     Config { config | backgroundColor = c }
 
 
+dataTestId : String -> Config msg -> Config msg
+dataTestId testId (Config config) =
+    Config { config | dataTestId = testId }
+
+
 view : Config msg -> String -> Html msg
 view (Config config) value =
     let
@@ -102,6 +109,7 @@ view (Config config) value =
             , Css.hover [ Css.borderColor (Css.hex "#C4C5D4") ]
             , Css.height (Css.px 30)
             ]
+        , attribute "data-test-id" config.dataTestId
         ]
         [ div
             -- layoutContainer
