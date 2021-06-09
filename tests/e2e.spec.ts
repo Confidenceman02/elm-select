@@ -1,5 +1,5 @@
 import { chromium, Browser } from "playwright";
-import { expect } from "chai";
+import { expect } from "@playwright/test";
 let browser: Browser;
 const BASE_URI = "http://localhost:8000";
 
@@ -29,12 +29,12 @@ describe("examples", () => {
     const disabledExampleVisible = await page.isVisible("text=Disabled.elm");
     const clearableExampleVisible = await page.isVisible("text=Clearable.elm");
 
-    expect(singleExampleVisible).to.be.true;
-    expect(truncationExampleVisible).to.be.true;
-    expect(multiAsyncExampleVisible).to.be.true;
-    expect(multiExampleVisible).to.be.true;
-    expect(disabledExampleVisible).to.be.true;
-    expect(clearableExampleVisible).to.be.true;
+    expect(singleExampleVisible).toBeTruthy();
+    expect(truncationExampleVisible).toBeTruthy();
+    expect(multiAsyncExampleVisible).toBeTruthy();
+    expect(multiExampleVisible).toBeTruthy();
+    expect(disabledExampleVisible).toBeTruthy();
+    expect(clearableExampleVisible).toBeTruthy();
   });
 });
 
@@ -50,35 +50,15 @@ describe("SingleSearchable", () => {
     );
     const inputVisible = await page.isVisible("[data-test-id=selectInput]");
 
-    expect(listBoxInitiallyVisible).to.be.false;
-    expect(inputVisible).to.be.true;
+    expect(listBoxInitiallyVisible).toBeFalsy();
+    expect(inputVisible).toBeTruthy();
 
     // we can assume that e will match at least something in the list box
     await page.fill("[data-test-id=selectInput]", "e");
     await page.waitForTimeout(100);
     const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
 
-    expect(listBoxVisible).to.be.true;
-  });
-
-  it("list box not visible when escape button pressed after matching input", async () => {
-    await browser.newContext();
-    const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
-
-    // we can assume that e will match at least something in the list box
-    await page.type("[data-test-id=selectInput]", "e");
-    await page.waitForTimeout(100);
-    const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
-
-    expect(listBoxVisible).to.be.true;
-
-    await page.keyboard.press("Escape");
-    const listBoxVisibleAfterEscape = await page.isVisible(
-      "[data-test-id=listBox]"
-    );
-
-    expect(listBoxVisibleAfterEscape).to.be.false;
+    expect(listBoxVisible).toBeTruthy();
   });
 
   it("list box not visible when input container clicked after matching input", async () => {
@@ -90,13 +70,13 @@ describe("SingleSearchable", () => {
     await page.waitForTimeout(100);
     const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
 
-    expect(listBoxVisible).to.be.true;
+    expect(listBoxVisible).toBeTruthy();
 
     await page.click("[data-test-id=selectContainer]");
     const listBoxVisibleAfterClick = await page.isVisible(
       "[data-text-id=selectContainer]"
     );
-    expect(listBoxVisibleAfterClick).to.be.false;
+    expect(listBoxVisibleAfterClick).toBeFalsy();
   });
 
   // INPUT
@@ -111,7 +91,7 @@ describe("SingleSearchable", () => {
       (el: HTMLInputElement) => el.value
     );
 
-    expect(inputValue).to.eq("e");
+    expect(inputValue).toBe("e");
 
     await page.click("[data-test-id=selectContainer]");
     await page.waitForTimeout(100);
@@ -120,29 +100,7 @@ describe("SingleSearchable", () => {
       (el: HTMLInputElement) => el.value
     );
 
-    expect(updatedInputValue).to.eq("");
-  });
-  it("input text cleared after Escape key", async () => {
-    await browser.newContext();
-    const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
-    await page.type("[data-test-id=selectInput]", "e");
-
-    const inputValue = await page.$eval(
-      "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
-    );
-
-    expect(inputValue).to.eq("e");
-
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(100);
-    const updatedInputValue = await page.$eval(
-      "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
-    );
-
-    expect(updatedInputValue).to.eq("");
+    expect(updatedInputValue).toBe("");
   });
 });
 
@@ -157,7 +115,7 @@ describe("Keyboard ArrowDown", () => {
       "[data-test-id=listBox]"
     );
 
-    expect(listBoxInitiallyVisible).to.be.false;
+    expect(listBoxInitiallyVisible).toBeFalsy();
 
     await page.keyboard.press("ArrowDown");
     await page.waitForTimeout(100);
@@ -165,7 +123,7 @@ describe("Keyboard ArrowDown", () => {
     const listBoxVisibleAfterAction = await page.isVisible(
       "[data-test-id=listBox]"
     );
-    expect(listBoxVisibleAfterAction).to.be.true;
+    expect(listBoxVisibleAfterAction).toBeTruthy();
   });
   // Target focusing refers to the menu item being visually highlighted as the item that will be selected on selection.
   it("target focuses the first menu item", async () => {
@@ -180,6 +138,75 @@ describe("Keyboard ArrowDown", () => {
       "[data-test-id=listBoxItemTargetFocus0]"
     );
 
-    expect(firstItemFocused).to.be.true;
+    expect(firstItemFocused).toBeTruthy();
+  });
+});
+
+describe("Keyboard Enter", () => {
+  it("automatically selects first target focused menu item", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+
+    const firstListItemSelected = await page.isVisible(
+      "[data-test-id=selectedItem]"
+    );
+
+    expect(firstListItemSelected).toBeTruthy();
+
+    const selectedItemInnerText = await page.innerText(
+      "data-test-id=selectedItem"
+    );
+    // Assuming menu items are Elm, Is, Really, Great
+    expect(selectedItemInnerText).toBe("Elm");
+  });
+});
+
+describe("Keyboard Escape", () => {
+  it("input text cleared", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.type("[data-test-id=selectInput]", "e");
+
+    const inputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(inputValue).toBe("e");
+
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(100);
+    const updatedInputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(updatedInputValue).toBe("");
+  });
+
+  it("list box not visible if open", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+
+    // we can assume that e will match at least something in the list box
+    await page.type("[data-test-id=selectInput]", "e");
+    await page.waitForTimeout(100);
+    const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(listBoxVisible).toBeTruthy();
+
+    await page.keyboard.press("Escape");
+    const listBoxVisibleAfterEscape = await page.isVisible(
+      "[data-test-id=listBox]"
+    );
+
+    expect(listBoxVisibleAfterEscape).toBeFalsy();
   });
 });

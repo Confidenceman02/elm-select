@@ -852,6 +852,7 @@ view (Config config) selectId =
                         Multi _ [] ->
                             viewPlaceholder config
 
+                        -- Multi selected values render differently
                         Multi _ _ ->
                             text ""
 
@@ -1161,6 +1162,7 @@ viewSelectedPlaceholder item =
                 ++ bold
                 ++ addedStyles
             )
+        , attribute "data-test-id" "selectedItem"
         ]
         [ text item.label ]
 
