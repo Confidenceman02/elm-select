@@ -95,4 +95,27 @@ describe("List box behaviour", () => {
     );
     expect(listBoxVisibleAfterClick).to.be.false;
   });
+
+  it("input text cleared after container click", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.type("[data-test-id=selectInput]", "e");
+
+    const inputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(inputValue).to.eq("e");
+
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForTimeout(100);
+    const updatedInputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(updatedInputValue).to.eq("");
+  });
 });
