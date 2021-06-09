@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "ts:test": "bin/test-ts.sh",
+    "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server"
   },
   "repository": {

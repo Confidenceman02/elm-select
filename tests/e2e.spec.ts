@@ -8,7 +8,7 @@ before(async () => {
 });
 
 after(async () => {
-  // await browser.close();
+  await browser.close();
 });
 
 describe("examples", () => {
@@ -16,7 +16,9 @@ describe("examples", () => {
     const page = await browser.newPage();
 
     await page.goto(BASE_URI);
-    const singleExampleVisible = await page.isVisible("text=Single.elm");
+    const singleExampleVisible = await page.isVisible(
+      "text=SingleSearchable.elm"
+    );
     const truncationExampleVisible = await page.isVisible(
       "text=Truncation.elm"
     );
@@ -36,11 +38,12 @@ describe("examples", () => {
   });
 });
 
-describe("List box behaviour", () => {
+describe("SingleSearchable", () => {
+  // LIST BOX
   it("list box visible after matching input", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
 
     const listBoxInitiallyVisible = await page.isVisible(
       "[data-test-id=listBox]"
@@ -61,7 +64,7 @@ describe("List box behaviour", () => {
   it("list box not visible when escape button pressed after matching input", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
 
     // we can assume that e will match at least something in the list box
     await page.type("[data-test-id=selectInput]", "e");
@@ -81,7 +84,7 @@ describe("List box behaviour", () => {
   it("list box not visible when input container clicked after matching input", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
 
     await page.type("[data-test-id=selectInput]", "e");
     await page.waitForTimeout(100);
@@ -96,10 +99,11 @@ describe("List box behaviour", () => {
     expect(listBoxVisibleAfterClick).to.be.false;
   });
 
+  // INPUT
   it("input text cleared after container click", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
     await page.type("[data-test-id=selectInput]", "e");
 
     const inputValue = await page.$eval(
@@ -110,6 +114,28 @@ describe("List box behaviour", () => {
     expect(inputValue).to.eq("e");
 
     await page.click("[data-test-id=selectContainer]");
+    await page.waitForTimeout(100);
+    const updatedInputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(updatedInputValue).to.eq("");
+  });
+  it("input text cleared after Escape key", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.type("[data-test-id=selectInput]", "e");
+
+    const inputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(inputValue).to.eq("e");
+
+    await page.keyboard.press("Escape");
     await page.waitForTimeout(100);
     const updatedInputValue = await page.$eval(
       "[data-test-id=selectInput]",

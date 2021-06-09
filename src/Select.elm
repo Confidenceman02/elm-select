@@ -72,6 +72,7 @@ type Msg item
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
+    | InputEscape
     | ClearFocusedItem
     | HoverFocused Int
     | EnterSelect item
@@ -546,6 +547,13 @@ update msg (State state_) =
 
         InputMousedowned ->
             ( Nothing, State { state_ | initialMousedown = InputMousedown }, Cmd.none )
+
+        InputEscape ->
+            let
+                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                    update CloseMenu (State state_)
+            in
+            ( Nothing, State { stateWithClosedMenu | inputValue = Nothing }, cmdWithClosedMenu )
 
         ClearFocusedItem ->
             ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
@@ -1207,7 +1215,7 @@ viewSelectInput viewSelectInputData =
             |> resolveInputWidth
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
-                        ++ (Events.isEscape CloseMenu
+                        ++ (Events.isEscape InputEscape
                                 :: whenArrowEvents
                            )
                )
