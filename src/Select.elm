@@ -31,7 +31,7 @@ import DotLoadingIcon
 import Events
 import Html.Styled exposing (Html, button, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaExpanded, role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaExpanded, ariaHasPopup, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
@@ -804,7 +804,7 @@ view (Config config) selectId =
                             else
                                 []
                     in
-                    activeDescendant ++ [ ariaExpanded "true", ariaControls (menuListId selectId) ]
+                    activeDescendant ++ [ ariaExpanded "true" ]
 
                 else
                     [ ariaExpanded "false" ]
@@ -838,6 +838,8 @@ view (Config config) selectId =
                     else
                         [ attribute "data-test-id" "selectContainer"
                         , role "combobox"
+                        , ariaHasPopup "listbox"
+                        , attribute "aria-owns" (menuListId selectId)
                         ]
                             ++ controlAriaAttribs
                    )
