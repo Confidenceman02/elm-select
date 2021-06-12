@@ -767,7 +767,24 @@ view (Config config) selectId =
             else
                 UnsearchableSelectContainerClicked selectId
     in
-    div [ StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ] ]
+    div
+        (StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ]
+            :: (if config.disabled then
+                    []
+
+                else
+                    [ preventDefaultOn "mousedown" <|
+                        Decode.map
+                            (\msg ->
+                                ( msg
+                                , preventDefault
+                                )
+                            )
+                        <|
+                            Decode.succeed resolveContainerMsg
+                    ]
+               )
+        )
         [ -- container
           let
             controlFocusedStyles =
@@ -819,16 +836,7 @@ view (Config config) selectId =
                         []
 
                     else
-                        [ preventDefaultOn "mousedown" <|
-                            Decode.map
-                                (\msg ->
-                                    ( msg
-                                    , preventDefault
-                                    )
-                                )
-                            <|
-                                Decode.succeed resolveContainerMsg
-                        , attribute "data-test-id" "selectContainer"
+                        [ attribute "data-test-id" "selectContainer"
                         , role "combobox"
                         ]
                             ++ controlAriaAttribs
@@ -1049,6 +1057,12 @@ viewMenu viewMenuData =
                  , id (menuListId viewMenuData.selectId)
                  , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
                  , role "listbox"
+                 , custom "mousedown"
+                    (Decode.map
+                        (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
+                     <|
+                        Decode.succeed DoNothing
+                    )
                  ]
                     ++ resolveAttributes
                 )
