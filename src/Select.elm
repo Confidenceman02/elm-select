@@ -31,7 +31,7 @@ import DotLoadingIcon
 import Events
 import Html.Styled exposing (Html, button, div, input, li, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaExpanded, ariaHasPopup, role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaExpanded, ariaHasPopup, ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
@@ -1130,9 +1130,16 @@ viewMenuItem viewMenuItemData =
 
                     else
                         []
+
+                resolveSelectedAriaAttribs =
+                    if data.itemSelected then
+                        [ ariaSelected "true" ]
+
+                    else
+                        [ ariaSelected "false" ]
             in
             -- option
-            div
+            li
                 ([ role "option"
                  , tabindex -1
                  , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
@@ -1162,6 +1169,7 @@ viewMenuItem viewMenuItemData =
                     ++ resolveMouseLeave
                     ++ resolveMouseUp
                     ++ resolveDataTestId
+                    ++ resolveSelectedAriaAttribs
                 )
                 [ text data.menuItem.label ]
         )
