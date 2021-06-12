@@ -1,5 +1,6 @@
 module SelectInput exposing
     ( InputSizing(..)
+    , activeDescendant
     , currentValue
     , default
     , defaultWidth
@@ -18,7 +19,7 @@ module SelectInput exposing
 import Events
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
-import Html.Styled.Attributes.Aria exposing (role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
 
@@ -43,6 +44,7 @@ type alias Configuration msg =
     , preventKeydownOn : List (Decode.Decoder msg)
     , inputSizing : InputSizing
     , dataTestId : String
+    , ariaActiveDescendant : Maybe String
     }
 
 
@@ -62,6 +64,7 @@ defaults =
     , preventKeydownOn = []
     , inputSizing = Dynamic
     , dataTestId = "selectInput"
+    , ariaActiveDescendant = Nothing
     }
 
 
@@ -91,6 +94,11 @@ defaultWidth =
 
 
 -- MODIFIERS
+
+
+activeDescendant : String -> Config msg -> Config msg
+activeDescendant s (Config config) =
+    Config { config | ariaActiveDescendant = Just s }
 
 
 inputSizing : InputSizing -> Config msg -> Config msg
@@ -186,6 +194,14 @@ view (Config config) id_ =
                     (\m -> ( m, True ))
                     (Decode.oneOf config.preventKeydownOn)
 
+        withAriaActiveDescendant =
+            case config.ariaActiveDescendant of
+                Just s ->
+                    [ ariaActiveDescendant s ]
+
+                _ ->
+                    []
+
         inputStyles =
             [ style "box-sizing" "content-box"
             , style "background" "0px center"
@@ -229,6 +245,7 @@ view (Config config) id_ =
              ]
                 ++ events
                 ++ inputStyles
+                ++ withAriaActiveDescendant
             )
             []
 

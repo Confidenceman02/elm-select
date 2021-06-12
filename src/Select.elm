@@ -165,9 +165,10 @@ type alias ViewMenuData item =
 
 
 type alias ViewSelectInputData item =
-    { id : String
+    { id : SelectId
     , maybeInputValue : Maybe String
     , maybeActiveTarget : Maybe (MenuItem item)
+    , activeTargetIndex : Int
     , totalViewableMenuItems : Int
     , menuOpen : Bool
     , variant : Variant item
@@ -796,15 +797,7 @@ view (Config config) selectId =
 
             controlAriaAttribs =
                 if state_.menuOpen then
-                    let
-                        activeDescendant =
-                            if 0 < List.length viewableMenuItems then
-                                [ ariaActiveDescendant (menuItemId selectId state_.activeTargetIndex) ]
-
-                            else
-                                []
-                    in
-                    activeDescendant ++ [ ariaExpanded "true" ]
+                    [ ariaExpanded "true" ]
 
                 else
                     [ ariaExpanded "false" ]
@@ -901,9 +894,10 @@ view (Config config) selectId =
                         if config.searchable then
                             lazy viewSelectInput
                                 (ViewSelectInputData
-                                    (getSelectId selectId)
+                                    selectId
                                     state_.inputValue
                                     enterSelectTargetItem
+                                    state_.activeTargetIndex
                                     totalMenuItems
                                     state_.menuOpen
                                     config.variant
@@ -1211,10 +1205,13 @@ viewSelectedPlaceholder item =
 viewSelectInput : ViewSelectInputData item -> Html (Msg item)
 viewSelectInput viewSelectInputData =
     let
+        selectId =
+            getSelectId viewSelectInputData.id
+
         resolveEnterMsg mi =
             case viewSelectInputData.variant of
                 Multi _ _ ->
-                    EnterSelectMulti mi.item (SelectId viewSelectInputData.id)
+                    EnterSelectMulti mi.item (SelectId selectId)
 
                 _ ->
                     EnterSelect mi.item
@@ -1234,7 +1231,7 @@ viewSelectInput viewSelectInputData =
 
         spaceKeydownDecoder decoders =
             if canBeSpaceToggled viewSelectInputData.menuOpen viewSelectInputData.maybeInputValue then
-                Events.isSpace (ToggleMenuAtKey <| SelectId viewSelectInputData.id) :: decoders
+                Events.isSpace (ToggleMenuAtKey <| SelectId selectId) :: decoders
 
             else
                 decoders
@@ -1244,8 +1241,8 @@ viewSelectInput viewSelectInputData =
                 []
 
             else
-                [ Events.isDownArrow (KeyboardDown (SelectId viewSelectInputData.id) viewSelectInputData.totalViewableMenuItems)
-                , Events.isUpArrow (KeyboardUp (SelectId viewSelectInputData.id) viewSelectInputData.totalViewableMenuItems)
+                [ Events.isDownArrow (KeyboardDown (SelectId selectId) viewSelectInputData.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp (SelectId selectId) viewSelectInputData.totalViewableMenuItems)
                 ]
 
         resolveInputWidth selectInputConfig =
@@ -1255,15 +1252,24 @@ viewSelectInput viewSelectInputData =
             --     SelectInput.inputSizing SelectInput.Fixed selectInputConfig
             -- else
             SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
+
+        resolveAriaActiveDescendant config =
+            case viewSelectInputData.maybeActiveTarget of
+                Just at ->
+                    SelectInput.activeDescendant (menuItemId viewSelectInputData.id viewSelectInputData.activeTargetIndex) config
+
+                _ ->
+                    config
     in
     SelectInput.view
         (SelectInput.default
-            |> SelectInput.onInput (InputChanged <| SelectId viewSelectInputData.id)
-            |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId viewSelectInputData.id))
-            |> SelectInput.onFocusMsg (InputReceivedFocused (Just <| SelectId viewSelectInputData.id))
+            |> SelectInput.onInput (InputChanged <| SelectId selectId)
+            |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId selectId))
+            |> SelectInput.onFocusMsg (InputReceivedFocused (Just <| SelectId selectId))
             |> SelectInput.currentValue resolveInputValue
             |> SelectInput.onMousedown InputMousedowned
             |> resolveInputWidth
+            |> resolveAriaActiveDescendant
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
                         ++ (Events.isEscape InputEscape
@@ -1271,7 +1277,7 @@ viewSelectInput viewSelectInputData =
                            )
                )
         )
-        viewSelectInputData.id
+        selectId
 
 
 viewDummyInput : ViewDummyInputData item -> Html (Msg item)
