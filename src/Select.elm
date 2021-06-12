@@ -1255,11 +1255,14 @@ viewSelectInput viewSelectInputData =
 
         resolveAriaActiveDescendant config =
             case viewSelectInputData.maybeActiveTarget of
-                Just at ->
+                Just _ ->
                     SelectInput.activeDescendant (menuItemId viewSelectInputData.id viewSelectInputData.activeTargetIndex) config
 
                 _ ->
                     config
+
+        resolveAriaControls config =
+            SelectInput.setAriaControls (menuListId viewSelectInputData.id) config
     in
     SelectInput.view
         (SelectInput.default
@@ -1270,6 +1273,7 @@ viewSelectInput viewSelectInputData =
             |> SelectInput.onMousedown InputMousedowned
             |> resolveInputWidth
             |> resolveAriaActiveDescendant
+            |> resolveAriaControls
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
                         ++ (Events.isEscape InputEscape
