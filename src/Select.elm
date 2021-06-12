@@ -982,19 +982,19 @@ view (Config config) selectId =
                     [ dropdownIndicator config
                     ]
                 ]
-            ]
-        , viewIf state_.menuOpen
-            (lazy viewMenu
-                (ViewMenuData
-                    config.variant
-                    selectId
-                    viewableMenuItems
-                    state_.initialMousedown
-                    state_.activeTargetIndex
-                    state_.menuNavigation
-                    config.isLoading
+            , viewIf state_.menuOpen
+                (lazy viewMenu
+                    (ViewMenuData
+                        config.variant
+                        selectId
+                        viewableMenuItems
+                        state_.initialMousedown
+                        state_.activeTargetIndex
+                        state_.menuNavigation
+                        config.isLoading
+                    )
                 )
-            )
+            ]
         ]
 
 
