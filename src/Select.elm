@@ -31,7 +31,7 @@ import DotLoadingIcon
 import Events
 import Html.Styled exposing (Html, button, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
-import Html.Styled.Attributes.Aria exposing (role)
+import Html.Styled.Attributes.Aria exposing (ariaExpanded, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
@@ -776,6 +776,13 @@ view (Config config) selectId =
 
                 else
                     []
+
+            controlAriaAttribs =
+                if state_.menuOpen then
+                    ariaExpanded "true"
+
+                else
+                    ariaExpanded "false"
           in
           div
             -- control
@@ -814,6 +821,8 @@ view (Config config) selectId =
                             <|
                                 Decode.succeed resolveContainerMsg
                         , attribute "data-test-id" "selectContainer"
+                        , role "combobox"
+                        , controlAriaAttribs
                         ]
                    )
             )
@@ -1033,6 +1042,7 @@ viewMenu viewMenuData =
                     [ StyledAttribs.css menuListStyles
                     , id (menuListId viewMenuData.selectId)
                     , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+                    , role "list"
                     ]
                     (List.indexedMap
                         (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)

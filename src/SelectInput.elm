@@ -18,6 +18,7 @@ module SelectInput exposing
 import Events
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
+import Html.Styled.Attributes.Aria exposing (role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
 
@@ -219,7 +220,13 @@ view (Config config) id_ =
     in
     div autoSizeInputContainerStyles
         [ input
-            ([ id (inputId id_), value inputValue, type_ "text", attribute "data-test-id" config.dataTestId ]
+            ([ id (inputId id_)
+             , value inputValue
+             , type_ "text"
+             , role "textbox"
+             , attribute "aria-multiline" "false"
+             , attribute "data-test-id" config.dataTestId
+             ]
                 ++ events
                 ++ inputStyles
             )
