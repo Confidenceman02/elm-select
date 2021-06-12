@@ -1023,6 +1023,9 @@ viewMenu viewMenuData =
             , Css.overflowY Css.auto
             , Css.paddingBottom (Css.px 6)
             , Css.paddingTop (Css.px 4)
+            , Css.paddingLeft (Css.px 0)
+            , Css.marginTop (Css.px 0)
+            , Css.marginBottom (Css.px 0)
             , Css.boxSizing Css.borderBox
             , Css.position Css.relative
             ]
@@ -1046,7 +1049,7 @@ viewMenu viewMenuData =
                     :: resolveAttributes
                 )
                 [ -- menuList
-                  Keyed.node "div"
+                  Keyed.node "ul"
                     [ StyledAttribs.css menuListStyles
                     , id (menuListId viewMenuData.selectId)
                     , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
