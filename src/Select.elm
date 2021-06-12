@@ -2,7 +2,7 @@ module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
     , multi, truncateMultiTag, multiTagColor
-    , disabled, loading, multiDefaultConfig
+    , disabled, labelledBy, loading, multiDefaultConfig
     )
 
 {-| Select items from a drop-down list.
@@ -172,6 +172,7 @@ type alias ViewSelectInputData item =
     , totalViewableMenuItems : Int
     , menuOpen : Bool
     , variant : Variant item
+    , labelledBy : Maybe String
     }
 
 
@@ -196,6 +197,7 @@ type alias Configuration item =
     , placeholder : String
     , disabled : Bool
     , clearable : Bool
+    , labelledBy : Maybe String
     }
 
 
@@ -285,6 +287,7 @@ defaults =
     , searchable = True
     , clearable = False
     , disabled = False
+    , labelledBy = Nothing
     }
 
 
@@ -359,6 +362,11 @@ disabled predicate (Config config) =
 loading : Bool -> Config item -> Config item
 loading predicate (Config config) =
     Config { config | isLoading = predicate }
+
+
+labelledBy : String -> Config item -> Config item
+labelledBy s (Config config) =
+    Config { config | labelledBy = Just s }
 
 
 
@@ -901,6 +909,7 @@ view (Config config) selectId =
                                     totalMenuItems
                                     state_.menuOpen
                                     config.variant
+                                    config.labelledBy
                                 )
 
                         else
@@ -1263,6 +1272,14 @@ viewSelectInput viewSelectInputData =
 
         resolveAriaControls config =
             SelectInput.setAriaControls (menuListId viewSelectInputData.id) config
+
+        resolveAriaLabelledBy config =
+            case viewSelectInputData.labelledBy of
+                Just s ->
+                    SelectInput.setAriaLabelledBy s config
+
+                _ ->
+                    config
     in
     SelectInput.view
         (SelectInput.default
@@ -1274,6 +1291,7 @@ viewSelectInput viewSelectInputData =
             |> resolveInputWidth
             |> resolveAriaActiveDescendant
             |> resolveAriaControls
+            |> resolveAriaLabelledBy
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
                         ++ (Events.isEscape InputEscape

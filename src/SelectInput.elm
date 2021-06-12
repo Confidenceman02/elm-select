@@ -13,6 +13,7 @@ module SelectInput exposing
     , onMousedown
     , preventKeydownOn
     , setAriaControls
+    , setAriaLabelledBy
     , sizerId
     , view
     )
@@ -20,7 +21,7 @@ module SelectInput exposing
 import Events
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaLabelledby, role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
 
@@ -47,6 +48,7 @@ type alias Configuration msg =
     , dataTestId : String
     , ariaActiveDescendant : Maybe String
     , ariaControls : Maybe String
+    , ariaLabelledBy : Maybe String
     }
 
 
@@ -68,6 +70,7 @@ defaults =
     , dataTestId = "selectInput"
     , ariaActiveDescendant = Nothing
     , ariaControls = Nothing
+    , ariaLabelledBy = Nothing
     }
 
 
@@ -97,6 +100,11 @@ defaultWidth =
 
 
 -- MODIFIERS
+
+
+setAriaLabelledBy : String -> Config msg -> Config msg
+setAriaLabelledBy s (Config config) =
+    Config { config | ariaLabelledBy = Just s }
 
 
 setAriaControls : String -> Config msg -> Config msg
@@ -218,6 +226,14 @@ view (Config config) id_ =
                 _ ->
                     []
 
+        withAriaLabelledBy =
+            case config.ariaLabelledBy of
+                Just s ->
+                    [ ariaLabelledby s ]
+
+                _ ->
+                    []
+
         inputStyles =
             [ style "box-sizing" "content-box"
             , style "background" "0px center"
@@ -264,6 +280,7 @@ view (Config config) id_ =
                 ++ inputStyles
                 ++ withAriaActiveDescendant
                 ++ withAriaControls
+                ++ withAriaLabelledBy
             )
             []
 
