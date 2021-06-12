@@ -29,7 +29,7 @@ import ClearIcon
 import Css
 import DotLoadingIcon
 import Events
-import Html.Styled exposing (Html, button, div, input, span, text)
+import Html.Styled exposing (Html, button, div, input, li, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
 import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaExpanded, ariaHasPopup, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
@@ -1133,7 +1133,7 @@ viewMenuItem viewMenuItemData =
             in
             -- option
             div
-                ([ role "listitem"
+                ([ role "option"
                  , tabindex -1
                  , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
                  , on "mouseover" <| Decode.succeed (HoverFocused data.index)
