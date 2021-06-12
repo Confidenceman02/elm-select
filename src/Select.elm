@@ -31,7 +31,7 @@ import DotLoadingIcon
 import Events
 import Html.Styled exposing (Html, button, div, input, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
-import Html.Styled.Attributes.Aria exposing (ariaControls, ariaExpanded, role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaExpanded, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
@@ -779,7 +779,15 @@ view (Config config) selectId =
 
             controlAriaAttribs =
                 if state_.menuOpen then
-                    [ ariaExpanded "true", ariaControls (menuListId selectId) ]
+                    let
+                        activeDescendant =
+                            if 0 < List.length viewableMenuItems then
+                                [ ariaActiveDescendant (menuItemId selectId state_.activeTargetIndex) ]
+
+                            else
+                                []
+                    in
+                    activeDescendant ++ [ ariaExpanded "true", ariaControls (menuListId selectId) ]
 
                 else
                     [ ariaExpanded "false" ]
