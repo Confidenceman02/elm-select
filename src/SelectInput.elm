@@ -257,6 +257,7 @@ view (Config config) id_ =
              , type_ "text"
              , role "textbox"
              , attribute "aria-multiline" "false"
+             , attribute "aria-autocomplete" "list"
              , attribute "data-test-id" config.dataTestId
              ]
                 ++ events
