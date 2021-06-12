@@ -1001,22 +1001,21 @@ viewMenu viewMenuData =
                 [ attribute "data-test-id" "listBox" ]
 
         menuStyles =
-            StyledAttribs.css
-                [ Css.top (Css.pct 100)
-                , Css.backgroundColor (Css.hex "#FFFFFF")
-                , Css.marginBottom (Css.px 8)
-                , Css.position Css.absolute
-                , Css.width (Css.pct 100)
-                , Css.boxSizing Css.borderBox
-                , Css.border3 (Css.px 6) Css.solid Css.transparent
-                , Css.borderRadius (Css.px 4)
+            [ Css.top (Css.pct 100)
+            , Css.backgroundColor (Css.hex "#FFFFFF")
+            , Css.marginBottom (Css.px 8)
+            , Css.position Css.absolute
+            , Css.width (Css.pct 100)
+            , Css.boxSizing Css.borderBox
+            , Css.border3 (Css.px 6) Css.solid Css.transparent
+            , Css.borderRadius (Css.px 4)
 
-                -- , Css.border3 (Css.px 6) Css.solid Css.transparent
-                , Css.borderRadius (Css.px 7)
-                , Css.boxShadow4 (Css.px 0) (Css.px 0) (Css.px 12) (Css.rgba 0 0 0 0.19)
-                , Css.marginTop (Css.px menuMarginTop)
-                , Css.zIndex (Css.int 1)
-                ]
+            -- , Css.border3 (Css.px 6) Css.solid Css.transparent
+            , Css.borderRadius (Css.px 7)
+            , Css.boxShadow4 (Css.px 0) (Css.px 0) (Css.px 12) (Css.rgba 0 0 0 0.19)
+            , Css.marginTop (Css.px menuMarginTop)
+            , Css.zIndex (Css.int 1)
+            ]
 
         menuListStyles =
             [ Css.maxHeight (Css.px 215)
@@ -1029,11 +1028,12 @@ viewMenu viewMenuData =
             , Css.boxSizing Css.borderBox
             , Css.position Css.relative
             ]
+                ++ menuStyles
     in
     case viewMenuData.viewableMenuItems of
         [] ->
             if viewMenuData.loading then
-                div [ menuStyles ]
+                div [ StyledAttribs.css menuStyles ]
                     [ div
                         [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
                         [ text "Loading..." ]
@@ -1043,23 +1043,19 @@ viewMenu viewMenuData =
                 text ""
 
         _ ->
-            div
-                -- menu
-                (menuStyles
-                    :: resolveAttributes
+            -- listbox
+            Keyed.node "ul"
+                ([ StyledAttribs.css menuListStyles
+                 , id (menuListId viewMenuData.selectId)
+                 , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+                 , role "listbox"
+                 ]
+                    ++ resolveAttributes
                 )
-                [ -- menuList
-                  Keyed.node "ul"
-                    [ StyledAttribs.css menuListStyles
-                    , id (menuListId viewMenuData.selectId)
-                    , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
-                    , role "list"
-                    ]
-                    (List.indexedMap
-                        (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
-                        viewMenuData.viewableMenuItems
-                    )
-                ]
+                (List.indexedMap
+                    (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
+                    viewMenuData.viewableMenuItems
+                )
 
 
 viewMenuItem : ViewMenuItemData item -> ( String, Html (Msg item) )
