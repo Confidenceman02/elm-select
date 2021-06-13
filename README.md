@@ -4,26 +4,24 @@ Select things in style! Inspired and built on top of Culture Amp's [Kaizen desig
 ## Why not just use the Kaizen select?
 1. The [Kaizen design system](https://cultureamp.design/) is a wonderful project with both react and elm components/views. Because the Kaizen elm select is being styled in scss, your project would need some extra tooling and bundling for things to work correctly. The elm-select package converts all the non elm code to the elm we all know and love. This is achieved largely due to the very excellent [rtfeldman/elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/).
 
-2. The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) is largely a port of the [react select](https://react-select.com/home) project which is a widely used piece of work. Whilst this package matches most of the functionality of [react select]() and [Kaizen select](), it endeavours to implement the [WAI aria](https://www.w3.org/TR/wai-aria-practices/examples/combobox/aria1.1pattern/listbox-combo.html) best practices for selects.
+2. The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) is largely a port of the [react select](https://react-select.com/home) project which is a widely used piece of work. Whilst this package matches most of the functionality of [react select]() and [Kaizen select](), it endeavours to implement the [WAI-ARIA](https://www.w3.org/TR/wai-aria-practices/examples/combobox/aria1.1pattern/listbox-combo.html) best practices for selects, in particular, the combobox pattern.
 
-## Accessibility first
-A lot of effort has been put into making the elm-select package as accessible as possible. Heavy focus on automated end to end testing using [playwright](https://playwright.dev/) allows for a progressive improvement in acessibility.
+## Accessibility
+A lot of effort has been put into making the elm-select package accessible. Heavy focus on automated end to end testing using [playwright](https://playwright.dev/) allows for progressive improvement over time and avoid any regressions to accessibility. Tests have been modelled after the WAI-ARIA recommendations, however, accessibility of elm-select is an ongoing comittment.
 
 ## Opt in JS optimizations
 The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) has some JS performance optimisations that dynamically size the input width. There are some sensible reasons why this optimization was done.
 
-First lets think about how we would dynamically resize an input node as someone types in elm. 
-1. We would handle some sort of InputChanged message.
-2. We would query the input node for its dimensions or decode its dimension information from the initial event.
-3. We would update the size of the input.
+First lets think about how we would dynamically resize an input element as someone types in elm. 
+1. We would handle some sort of "input" event.
+2. We would query a hidden sizer node that contains the input text for its dimensions.
+3. We would update the width of the input.
 
-Resizing an input dynamically using the above method ends up being not very performant. It is highly likely someone will experience a lag between them typing and the input resizing.
+Resizing an input dynamically using the above method ends up being not very performant due to how slow is to react to events and query the DOM. It is certain that someone will experience a lag between them typing and the input resizing. Not a great user experience!
 
-The [react select](https://react-select.com/home) project gets around this by using a [ref](https://reactjs.org/docs/refs-and-the-dom.html) whilst Kaizen select uses a mutation observer to handle the resizing.
+When you opt in to JS optimization, elm-select uses a mutation observer which allows for a zero lag, performant, dynamically sized input. JS optimizations will even clean up after themselves by removing observers when selects are removed from the DOM.
 
-When you opt in to JS optimization, elm-select uses a mutation observer which allows for a zero lag, performant, dynamically sized input.
-
-If you don't want use a JS optimization thats totally ok! Elm-select handles dynamic width via the [size atribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/size) by default. The size attribute is not an ideal solution despite the fact it mostly just works. Consider adding the very minimal JS in to your project to get the best performance.
+If you don't want to use a JS optimization thats totally ok! Elm-select handles dynamic width via the [size atribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/size) by default. The size attribute is not an ideal solution despite the fact it mostly just works. Consider adding the very minimal JS in to your project to get the best performance.
 
 NOTE: It doesn't matter how many `elm-select`'s you render, on the page. The javascript included will detect and handle all of them.
 
@@ -32,6 +30,21 @@ __Opt in to JS optimization__
 
 { selectState = initState |> jsOptimize True }
 ```
+
+__Import the elm-select package__
+
+NOTE: Because this is a github package you will need to add the following line to your projects `.npmrc`.
+```
+// .npmrc 
+@confidenceman02:registry=https://npm.pkg.github.com/
+```
+
+install the package.
+
+```bash
+npm install @confidenceman02/elm-select
+```
+
 
 Import in your index.js file.
 ```javascript
