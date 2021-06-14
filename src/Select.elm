@@ -1,8 +1,8 @@
 module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
-    , multi, truncateMultiTag, multiTagColor
-    , disabled, labelledBy, loading, multiDefaultConfig
+    , multi, truncateMultiTag, multiTagColor, initMultiConfig
+    , disabled, labelledBy, loading
     )
 
 {-| Select items from a drop-down list.
@@ -20,7 +20,7 @@ module Select exposing
 
 # Multi select
 
-@docs multi, truncateMultiTag, multiTagColor
+@docs multi, truncateMultiTag, multiTagColor, initMultiConfig
 
 -}
 
@@ -104,7 +104,7 @@ type State
 
 
 
-{- Determines what was mousedowned first within the container -}
+-- Determines what was mousedowned first within the container
 
 
 type InitialMousedown
@@ -224,9 +224,9 @@ type MenuNavigation
     | Mouse
 
 
-{-| The menu item that will be represented in the drop-down list.
+{-| The list item that will be represented in the list-box.
 
-The `item` is the type representation of the menu item that will be used in an Action.
+The `item` is the type representation of the list-box item that will be used in an Action.
 
 The `label` is the text representation that will be shown in the drop-down list.
 
@@ -238,7 +238,7 @@ The `label` is the text representation that will be shown in the drop-down list.
     toolItems =
         [ { item = Screwdriver, label = "Screwdriver" }
         , { item = Hammer, label = "Hammer" }
-        , { item = Drill, label = " Drill" }
+        , { item = Drill, label = "Drill" }
         ]
 
     view model =
@@ -260,7 +260,8 @@ type alias MenuItem item =
 -- DEFAULTS
 
 
-{-| -}
+{-| An initial state for the State type.
+-}
 initState : State
 initState =
     State
@@ -300,8 +301,10 @@ multiDefaults =
 -- MULTI MODIFIERS
 
 
-multiDefaultConfig : MultiSelectConfig
-multiDefaultConfig =
+{-| Starting value for the MultiSelectConfig type.
+-}
+initMultiConfig : MultiSelectConfig
+initMultiConfig =
     MultiSelectConfig multiDefaults
 
 
@@ -318,7 +321,7 @@ truncateMultiTag w (MultiSelectConfig config) =
 
 {-| Set the color for the multi select tag.
 
-        multi (multiDefaultConfig |> multiTagColor (Css.hex "#E1E2EA")
+        multi (initMultiConfig |> multiTagColor (Css.hex "#E1E2EA")
 
 -}
 multiTagColor : Css.Color -> MultiSelectConfig -> MultiSelectConfig
@@ -330,19 +333,24 @@ multiTagColor c (MultiSelectConfig config) =
 -- MODIFIERS
 
 
-{-| -}
+{-| The text that will appear as a select placeholder.
+-}
 placeholder : String -> Config item -> Config item
 placeholder plc (Config config) =
     Config { config | placeholder = plc }
 
 
-{-| -}
+{-| Sets the state value.
+-}
 state : State -> Config item -> Config item
 state state_ (Config config) =
     Config { config | state = state_ }
 
 
-{-| -}
+{-| Buils the items that will appear in the list-box.
+When using the Multi select variant, selected items will be visually removed
+from the list.
+-}
 menuItems : List (MenuItem item) -> Config item -> Config item
 menuItems items (Config config) =
     Config { config | menuItems = items }
