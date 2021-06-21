@@ -38,6 +38,7 @@ import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import List.Extra as ListExtra
+import Select.Internal as Internal
 import SelectInput
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, height, viewBox)
@@ -113,11 +114,6 @@ type InitialMousedown
     | InputMousedown
     | ContainerMousedown
     | NothingMousedown
-
-
-type Direction
-    = Up
-    | Down
 
 
 type MenuItemVisibility
@@ -667,7 +663,7 @@ update msg (State state_) =
                     update OpenMenu (State state_)
 
                 nextActiveTargetIndex =
-                    calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Down
+                    Internal.calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Internal.Down
 
                 nodeQueryForViewportFocus =
                     if shouldQueryNextTargetElement nextActiveTargetIndex state_ then
@@ -691,7 +687,7 @@ update msg (State state_) =
                     update OpenMenu (State state_)
 
                 nextActiveTargetIndex =
-                    calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Up
+                    Internal.calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Internal.Up
 
                 nodeQueryForViewportFocus =
                     if shouldQueryNextTargetElement nextActiveTargetIndex state_ then
@@ -1148,6 +1144,9 @@ viewMenuItem viewMenuItemData =
 
                     else
                         [ ariaSelected "false" ]
+
+                resolvePosinsetAriaAttrib =
+                    [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
             in
             -- option
             li
@@ -1181,6 +1180,7 @@ viewMenuItem viewMenuItemData =
                     ++ resolveMouseUp
                     ++ resolveDataTestId
                     ++ resolveSelectedAriaAttribs
+                    ++ resolvePosinsetAriaAttrib
                 )
                 [ text data.menuItem.label ]
         )
@@ -1496,30 +1496,6 @@ canBeSpaceToggled menuOpen inputValue =
 
 
 -- CALC
-
-
-calculateNextActiveTarget : Int -> Int -> Direction -> Int
-calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
-    case direction of
-        Up ->
-            if currentTargetIndex == 0 then
-                0
-
-            else if totalTargetCount < currentTargetIndex + 1 then
-                0
-
-            else
-                currentTargetIndex - 1
-
-        Down ->
-            if currentTargetIndex + 1 == totalTargetCount then
-                currentTargetIndex
-
-            else if totalTargetCount < currentTargetIndex + 1 then
-                0
-
-            else
-                currentTargetIndex + 1
 
 
 calculateMenuBoundaries : MenuListElement -> MenuListBoundaries
