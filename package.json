@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "e2e:test": "bin/test-ts.sh",
-    "watch": "elm-live --no-server"
+    "watch": "elm-live --no-server",
+    "elm:test": "elm-test"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
     "elm-analyse": "^0.16.5",
     "elm-format": "^0.8.5",
     "elm-live": "^4.0.0-rc.1",
+    "elm-test": "^0.19.1-revision7",
     "mocha": "^8.4.0",
     "playwright": "^1.11.1",
     "ts-node": "^10.0.0",
