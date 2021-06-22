@@ -1,4 +1,4 @@
-module Select.Internal exposing (Direction(..), calculateNextActiveTarget)
+module Select.Internal exposing (Direction(..), calculateNextActiveTarget, shouldQueryNextTargetElement)
 
 
 type Direction
@@ -28,3 +28,8 @@ calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
 
             else
                 currentTargetIndex + 1
+
+
+shouldQueryNextTargetElement : Int -> Int -> Bool
+shouldQueryNextTargetElement nextTargetIndex activeTargetIndex =
+    nextTargetIndex /= activeTargetIndex

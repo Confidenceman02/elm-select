@@ -666,7 +666,7 @@ update msg (State state_) =
                     Internal.calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Internal.Down
 
                 nodeQueryForViewportFocus =
-                    if shouldQueryNextTargetElement nextActiveTargetIndex state_ then
+                    if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
                         queryNodesForViewportFocus selectId nextActiveTargetIndex
 
                     else
@@ -690,7 +690,7 @@ update msg (State state_) =
                     Internal.calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Internal.Up
 
                 nodeQueryForViewportFocus =
-                    if shouldQueryNextTargetElement nextActiveTargetIndex state_ then
+                    if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
                         queryNodesForViewportFocus selectId nextActiveTargetIndex
 
                     else
@@ -1482,11 +1482,6 @@ isMenuItemWithinBottomBoundary (MenuItemElement menuItemElement) bottomBoundary 
 isEmptyInputValue : Maybe String -> Bool
 isEmptyInputValue inputValue =
     String.isEmpty (Maybe.withDefault "" inputValue)
-
-
-shouldQueryNextTargetElement : Int -> SelectState -> Bool
-shouldQueryNextTargetElement nextTargetIndex state_ =
-    nextTargetIndex /= state_.activeTargetIndex
 
 
 canBeSpaceToggled : Bool -> Maybe String -> Bool
