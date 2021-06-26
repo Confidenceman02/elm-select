@@ -31,7 +31,7 @@ import DotLoadingIcon
 import Events
 import Html.Styled exposing (Html, button, div, input, li, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaExpanded, ariaHasPopup, ariaSelected, role)
+import Html.Styled.Attributes.Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
@@ -811,13 +811,6 @@ view (Config config) selectId =
 
                 else
                     []
-
-            controlAriaAttribs =
-                if state_.menuOpen then
-                    [ ariaExpanded "true" ]
-
-                else
-                    [ ariaExpanded "false" ]
           in
           div
             -- control
@@ -847,11 +840,7 @@ view (Config config) selectId =
 
                     else
                         [ attribute "data-test-id" "selectContainer"
-                        , role "combobox"
-                        , ariaHasPopup "listbox"
-                        , attribute "aria-owns" (menuListId selectId)
                         ]
-                            ++ controlAriaAttribs
                    )
             )
             [ -- valueContainer
@@ -1293,6 +1282,9 @@ viewSelectInput viewSelectInputData =
 
                 _ ->
                     config
+
+        resolveAriaExpanded config =
+            SelectInput.setAriaExpanded viewSelectInputData.menuOpen config
     in
     SelectInput.view
         (SelectInput.default
@@ -1305,6 +1297,7 @@ viewSelectInput viewSelectInputData =
             |> resolveAriaActiveDescendant
             |> resolveAriaControls
             |> resolveAriaLabelledBy
+            |> resolveAriaExpanded
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
                         ++ (Events.isEscape InputEscape

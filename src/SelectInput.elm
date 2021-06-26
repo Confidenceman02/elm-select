@@ -13,6 +13,7 @@ module SelectInput exposing
     , onMousedown
     , preventKeydownOn
     , setAriaControls
+    , setAriaExpanded
     , setAriaLabelledBy
     , sizerId
     , view
@@ -21,7 +22,7 @@ module SelectInput exposing
 import Events
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaLabelledby, role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
 
@@ -49,6 +50,7 @@ type alias Configuration msg =
     , ariaActiveDescendant : Maybe String
     , ariaControls : Maybe String
     , ariaLabelledBy : Maybe String
+    , ariaExpanded : Bool
     }
 
 
@@ -69,8 +71,9 @@ defaults =
     , inputSizing = Dynamic
     , dataTestId = "selectInput"
     , ariaActiveDescendant = Nothing
-    , ariaControls = Nothing
     , ariaLabelledBy = Nothing
+    , ariaControls = Nothing
+    , ariaExpanded = False
     }
 
 
@@ -102,14 +105,19 @@ defaultWidth =
 -- MODIFIERS
 
 
-setAriaLabelledBy : String -> Config msg -> Config msg
-setAriaLabelledBy s (Config config) =
-    Config { config | ariaLabelledBy = Just s }
+setAriaExpanded : Bool -> Config msg -> Config msg
+setAriaExpanded expanded (Config config) =
+    Config { config | ariaExpanded = expanded }
 
 
 setAriaControls : String -> Config msg -> Config msg
 setAriaControls s (Config config) =
     Config { config | ariaControls = Just s }
+
+
+setAriaLabelledBy : String -> Config msg -> Config msg
+setAriaLabelledBy s (Config config) =
+    Config { config | ariaLabelledBy = Just s }
 
 
 activeDescendant : String -> Config msg -> Config msg
@@ -264,9 +272,26 @@ view (Config config) id_ =
             , style "box-sizing" "border-box"
             , style "margin" "2px"
             , style "display" "inline"
+            , role "combobox"
+            , ariaHasPopup "listbox"
             ]
+
+        withAriaOwns =
+            case config.ariaControls of
+                Just al ->
+                    [ attribute "aria-owns" al ]
+
+                _ ->
+                    []
+
+        withAriaExpanded =
+            if config.ariaExpanded then
+                [ ariaExpanded "true" ]
+
+            else
+                [ ariaExpanded "false" ]
     in
-    div autoSizeInputContainerStyles
+    div (autoSizeInputContainerStyles ++ withAriaOwns ++ withAriaExpanded)
         [ input
             ([ id (inputId id_)
              , value inputValue
@@ -274,6 +299,7 @@ view (Config config) id_ =
              , role "textbox"
              , attribute "aria-multiline" "false"
              , attribute "aria-autocomplete" "list"
+             , attribute "autocomplete" "off"
              , attribute "data-test-id" config.dataTestId
              ]
                 ++ events
