@@ -1018,7 +1018,7 @@ viewMenu viewMenuData =
             , Css.position Css.absolute
             , Css.width (Css.pct 100)
             , Css.boxSizing Css.borderBox
-            , Css.border3 (Css.px 6) Css.solid Css.transparent
+            , Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
             , Css.borderRadius (Css.px 4)
 
             -- , Css.border3 (Css.px 6) Css.solid Css.transparent
@@ -1031,8 +1031,8 @@ viewMenu viewMenuData =
         menuListStyles =
             [ Css.maxHeight (Css.px 215)
             , Css.overflowY Css.auto
-            , Css.paddingBottom (Css.px 6)
-            , Css.paddingTop (Css.px 4)
+            , Css.paddingBottom (Css.px listBoxPaddingBottom)
+            , Css.paddingTop (Css.px listBoxPaddingTop)
             , Css.paddingLeft (Css.px 0)
             , Css.marginTop (Css.px 0)
             , Css.marginBottom (Css.px 0)
@@ -1601,16 +1601,22 @@ setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem)
         Above ->
             let
                 menuItemDistanceAbove =
-                    menuListElem.element.y - menuItemElem.element.y
+                    menuListElem.element.y - menuItemElem.element.y + listBoxPaddingTop + listBoxBorder
             in
-            ( Task.attempt (\_ -> DoNothing) <| Dom.setViewportOf (menuListId selectId) 0 (menuListViewport - menuItemDistanceAbove), menuListViewport - menuItemDistanceAbove )
+            ( Task.attempt (\_ -> DoNothing) <|
+                Dom.setViewportOf (menuListId selectId) 0 (menuListViewport - menuItemDistanceAbove)
+            , menuListViewport - menuItemDistanceAbove
+            )
 
         Below ->
             let
                 menuItemDistanceBelow =
-                    (menuItemElem.element.y + menuItemElem.element.height) - (menuListElem.element.y + menuListElem.element.height)
+                    (menuItemElem.element.y + menuItemElem.element.height + listBoxPaddingBottom + listBoxBorder) - (menuListElem.element.y + menuListElem.element.height)
             in
-            ( Task.attempt (\_ -> DoNothing) <| Dom.setViewportOf (menuListId selectId) 0 (menuListViewport + menuItemDistanceBelow), menuListViewport + menuItemDistanceBelow )
+            ( Task.attempt (\_ -> DoNothing) <|
+                Dom.setViewportOf (menuListId selectId) 0 (menuListViewport + menuItemDistanceBelow)
+            , menuListViewport + menuItemDistanceBelow
+            )
 
         Both ->
             let
@@ -1722,3 +1728,18 @@ bold =
     [ Css.color (Css.hex "#35374A")
     , Css.fontWeight (Css.int 400)
     ]
+
+
+listBoxPaddingBottom : Float
+listBoxPaddingBottom =
+    6
+
+
+listBoxPaddingTop : Float
+listBoxPaddingTop =
+    4
+
+
+listBoxBorder : Float
+listBoxBorder =
+    6

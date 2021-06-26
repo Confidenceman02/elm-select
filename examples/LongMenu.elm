@@ -30,6 +30,9 @@ init =
             , { item = "Fun", label = "Fun" }
             , { item = "To", label = "To" }
             , { item = "Use", label = "Use" }
+            , { item = "All", label = "All" }
+            , { item = "The", label = "The" }
+            , { item = "Time", label = "Time" }
             ]
       , selectedItem = Nothing
       }
