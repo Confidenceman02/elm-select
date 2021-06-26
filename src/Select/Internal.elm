@@ -11,7 +11,8 @@ calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
     case direction of
         Up ->
             if currentTargetIndex == 0 then
-                0
+                -- active target is last item
+                totalTargetCount - 1
 
             else if totalTargetCount < currentTargetIndex + 1 then
                 0
@@ -20,8 +21,9 @@ calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
                 currentTargetIndex - 1
 
         Down ->
+            -- active target is first item
             if currentTargetIndex + 1 == totalTargetCount then
-                currentTargetIndex
+                0
 
             else if totalTargetCount < currentTargetIndex + 1 then
                 0

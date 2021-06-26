@@ -140,6 +140,47 @@ describe("Keyboard ArrowDown", () => {
 
     expect(firstItemFocused).toBeTruthy();
   });
+
+  it("target focuses the first menu item when the last menu item is target focused", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.focus("[data-test-id=selectInput]");
+    await page.keyboard.press("ArrowUp");
+    await page.waitForTimeout(100);
+
+    const lastItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus3]"
+    );
+
+    expect(lastItemFocused).toBeTruthy();
+
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(100);
+
+    const firstItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus0]"
+    );
+
+    expect(firstItemFocused).toBeTruthy();
+  });
+});
+
+describe("Keyboard ArrowUp", () => {
+  it("target focuses the last menu item", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.focus("[data-test-id=selectInput]");
+    await page.keyboard.press("ArrowUp");
+    await page.waitForTimeout(100);
+
+    const lastItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus3]"
+    );
+
+    expect(lastItemFocused).toBeTruthy();
+  });
 });
 
 describe("Keyboard Enter", () => {

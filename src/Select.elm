@@ -701,7 +701,12 @@ update msg (State state_) =
                         ( { state_ | activeTargetIndex = nextActiveTargetIndex, menuNavigation = Keyboard }, nodeQueryForViewportFocus )
 
                     else
-                        ( { stateWithOpenMenu | menuNavigation = Keyboard }, cmdWithOpenMenu )
+                        ( { stateWithOpenMenu
+                            | menuNavigation = Keyboard
+                            , activeTargetIndex = nextActiveTargetIndex
+                          }
+                        , Cmd.batch [ cmdWithOpenMenu, nodeQueryForViewportFocus ]
+                        )
             in
             ( Nothing, State updatedState, updatedCmd )
 
