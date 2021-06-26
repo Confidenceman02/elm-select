@@ -33,7 +33,7 @@ __Opt in to JS optimization__
 
 __Import the elm-select package__
 
-NOTE: Because this is a github package you will need to add the following line to your projects `.npmrc`.
+NOTE: Because this is a github package for now, you will need to add the following line to your projects `.npmrc`.
 ```
 // .npmrc 
 @confidenceman02:registry=https://npm.pkg.github.com/
