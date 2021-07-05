@@ -411,6 +411,11 @@
     "@babel/helper-validator-identifier" "^7.14.0"
     to-fast-properties "^2.0.0"
 
+"@icelab/defo@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@icelab/defo/-/defo-0.0.3.tgz#2124781382270e66a43c69c9be3d50598d9a0864"
+  integrity sha512-cPXj4pIDGfvw0RLLVeui/BGnSapWCxQ9Gnh7y7oLkuQM9lEIwUtA6yVR5s148jz1ldyH/wgUm3nFqAVURn3gpg==
+
 "@jest/types@^26.6.2":
   version "26.6.2"
   resolved "https://registry.yarnpkg.com/@jest/types/-/types-26.6.2.tgz#bef5a532030e1d88a2f5a6d933f84e97226ed48e"

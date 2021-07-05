@@ -1,29 +1,23 @@
 {
   "name": "@confidenceman02/elm-select",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Helper functions for Confidenceman02/elm-select elm package",
   "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "browser": "dist/index.bundle.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server",
     "elm:test": "elm-test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Confidenceman02/elm-select.git"
-  },
-  "keywords": [
-    "select",
-    "elm-select"
-  ],
-  "author": "Confidenceman02",
   "license": "BSD-3-Clause",
-  "bugs": {
-    "url": "https://github.com/Confidenceman02/elm-select/issues"
-  },
-  "homepage": "https://github.com/Confidenceman02/elm-select#readme",
   "devDependencies": {
+    "@icelab/defo": "^0.0.3",
     "@playwright/test": "^1.12.0",
     "@tsconfig/node12": "^1.0.7",
     "@types/chai": "^4.2.18",
