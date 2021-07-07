@@ -26,8 +26,8 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install
 
-      - name: Run elm examples
-        run: yarn elm_reactor
+      - name: Run elm e2e tests
+        run: yarn ci:elm:e2e
 
       - name: elm-analyse
         run: yarn elm-analyse

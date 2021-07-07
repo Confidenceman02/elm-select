@@ -14,8 +14,8 @@
     "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server",
     "elm:test": "elm-test",
-    "elm_reactor": "bin/elm-examples.sh",
-    "ci": "start-server-and-test elm_reactor http://localhost:8080 e2e:test"
+    "elm:examples": "bin/elm-examples.sh",
+    "ci:elm:e2e": "start-server-and-test elm:examples http://localhost:8000 e2e:test"
   },
   "license": "BSD-3-Clause",
   "devDependencies": {
