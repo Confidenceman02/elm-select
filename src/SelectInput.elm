@@ -25,6 +25,7 @@ import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value
 import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
+import Json.Encode as Encode
 
 
 type Config msg
@@ -33,7 +34,7 @@ type Config msg
 
 type InputSizing
     = Dynamic
-    | Fixed
+    | DynamicJsOptimized
 
 
 type alias Configuration msg =
@@ -172,6 +173,15 @@ disabled predicate (Config config) =
 view : Config msg -> String -> Html msg
 view (Config config) id_ =
     let
+        resolveSizerId =
+            sizerId id_
+
+        resolveInputId =
+            inputId id_
+
+        buildDynamcSelectInputProps =
+            Encode.encode 0 <| Encode.object [ ( "sizerId", Encode.string resolveSizerId ) ]
+
         inputWidthStyle =
             case config.inputSizing of
                 Dynamic ->
@@ -181,8 +191,8 @@ view (Config config) id_ =
                     else
                         [ size <| String.length inputValue + config.minWidth ]
 
-                Fixed ->
-                    [ style "width" (String.fromInt config.minWidth ++ "px") ]
+                DynamicJsOptimized ->
+                    [ style "width" (String.fromInt config.minWidth ++ "px"), attribute "data-es-dynamic-select-input" buildDynamcSelectInputProps ]
 
         input_ changeMsg =
             Events.onInputAt [ "target", "value" ] changeMsg
@@ -293,7 +303,7 @@ view (Config config) id_ =
     in
     div (autoSizeInputContainerStyles ++ withAriaOwns ++ withAriaExpanded)
         [ input
-            ([ id (inputId id_)
+            ([ id resolveInputId
              , value inputValue
              , type_ "text"
              , role "textbox"
