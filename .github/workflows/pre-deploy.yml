@@ -17,6 +17,10 @@ jobs:
 
       - uses: c-hive/gha-yarn-cache@v1
 
+      - uses: jorelali/setup-elm@v3
+        with:
+          elm-version: 0.19.1
+
       - name: Install JS dependencies
         # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         if: steps.yarn-cache.outputs.cache-hit != 'true'
