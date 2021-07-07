@@ -13,7 +13,8 @@
   "scripts": {
     "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server",
-    "elm:test": "elm-test"
+    "elm:test": "elm-test",
+    "elm_reactor": "cd examples && elm reactor"
   },
   "license": "BSD-3-Clause",
   "devDependencies": {
