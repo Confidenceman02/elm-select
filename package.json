@@ -14,7 +14,7 @@
     "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server",
     "elm:test": "elm-test",
-    "elm_reactor": "cd examples && elm reactor"
+    "elm_reactor": "bin/elm-examples.sh"
   },
   "license": "BSD-3-Clause",
   "devDependencies": {
