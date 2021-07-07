@@ -169,6 +169,7 @@ type alias ViewSelectInputData item =
     , menuOpen : Bool
     , variant : Variant item
     , labelledBy : Maybe String
+    , jsOptmized : Bool
     }
 
 
@@ -212,6 +213,7 @@ type alias SelectState =
     , menuViewportFocusNodes : Maybe ( MenuListElement, MenuItemElement )
     , menuListScrollTop : Float
     , menuNavigation : MenuNavigation
+    , jsOptimize : Bool
     }
 
 
@@ -271,6 +273,7 @@ initState =
         , menuViewportFocusNodes = Nothing
         , menuListScrollTop = 0
         , menuNavigation = Mouse
+        , jsOptimize = False
         }
 
 
@@ -908,6 +911,7 @@ view (Config config) selectId =
                                     state_.menuOpen
                                     config.variant
                                     config.labelledBy
+                                    state_.jsOptimize
                                 )
 
                         else
@@ -1257,12 +1261,11 @@ viewSelectInput viewSelectInputData =
                 ]
 
         resolveInputWidth selectInputConfig =
-            -- TODO resolve how to use JS to handle input sizing
-            -- if viewSelectInputData.usePorts then
-            --     -- fixed because javascript controls its width via ports
-            --     SelectInput.inputSizing SelectInput.Fixed selectInputConfig
-            -- else
-            SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
+            if viewSelectInputData.jsOptmized then
+                SelectInput.inputSizing SelectInput.DynamicJsOptimized selectInputConfig
+
+            else
+                SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
 
         resolveAriaActiveDescendant config =
             case viewSelectInputData.maybeActiveTarget of
