@@ -4,7 +4,7 @@ import Browser
 import Css
 import Html.Styled as Styled exposing (Html, div)
 import Html.Styled.Attributes as StyledAttribs
-import Select exposing (MenuItem, initState, selectIdentifier, update)
+import Select exposing (MenuItem, initState, jsOptimize, selectIdentifier, update)
 
 
 type Msg
@@ -20,7 +20,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState
+    ( { selectState = initState |> jsOptimize True
       , items =
             [ { item = "Elm", label = "Elm" }
             , { item = "Is", label = "Is" }

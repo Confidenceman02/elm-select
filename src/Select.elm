@@ -2,7 +2,7 @@ module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
-    , disabled, labelledBy, loading
+    , disabled, jsOptimize, labelledBy, loading
     )
 
 {-| Select items from a drop-down list.
@@ -346,7 +346,7 @@ state state_ (Config config) =
     Config { config | state = state_ }
 
 
-{-| Buils the items that will appear in the list-box.
+{-| Builds the items that will appear in the list-box.
 When using the Multi select variant, selected items will be visually removed
 from the list.
 -}
@@ -374,6 +374,15 @@ loading predicate (Config config) =
 labelledBy : String -> Config item -> Config item
 labelledBy s (Config config) =
     Config { config | labelledBy = Just s }
+
+
+
+-- STATE MODIFIERS
+
+
+jsOptimize : Bool -> State -> State
+jsOptimize pred (State state_) =
+    State { state_ | jsOptimize = pred }
 
 
 
