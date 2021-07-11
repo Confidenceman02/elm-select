@@ -170,6 +170,7 @@ type alias ViewSelectInputData item =
     , variant : Variant item
     , labelledBy : Maybe String
     , jsOptmized : Bool
+    , controlUiFocused : Bool
     }
 
 
@@ -921,6 +922,7 @@ view (Config config) selectId =
                                     config.variant
                                     config.labelledBy
                                     state_.jsOptimize
+                                    state_.controlUiFocused
                                 )
 
                         else
@@ -1271,7 +1273,7 @@ viewSelectInput viewSelectInputData =
 
         resolveInputWidth selectInputConfig =
             if viewSelectInputData.jsOptmized then
-                SelectInput.inputSizing SelectInput.DynamicJsOptimized selectInputConfig
+                SelectInput.inputSizing (SelectInput.DynamicJsOptimized viewSelectInputData.controlUiFocused) selectInputConfig
 
             else
                 SelectInput.inputSizing SelectInput.Dynamic selectInputConfig

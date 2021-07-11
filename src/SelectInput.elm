@@ -32,9 +32,13 @@ type Config msg
     = Config (Configuration msg)
 
 
+type alias Active =
+    Bool
+
+
 type InputSizing
     = Dynamic
-    | DynamicJsOptimized
+    | DynamicJsOptimized Active
 
 
 type alias Configuration msg =
@@ -191,8 +195,11 @@ view (Config config) id_ =
                     else
                         [ size <| String.length inputValue + config.minWidth ]
 
-                DynamicJsOptimized ->
+                DynamicJsOptimized True ->
                     [ style "width" (String.fromInt config.minWidth ++ "px"), attribute "data-es-dynamic-select-input" buildDynamcSelectInputProps ]
+
+                DynamicJsOptimized False ->
+                    [ style "width" (String.fromInt config.minWidth ++ "px") ]
 
         input_ changeMsg =
             Events.onInputAt [ "target", "value" ] changeMsg
