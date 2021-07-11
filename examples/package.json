@@ -10,7 +10,7 @@
     "parcel": "^2.0.0-beta.3.1"
   },
   "scripts": {
-    "start": "parcel index.html"
+    "start": "rm -rf .parcel-cache && parcel index.html"
   },
   "author": "",
   "license": "ISC"
