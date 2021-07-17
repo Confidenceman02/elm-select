@@ -8,22 +8,24 @@ type DynamicSelectInputProps = {
   sizerId: string;
   defaultInputWidth: number;
 };
-const sizerCallback = (
-  sizer: HTMLElement,
-  input: HTMLElement,
-  initialWidth: number,
-  data: DynamicSelectInputProps
-): MutationCallback => () => {
-  // Need to remove the initial width of the sizer to account for empty space.
-  const currentSizerWidth: number =
-    sizer.getBoundingClientRect().width - initialWidth;
-  // We also need to add the default width of the input which accounts for the cursor
-  const calculatedInputWidth =
-    currentSizerWidth < data.defaultInputWidth
-      ? data.defaultInputWidth
-      : currentSizerWidth + data.defaultInputWidth;
-  input.style.width = `${calculatedInputWidth.toString()}px`;
-};
+const sizerCallback =
+  (
+    sizer: HTMLElement,
+    input: HTMLElement,
+    initialWidth: number,
+    data: DynamicSelectInputProps
+  ): MutationCallback =>
+  () => {
+    // Need to remove the initial width of the sizer to account for empty space.
+    const currentSizerWidth: number =
+      sizer.getBoundingClientRect().width - initialWidth;
+    // We also need to add the default width of the input which accounts for the cursor
+    const calculatedInputWidth =
+      currentSizerWidth < data.defaultInputWidth
+        ? data.defaultInputWidth
+        : currentSizerWidth + data.defaultInputWidth;
+    input.style.width = `${calculatedInputWidth.toString()}px`;
+  };
 
 const initObserver = (
   sizer: HTMLElement,
@@ -48,6 +50,6 @@ export function dynamicSelectInput(
   }
   return {
     destroy: noop,
-    update: () => console.log("Update from defo"),
+    update: noop,
   };
 }
