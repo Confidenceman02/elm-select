@@ -32,6 +32,7 @@
     "elm-test": "^0.19.1-revision7",
     "mocha": "^9.0.2",
     "playwright": "^1.12.3",
+    "prettier": "^2.3.2",
     "start-server-and-test": "^1.12.6",
     "ts-node": "^10.1.0",
     "typescript": "^4.3.5"
