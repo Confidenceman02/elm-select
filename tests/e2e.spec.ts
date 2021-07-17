@@ -29,6 +29,7 @@ describe("examples", () => {
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const disabledExampleVisible = await page.isVisible("text=Disabled.elm");
     const clearableExampleVisible = await page.isVisible("text=Clearable.elm");
+    const longMenuVisible = await page.isVisible("text=LongMenu.elm");
 
     expect(singleExampleVisible).toBeTruthy();
     expect(truncationExampleVisible).toBeTruthy();
@@ -36,6 +37,7 @@ describe("examples", () => {
     expect(multiExampleVisible).toBeTruthy();
     expect(disabledExampleVisible).toBeTruthy();
     expect(clearableExampleVisible).toBeTruthy();
+    expect(longMenuVisible).toBeTruthy();
   });
 });
 
