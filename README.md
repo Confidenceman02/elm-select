@@ -68,7 +68,7 @@ __Render your view__.
 view : Model -> Msg
 view model =
   Select.view 
-      (Select.single Nothing)
+      ((Select.single Nothing)
           |> Select.state model.selectState
           |> Select.menuItems model.items
           |> Select.placeholder "Placeholder"
