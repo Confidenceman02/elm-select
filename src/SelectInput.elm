@@ -184,7 +184,11 @@ view (Config config) id_ =
             inputId id_
 
         buildDynamcSelectInputProps =
-            Encode.encode 0 <| Encode.object [ ( "sizerId", Encode.string resolveSizerId ) ]
+            Encode.encode 0 <|
+                Encode.object
+                    [ ( "sizerId", Encode.string resolveSizerId )
+                    , ( "defaultInputWidth", Encode.int defaultWidth )
+                    ]
 
         inputWidthStyle =
             case config.inputSizing of
