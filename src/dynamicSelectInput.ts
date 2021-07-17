@@ -1,13 +1,11 @@
+import { DefoFunctionReturnValue, DynamicSelectInputProps } from "./types";
+
 const noop = () => {};
 
 let activeMutationObserver: MutationObserver | undefined;
 
 const config: MutationObserverInit = { characterData: true, subtree: true };
 
-type DynamicSelectInputProps = {
-  sizerId: string;
-  defaultInputWidth: number;
-};
 const sizerCallback =
   (
     sizer: HTMLElement,
@@ -43,7 +41,7 @@ const initObserver = (
 export function dynamicSelectInput(
   inputElement: HTMLElement,
   props: DynamicSelectInputProps
-) {
+): DefoFunctionReturnValue {
   const sizerNode = document.getElementById(props.sizerId);
   if (sizerNode) {
     initObserver(sizerNode, inputElement, props).observe(sizerNode, config);

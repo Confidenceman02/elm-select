@@ -11,3 +11,8 @@ export type DefoFunctionReturnValue = {
   destroy?: () => void;
   update?: (props: any) => void;
 };
+
+export type DynamicSelectInputProps = {
+  sizerId: string;
+  defaultInputWidth: number;
+};
