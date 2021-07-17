@@ -2,6 +2,7 @@ import { chromium, Browser } from "playwright";
 import { expect } from "@playwright/test";
 let browser: Browser;
 const BASE_URI = "http://localhost:8000";
+const OPTIMIZED_BASE_URI = "http://localhost:1234";
 
 before(async () => {
   browser = await chromium.launch();
@@ -249,5 +250,46 @@ describe("Keyboard Escape", () => {
     );
 
     expect(listBoxVisibleAfterEscape).toBeFalsy();
+  });
+});
+
+describe("JsOptimized", () => {
+  it("renders dynamic input data attributes when focused", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${OPTIMIZED_BASE_URI}`);
+
+    const dynamicAttribsVisibleBeforeFocus = await page.isVisible(
+      `[data-es-dynamic-select-input]`
+    );
+
+    expect(dynamicAttribsVisibleBeforeFocus).toBeFalsy();
+
+    await page.focus("[data-test-id=selectInput]");
+    const dynamicAttribsVisibleAfterFocus = await page.isVisible(
+      `[data-es-dynamic-select-input]`
+    );
+
+    expect(dynamicAttribsVisibleAfterFocus).toBeTruthy();
+  });
+
+  it("dynamically increases the input width when typing", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${OPTIMIZED_BASE_URI}`);
+
+    const defaultInputWidth = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.getBoundingClientRect().width
+    );
+
+    await page.type("[data-test-id=selectInput]", "JAIME");
+    await page.waitForTimeout(90);
+    const currentInputWidth = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.getBoundingClientRect().width
+    );
+
+    expect(currentInputWidth).toBeGreaterThan(defaultInputWidth);
   });
 });
