@@ -41,7 +41,7 @@ describe("examples", () => {
 describe("SingleSearchable", () => {
   // LIST BOX
   it("list box visible after matching input", async () => {
-    await browser.newContext();
+    // @ts-ignore
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/SingleSearchable.elm`);
 
