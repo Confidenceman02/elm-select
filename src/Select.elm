@@ -91,6 +91,12 @@ type Msg item
 
 
 {-| The select actions that your program can react to.
+
+    InputChange -> The value of the input has changed
+    Select -> There has been a selection of a [`MenuItem`](#MenuItem)
+    DeselectMulti -> A [`multi`](#multi) variant selected tag has been deselected
+    ClearSingleSelectItem -> A [`single`](#single) variant selected menu item has been deselected
+
 -}
 type Action item
     = InputChange String
@@ -225,7 +231,7 @@ type MenuNavigation
 
 {-| The list item that will be represented in the list-box.
 
-The `item` is the type representation of the list-box item that will be used in an Action.
+The `item` property is the value representation of the list-box item that will be used in an Action.
 
 The `label` is the text representation that will be shown in the drop-down list.
 
@@ -234,6 +240,7 @@ The `label` is the text representation that will be shown in the drop-down list.
         | Hammer
         | Drill
 
+    toolItems : MenuItem Tool
     toolItems =
         [ { item = Screwdriver, label = "Screwdriver" }
         , { item = Hammer, label = "Hammer" }
@@ -333,7 +340,7 @@ multiTagColor c (MultiSelectConfig config) =
 -- MODIFIERS
 
 
-{-| The text that will appear as a select placeholder.
+{-| The text that will appear as an input placeholder.
 -}
 placeholder : String -> Config item -> Config item
 placeholder plc (Config config) =
@@ -341,22 +348,38 @@ placeholder plc (Config config) =
 
 
 {-| Sets the state value.
+
+    Should be a persisted value that lives in your model.
+
+    model : Model
+    model = { selectState = initState }
+
 -}
 state : State -> Config item -> Config item
 state state_ (Config config) =
     Config { config | state = state_ }
 
 
-{-| Builds the items that will appear in the list-box.
-When using the Multi select variant, selected items will be visually removed
-from the list.
+{-| The items that will appear in the menu box.
+
+    NOTE: When using the Multi select variant, selected items will be visually removed
+    from the menu box.
+
 -}
 menuItems : List (MenuItem item) -> Config item -> Config item
 menuItems items (Config config) =
     Config { config | menuItems = items }
 
 
-{-| -}
+{-| Allows a ['single'](#single) variant selected menu item to be deselected.
+
+            view
+                ((single Nothing)
+                    |> clearable True
+                )
+                (selectIdentifier "SingleSelectExample")
+
+-}
 clearable : Bool -> Config item -> Config item
 clearable clear (Config config) =
     Config { config | clearable = clear }
@@ -409,7 +432,12 @@ multi multiSelectTagConfig selectedItems =
     Config { defaults | variant = Multi multiSelectTagConfig selectedItems }
 
 
-{-| -}
+{-| The ID for the rendered Select input
+
+    NOTE: It is important that the ID's of all selects that exist on
+    a page remain unique.
+
+-}
 selectIdentifier : String -> SelectId
 selectIdentifier id_ =
     SelectId id_
@@ -419,7 +447,8 @@ selectIdentifier id_ =
 -- UPDATE
 
 
-{-| -}
+{-| Handle all Msg events
+-}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
@@ -756,7 +785,18 @@ update msg (State state_) =
             ( Just ClearSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus inputId) )
 
 
-{-| -}
+{-| Renders the select
+
+            yourView model =
+                view
+                    ((single Nothing)
+                        |> state model.selectState
+                        |> menuItems model.items
+                        |> placeholder "Placeholder"
+                    )
+                    (selectIdentifier "SingleSelectExample")
+
+-}
 view : Config item -> SelectId -> Html (Msg item)
 view (Config config) selectId =
     let
