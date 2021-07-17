@@ -283,6 +283,8 @@ view (Config config) id_ =
             , style "overflow" "scroll"
             , style "white-space" "pre"
             , style "font-size" "16px"
+            , style "font-style" "normal"
+            , style "font-family" "Arial"
             , style "letter-spacing" "normal"
             , style "text-transform" "none"
             ]
