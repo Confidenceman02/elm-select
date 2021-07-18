@@ -77,20 +77,18 @@ view model =
 ```
 
 ## Opt in JS optimizations
-The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) has some JS performance optimizations that dynamically size the input element. There are some sensible reasons why this optimization makes sense.
+The **@confidenceman02/elm-select** project has some JS performance optimizations that dynamically size the input element. There are some sensible reasons why this optimization makes sense.
 
 Lets think about how we would dynamically resize an input element as someone types in elm.
 1. We would handle some sort of "input" event.
 2. We would query a hidden sizer node that contains the input text for its dimensions.
 3. We would update the width of the input.
 
-Resizing an input dynamically using the above method ends up being not very performant due to how slow is to react to events and query the DOM. It is certain that someone will experience a lag between them typing and the input resizing. Not a great user experience!
+Resizing an input dynamically using the above method ends up being not very performant due to how slow it is to react to events and query the DOM. It is certain that someone will experience a lag between them typing and the input resizing. Not a great user experience!
 
 When you opt in to JS optimization, elm-select uses a mutation observer which allows for a zero lag, performant, dynamically sized input.
 
 If you don't want to use a JS optimization thats totally ok! Elm-select handles dynamic width via the [size atribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/size) by default. The size attribute is not an ideal solution despite the fact it mostly just works. Consider adding the very minimal JS in to your project to get the best performance.
-
-NOTE: It doesn't matter how many `elm-select`'s you render, on the page. The javascript included will detect and handle all of them.
 
 __Opt in to JS optimization__
 ```elm
@@ -98,7 +96,7 @@ __Opt in to JS optimization__
 { selectState = initState |> jsOptimize True }
 ```
 
-__Importing the elm-select package__
+__Importing the JS__
 
 Via npm
 ```sh
@@ -119,7 +117,7 @@ install the package.
 npm install @confidenceman02/elm-select
 ```
 
-__Using the javascript__
+__Using the JS__
 
 Import the script wherever you are initiating your Elm program.
 ```javascript
