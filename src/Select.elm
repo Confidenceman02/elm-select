@@ -22,6 +22,11 @@ module Select exposing
 
 @docs multi, truncateMultiTag, multiTagColor, initMultiConfig
 
+
+# Common
+
+@docs disabled, jsOptimize, labelledBy, loading
+
 -}
 
 import Browser.Dom as Dom
@@ -92,10 +97,13 @@ type Msg item
 
 {-| The select actions that your program can react to.
 
-    InputChange -> The value of the input has changed
-    Select -> There has been a selection of a [`MenuItem`](#MenuItem)
-    DeselectMulti -> A [`multi`](#multi) variant selected tag has been deselected
-    ClearSingleSelectItem -> A [`single`](#single) variant selected menu item has been deselected
+InputChange -> The value of the input has changed
+
+Select -> There has been a selection of a [`MenuItem`](#MenuItem)
+
+DeselectMulti -> A [`multi`](#multi) variant selected tag has been deselected
+
+ClearSingleSelectItem -> A [`single`](#single) variant selected menu item has been deselected
 
 -}
 type Action item
@@ -247,8 +255,8 @@ The `label` is the text representation that will be shown in the drop-down list.
         , { item = Drill, label = "Drill" }
         ]
 
-    view model =
-        Select.view
+    yourView model =
+        view
             (single Nothing
                 |> menuItems toolItems
                 |> state model.selectState
@@ -308,7 +316,13 @@ multiDefaults =
 -- MULTI MODIFIERS
 
 
-{-| Starting value for the MultiSelectConfig type.
+{-| Starting value for the ['multi'](*multi) variant.
+
+    yourView model =
+        view
+            (multi initMultiConfig)
+            (selectIdentifier "1234")
+
 -}
 initMultiConfig : MultiSelectConfig
 initMultiConfig =
@@ -320,6 +334,13 @@ initMultiConfig =
 Handy for when the selected item text is excessively long.
 Text that breaches the set width will display as an ellipses.
 
+Width will be in px values.
+
+        yourView model =
+            view
+                (multi (initMultiConfig |> truncateMultitag 30) [])
+                (selectIdentifier "1234")
+
 -}
 truncateMultiTag : Float -> MultiSelectConfig -> MultiSelectConfig
 truncateMultiTag w (MultiSelectConfig config) =
@@ -328,7 +349,10 @@ truncateMultiTag w (MultiSelectConfig config) =
 
 {-| Set the color for the multi select tag.
 
-        multi (initMultiConfig |> multiTagColor (Css.hex "#E1E2EA")
+        yourView =
+            view
+                (multi (initMultiConfig |> multiTagColor (Css.hex "#E1E2EA") [])
+                (selectIdentifier "1234")
 
 -}
 multiTagColor : Css.Color -> MultiSelectConfig -> MultiSelectConfig
@@ -341,6 +365,12 @@ multiTagColor c (MultiSelectConfig config) =
 
 
 {-| The text that will appear as an input placeholder.
+
+    yourView model =
+        view
+            (single Nothing |> placeholder "some placeholder")
+            (selectIdentifier "1234")
+
 -}
 placeholder : String -> Config item -> Config item
 placeholder plc (Config config) =
@@ -349,10 +379,17 @@ placeholder plc (Config config) =
 
 {-| Sets the state value.
 
-    Should be a persisted value that lives in your model.
+Should be a persisted value that lives in your model.
 
     model : Model
-    model = { selectState = initState }
+    model =
+        { selectState = initState }
+
+    yourView : Model
+    yourView model =
+        view
+            (single Nothing |> state model.selectState)
+            (selectIdentifier "1234")
 
 -}
 state : State -> Config item -> Config item
@@ -360,10 +397,18 @@ state state_ (Config config) =
     Config { config | state = state_ }
 
 
-{-| The items that will appear in the menu box.
+{-| The items that will appear in the menu list.
 
-    NOTE: When using the Multi select variant, selected items will be visually removed
-    from the menu box.
+NOTE: When using the Multi select variant, selected items will be visually removed
+from the menu list.
+
+      items =
+          [ { item = SomeValue, label = "Some label" } ]
+
+      yourView =
+          view
+              (Single Nothing |> menuItems items)
+              (selectIdentifier "1234")
 
 -}
 menuItems : List (MenuItem item) -> Config item -> Config item
@@ -374,9 +419,7 @@ menuItems items (Config config) =
 {-| Allows a ['single'](#single) variant selected menu item to be deselected.
 
             view
-                ((single Nothing)
-                    |> clearable True
-                )
+                (single Nothing |> clearable True)
                 (selectIdentifier "SingleSelectExample")
 
 -}
@@ -385,16 +428,19 @@ clearable clear (Config config) =
     Config { config | clearable = clear }
 
 
+{-| -}
 disabled : Bool -> Config item -> Config item
 disabled predicate (Config config) =
     Config { config | disabled = predicate }
 
 
+{-| -}
 loading : Bool -> Config item -> Config item
 loading predicate (Config config) =
     Config { config | isLoading = predicate }
 
 
+{-| -}
 labelledBy : String -> Config item -> Config item
 labelledBy s (Config config) =
     Config { config | labelledBy = Just s }
@@ -404,6 +450,7 @@ labelledBy s (Config config) =
 -- STATE MODIFIERS
 
 
+{-| -}
 jsOptimize : Bool -> State -> State
 jsOptimize pred (State state_) =
     State { state_ | jsOptimize = pred }
@@ -426,6 +473,12 @@ single maybeSelectedItem =
 
 
 {-| Select multiple items.
+
+        yourView model =
+            view
+                (multi initMultiConfig [])
+                (selectIdentifier "1234")
+
 -}
 multi : MultiSelectConfig -> List (MenuItem item) -> Config item
 multi multiSelectTagConfig selectedItems =
@@ -434,8 +487,13 @@ multi multiSelectTagConfig selectedItems =
 
 {-| The ID for the rendered Select input
 
-    NOTE: It is important that the ID's of all selects that exist on
-    a page remain unique.
+NOTE: It is important that the ID's of all selects that exist on
+a page remain unique.
+
+        yourView model =
+            view
+                (single Nothing)
+                (selectIdentifier "someUniqueId")
 
 -}
 selectIdentifier : String -> SelectId
@@ -448,6 +506,12 @@ selectIdentifier id_ =
 
 
 {-| Handle all Msg events
+
+    yourUpdate msg model =
+        case msg of
+            SelectMsg selectMsg ->
+                update selectMsg model.selectState
+
 -}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
@@ -789,11 +853,7 @@ update msg (State state_) =
 
             yourView model =
                 view
-                    ((single Nothing)
-                        |> state model.selectState
-                        |> menuItems model.items
-                        |> placeholder "Placeholder"
-                    )
+                    (single Nothing)
                     (selectIdentifier "SingleSelectExample")
 
 -}
