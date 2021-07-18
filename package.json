@@ -11,6 +11,7 @@
   "browser": "dist/index.bundle.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "rollup -c",
     "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server",
     "elm:test": "elm-test",
@@ -19,8 +20,8 @@
   },
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "@icelab/defo": "^0.0.3",
     "@playwright/test": "^1.12.3",
+    "@rollup/plugin-typescript": "^8.2.3",
     "@tsconfig/node12": "^1.0.9",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^8.2.3",
@@ -33,9 +34,13 @@
     "mocha": "^9.0.2",
     "playwright": "^1.12.3",
     "prettier": "^2.3.2",
+    "rollup": "^2.53.2",
+    "rollup-plugin-uglify": "^6.0.4",
     "start-server-and-test": "^1.12.6",
     "ts-node": "^10.1.0",
     "typescript": "^4.3.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@icelab/defo": "^0.0.3"
+  }
 }
