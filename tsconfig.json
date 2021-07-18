@@ -3,7 +3,6 @@
   "compilerOptions": {
     "declaration": true,
     "declarationDir": "./dist",
-    "module": "CommonJS",
     "noImplicitAny": true,
     "outDir": "./dist",
     "target": "ES2015",
