@@ -318,10 +318,10 @@ multiDefaults =
 
 {-| Starting value for the ['multi'](*multi) variant.
 
-    yourView model =
-        view
-            (multi initMultiConfig)
-            (selectIdentifier "1234")
+        yourView model =
+            view
+                (multi initMultiConfig)
+                (selectIdentifier "1234")
 
 -}
 initMultiConfig : MultiSelectConfig
@@ -366,10 +366,10 @@ multiTagColor c (MultiSelectConfig config) =
 
 {-| The text that will appear as an input placeholder.
 
-    yourView model =
-        view
-            (single Nothing |> placeholder "some placeholder")
-            (selectIdentifier "1234")
+        yourView model =
+            view
+                (single Nothing |> placeholder "some placeholder")
+                (selectIdentifier "1234")
 
 -}
 placeholder : String -> Config item -> Config item
@@ -381,15 +381,15 @@ placeholder plc (Config config) =
 
 Should be a persisted value that lives in your model.
 
-    model : Model
-    model =
-        { selectState = initState }
+        model : Model
+        model =
+            { selectState = initState }
 
-    yourView : Model
-    yourView model =
-        view
-            (single Nothing |> state model.selectState)
-            (selectIdentifier "1234")
+        yourView : Model
+        yourView model =
+            view
+                (single Nothing |> state model.selectState)
+                (selectIdentifier "1234")
 
 -}
 state : State -> Config item -> Config item
@@ -418,6 +418,7 @@ menuItems items (Config config) =
 
 {-| Allows a ['single'](#single) variant selected menu item to be deselected.
 
+        yourView model =
             view
                 (single Nothing |> clearable True)
                 (selectIdentifier "SingleSelectExample")
@@ -428,19 +429,42 @@ clearable clear (Config config) =
     Config { config | clearable = clear }
 
 
-{-| -}
+{-| Disable the the select input
+
+        yourView model =
+            view
+                (single Nothing |> disabled True)
+                (selectIdentifier "SingleSelectExample")
+
+-}
 disabled : Bool -> Config item -> Config item
 disabled predicate (Config config) =
     Config { config | disabled = predicate }
 
 
-{-| -}
+{-| Displays the animated loading icon.
+This would be useful if you are loading menu options asynchronously, like from a server.
+
+        yourView model =
+            view
+                (single Nothing |> loading True)
+                (selectIdentifier "SingleSelectExample")
+
+-}
 loading : Bool -> Config item -> Config item
 loading predicate (Config config) =
     Config { config | isLoading = predicate }
 
 
-{-| -}
+{-| The ID for the label that describes the select.
+It is best practice to render the select with a label.
+
+        yourView model =
+            view
+                (single Nothing |> labelledBy "selectLabelId")
+                (selectIdentifier "SingleSelectExample")
+
+-}
 labelledBy : String -> Config item -> Config item
 labelledBy s (Config config) =
     Config { config | labelledBy = Just s }
@@ -450,7 +474,53 @@ labelledBy s (Config config) =
 -- STATE MODIFIERS
 
 
-{-| -}
+{-| Opt in to JS optimizations for the best performance.
+
+        model : Model model =
+            { selectState = initState |> jsOptimize True }
+
+Install the JS package:
+
+**npm**
+
+> `npm install @confidenceman02/elm-select`
+
+**github packages**
+
+add to projects `.npmrc`
+
+    @confidenceman02:registry=<https://npm.pkg.github.com/>
+
+install
+
+> `npm install @confidenceman02/elm-select`
+
+**Import script**
+
+In the Elm init file
+
+    import { Elm } from "./src/Main";
+    import "@confidenceman02/elm-select/dynamic"
+
+    Elm.Main.init({node, flags})
+
+Alternatively, you can import the minified JS in the index.html file
+
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Viewer</title>
+
+            <script src="/node_modules/@confidenceman02/elm-select/dist/dynamic.min.js"></script>
+          </head>
+          <body>
+            <main></main>
+            <script src="index.js"></script>
+          </body>
+        </html>
+
+-}
 jsOptimize : Bool -> State -> State
 jsOptimize pred (State state_) =
     State { state_ | jsOptimize = pred }
@@ -474,10 +544,10 @@ single maybeSelectedItem =
 
 {-| Select multiple items.
 
-        yourView model =
-            view
-                (multi initMultiConfig [])
-                (selectIdentifier "1234")
+    yourView model =
+        view
+            (multi initMultiConfig [])
+            (selectIdentifier "1234")
 
 -}
 multi : MultiSelectConfig -> List (MenuItem item) -> Config item
@@ -490,10 +560,10 @@ multi multiSelectTagConfig selectedItems =
 NOTE: It is important that the ID's of all selects that exist on
 a page remain unique.
 
-        yourView model =
-            view
-                (single Nothing)
-                (selectIdentifier "someUniqueId")
+    yourView model =
+        view
+            (single Nothing)
+            (selectIdentifier "someUniqueId")
 
 -}
 selectIdentifier : String -> SelectId
@@ -851,10 +921,10 @@ update msg (State state_) =
 
 {-| Renders the select
 
-            yourView model =
-                view
-                    (single Nothing)
-                    (selectIdentifier "SingleSelectExample")
+        yourView model =
+            view
+                (single Nothing)
+                (selectIdentifier "SingleSelectExample")
 
 -}
 view : Config item -> SelectId -> Html (Msg item)

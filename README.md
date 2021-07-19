@@ -80,9 +80,9 @@ view model =
 The **@confidenceman02/elm-select** project has some JS performance optimizations that dynamically size the input element. There are some sensible reasons why this optimization makes sense.
 
 Lets think about how we would dynamically resize an input element as someone types in elm.
-1. We would handle some sort of "input" event.
-2. We would query a hidden sizer node that contains the input text for its dimensions.
-3. We would update the width of the input.
+- We would handle some sort of "input" event.
+- We would query a hidden sizer node that contains the input text for its dimensions.
+- We would update the width of the input.
 
 Resizing an input dynamically using the above method ends up being not very performant due to how slow it is to react to events and query the DOM. It is certain that someone will experience a lag between them typing and the input resizing. Not a great user experience!
 
