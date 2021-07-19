@@ -1,14 +1,14 @@
 {
   "name": "@confidenceman02/elm-select",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Helper functions for Confidenceman02/elm-select elm package",
-  "main": "dist/index.js",
-  "module": "dist/index.es.js",
+  "main": "dist/dynamic.js",
+  "module": "dist/dynamic.es.js",
   "files": [
     "dist",
     "README.md"
   ],
-  "browser": "dist/index.bundle.js",
+  "browser": "dist/dynamic.bundle.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
@@ -28,6 +28,7 @@
     "chai": "^4.3.4",
     "elm": "^0.19.1-5",
     "elm-analyse": "^0.16.5",
+    "elm-doc-preview": "^5.0.5",
     "elm-format": "^0.8.5",
     "elm-live": "^4.0.2",
     "elm-test": "^0.19.1-revision7",
