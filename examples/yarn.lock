@@ -213,10 +213,10 @@
     "@babel/helper-validator-identifier" "^7.14.0"
     to-fast-properties "^2.0.0"
 
-"@confidenceman02/elm-select@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@confidenceman02/elm-select/-/elm-select-1.0.0.tgz#5f889851d9fc3174866d9a17e2d64ff8f3cc9bae"
-  integrity sha512-Hx6b/PKMNk7ipJongpdOOsirtgfh3v+gNd8v53y90btQx4AnK+Tblik6TjwlHQ9hc3TIoz+p2kZ8zFxNhQcwCA==
+"@confidenceman02/elm-select@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@confidenceman02/elm-select/-/elm-select-1.0.2.tgz#9632ee0adf83b79d1c96b58d15d46be63a0afc0a"
+  integrity sha512-GcvQMCtMx0qFix1++xrD0BTVYVsWpOJpOK1vgN5mh9tIUA5lCIHL1eBv1Hby6Zd6ak3T6M5Hb69HjKdyedhYPQ==
   dependencies:
     "@icelab/defo" "^0.0.3"
 
