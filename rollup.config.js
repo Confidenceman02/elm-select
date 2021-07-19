@@ -11,7 +11,7 @@ export default {
     {
       file: "dist/dynamic.min.js",
       format: "umd",
-      globals: { "@icelab/defo": "defo" },
+      globals: { "@icelab/defo": "Defo" },
     },
   ],
   plugins: [uglify(), typescript({ typescript: require("typescript") })],
