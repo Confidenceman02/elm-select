@@ -123,12 +123,12 @@ Import the script wherever you are initiating your Elm program.
 ```javascript
 
 import { Elm } from "./src/Main";
-import "@confidenceman02/elm-select/dynamic"
+import "@confidenceman02/elm-select"
 
 Elm.Main.init({node, flags})
 ```
 
-Alternatively you can import the script directly into your index.html file.
+Alternatively you can import a minified script directly into your html file.
 
 ```html
 <!DOCTYPE html>
