@@ -1,20 +1,29 @@
 {
   "extends": "@tsconfig/node12/tsconfig.json",
+  "include": [
+    "src/**/*"
+  ],
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "./dist",
+    "declarationDir": "dist",
     "noImplicitAny": true,
-    "outDir": "./dist",
+    "outDir": "dist",
     "target": "ES2015",
     "skipLibCheck": true,
     "allowJs": false,
     "checkJs": false,
     "strict": true,
     "resolveJsonModule": true,
-    "lib": ["dom", "ES2015"],
+    "lib": [
+      "dom",
+      "ES2015"
+    ],
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
