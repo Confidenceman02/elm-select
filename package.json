@@ -11,7 +11,7 @@
   "browser": "dist/dynamic.bundle.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && tsc",
     "e2e:test": "bin/test-ts.sh",
     "watch": "elm-live --no-server",
     "elm:test": "elm-test",
