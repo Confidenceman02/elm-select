@@ -28,7 +28,7 @@ jobs:
 
       - name: Install JS dependencies on examples
         if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: cd examples && yarn install
+        run: cd examples-optimized && yarn install
 
       - name: Run elm e2e tests
         run: yarn ci:elm:e2e
