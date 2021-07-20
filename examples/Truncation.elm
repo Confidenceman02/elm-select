@@ -82,7 +82,7 @@ view m =
         [ Styled.map SelectMsg <|
             Select.view
                 (Select.multi
-                    (Select.multiDefaultConfig
+                    (Select.initMultiConfig
                         |> Select.truncateMultiTag 40
                     )
                     selectedItems
