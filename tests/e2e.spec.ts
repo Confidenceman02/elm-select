@@ -21,14 +21,16 @@ describe("examples", () => {
       "text=SingleSearchable.elm"
     );
     const truncationExampleVisible = await page.isVisible(
-      "text=Truncation.elm"
+      "text=MultiTruncation.elm"
     );
     const multiAsyncExampleVisible = await page.isVisible(
       "text=MultiAsync.elm"
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const disabledExampleVisible = await page.isVisible("text=Disabled.elm");
-    const clearableExampleVisible = await page.isVisible("text=Clearable.elm");
+    const clearableExampleVisible = await page.isVisible(
+      "text=SingleClearable.elm"
+    );
     const longMenuVisible = await page.isVisible("text=LongMenu.elm");
 
     expect(singleExampleVisible).toBeTruthy();

@@ -1,5 +1,5 @@
 ## Examples
-This directory holds all the files for the different **@confidencemna/elm-select** variants.
+This directory holds all the files for the different **@confidenceman02/elm-select** variants.
 
 ## Running examples
 ```bash

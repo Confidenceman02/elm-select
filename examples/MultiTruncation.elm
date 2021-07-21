@@ -1,4 +1,4 @@
-module Truncation exposing (..)
+module MultiTruncation exposing (..)
 
 import Browser
 import Css

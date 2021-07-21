@@ -1,4 +1,4 @@
-module Clearable exposing (..)
+module SingleClearable exposing (..)
 
 import Browser
 import Css
