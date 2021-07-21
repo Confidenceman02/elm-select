@@ -1,7 +1,5 @@
 ## Examples
-This directory holds all the files for the different @confidencemna/elm-select variants.
-
-The majority of e2e [playwright](https://playwright.dev/) tests are run against these examples.
+This directory holds all the files for the different **@confidencemna/elm-select** variants.
 
 ## Running examples
 ```bash
