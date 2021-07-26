@@ -1,5 +1,5 @@
 # elm-select
-Select things in style! Inspired and built on top of Culture Amp's [Kaizen design system](https://cultureamp.design) select component.
+Select things in style! Inspired and built on top of the [Kaizen design system](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) Select component. 
 
 **Single select** 
 
@@ -9,134 +9,233 @@ Select things in style! Inspired and built on top of Culture Amp's [Kaizen desig
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/Multi.png)
 
-## Why not just use the Kaizen select?
-1. The [Kaizen design system](https://cultureamp.design/) is a wonderful project with both react and elm components/views. Because the Kaizen elm select is being styled in scss, your project would need some extra tooling and bundling for things to work correctly. The elm-select package converts all the non elm code to the elm we all know and love. This is achieved largely due to the very excellent [rtfeldman/elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/).
-
-2. The [Kaizen elm select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) is largely a port of the [react select](https://react-select.com/home) project which is a widely used piece of work. Whilst this package matches most of the functionality of [react select]() and [Kaizen select](), it endeavours to implement the [WAI-ARIA](https://www.w3.org/TR/wai-aria-practices/examples/combobox/aria1.1pattern/listbox-combo.html) best practices for selects, in particular, the combobox pattern.
-
 ## Accessibility
-A lot of effort has been put into making the elm-select package accessible. Heavy focus on automated end to end testing using [playwright](https://playwright.dev/) allows for progressive improvement over time and avoid any regressions to accessibility. Tests have been modelled after the WAI-ARIA recommendations, however, accessibility of elm-select is an ongoing comittment.
+- Keyboard accessible
+- Screen reader accessible
 
-## Usage
-__Set an initial state__ in your model.
+NOTE: The multi select variant has accessibility features missing that will be added in future versions. You can read what those are in the [Still to come](#still-to-come) section.
+
+## Styled with elm-css
+In the case your program is not using [elm-css]() already, an extra step will be required to make everything work. 
+You can see how to do that in the [Unstyling elm-css](#-unstyling-elm-css-) section.
+
+# Usage
+__Set an initial state in your model__.
 
 ```elm
+import Select
+import Html exposing (Html)
+import Html.Styled as Styled
+
+
+type Country
+    = Australia
+    | Japan
+    | Taiwan
+    -- other countries
+
+
+type alias Model =
+    {  selectState : Select.State
+    ,  items : List (Select.MenuItem Country)
+    ,  selectedCountry : Maybe Country
+    }
+
+
 init : Model
 init = 
-    {  selectState = initState
-    ,  items = []
+    {  selectState = Select.initState
+    ,  items = 
+           [ { item = Australia, label = "Australia" }
+           , { item = Japan, label = "Japan" }
+           , { item = Taiwan, label = "Taiwan" }
+           ]
+    ,  selectedCountry = Nothing
     }
 ```
 
-__Set up an update `Msg`__ in your update function.
+__Add a branch in your update to handle `Msg`'s from the view__.
+
+When updating, elm-select will return a  `Maybe Select.Action`, `Select.State` and `Cmd Select.Msg` that need to be handled.
+
+Ignoring the `maybeAction` for now, the update below shows how to persist the `updatedSelectState` and map the `selectCmds`'s to your programs ` Cmd Msg`'s.
 
 ```elm
-    update : Msg -> Model -> (Model, Cmd Msg)
-    update msg model =
+type Msg 
+    = SelectMsg (Select.Msg Country)
+    -- your other Msg's
+
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+    case msg of
         SelectMsg selectMsg ->
             let
-                (action, selectState, selectCmds) = update selectMsg model.selectState
+                (maybeAction, updatedSelectState, selectCmds) = 
+                    Select.update selectMsg model.selectState
             in
-            ({ model | selectState = selectState }, Cmd.map SelectMsg selectCmds)
-
+            ({ model | selectState = updatedSelectState }
+             , Cmd.map SelectMsg selectCmds
+            )
 ```
 
-__Handle the `Action`__ in your update function.
+__Handle the `Action` in your update__
+
+Adding to the example above, the update is handling the `maybeAction` value. This `Action` value represents an event that you may want to react to.
+
+Because there is a `Country` type to represent the menu list items of the Select, we presumably want to know what country someone is from. To know when 
+a country is selected we are interested in the `Select` action. 
+
+The `Select` action will contain the `Country` value that you can persist in your model to track what has been selected.
+
 
 ```elm
-    update : Msg -> Model -> (Model, Cmd Msg)
-    update msg model =
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+    case msg of
         SelectMsg selectMsg ->
             let
-                (maybeAction, selectState, selectCmds) = update selectMsg model.selectState
+                (maybeAction, selectState, selectCmds) = 
+                    Select.update selectMsg model.selectState
 
-                handledAction =
+                newModel =
                     case maybeAction of 
-                        -- an item has been selected
-                        Just Select item ->
-                            -- handle selected item
-                        -- Clear single select selection
-                        Just ClearSingleSelectItem item ->
-                            -- handle cleared item
-                        -- Multi item has been deselected
-                        Just DeselectMultiItem ->
-                            -- handle deselected multi item
-                        -- Input value has changed
-                        Just InputChange value ->
-                            -- handle changed input
-                        _ ->
-                          -- no action
+                        
+                        Just (Select someCountry) ->
+                            { model | selectedCountry = Just someCountry }
+                        
+                        Just (ClearSingleSelectItem someCountry) -> 
+                            -- handle cleared 
+                       
+                        Just (DeselectMultiItem) -> 
+                            -- handle deselected 
+                       
+                        Just (InputChange value) -> 
+                            -- handle InputChange
+                        
+                        Nothing ->
+                            model
             in
-            -- (model, Cmd Msg)
+            (newModel, Cmd.map SelectMsg selectCmds)
 ```
 
-__Render your view__.
+#### **Render your Select view**
+The elm-select view's first argument is a `Select.Config Country` value which can be built using our model. 
 
 ```elm
-view : Model -> Msg
+selectedCountryToMenuItem : Country -> Select.MenuItem Country
+selectedCountryToMenuItem country =
+    case country of 
+        Australia -> { item = Australia, label = "Australia" }
+        Japan -> { item = Japan, label = "Japan" }
+        Taiwan -> { item = Taiwan, label = "Taiwan" }
+        -- other countries
+        
+        
+renderSelect : Model -> Styled.Html (Select.Msg Country)
+renderSelect mdl =
+    Html.map SelectMsg <| 
+      Select.view 
+          ((Select.single <| Maybe.map selectedCountryToMenuItem model.selectedCountry)
+              |> Select.state model.selectState
+              |> Select.menuItems model.items
+              |> Select.placeholder "Select your country"
+          )
+          (selectIdentifier "CountrySelector")
+```
+It is required to map the `Select.Msg` that the `Select.view` outputs to a `Msg` type that our `view` is compatible with.
+
+The single and only `Msg` we have set up is the `SelectMsg (Select.Msg Country)` which satisfies the `renderSelect` messages.
+
+```elm
+view : Model -> Html Msg
 view model =
-  Select.view 
-      ((Select.single Nothing)
-          |> Select.state model.selectState
-          |> Select.menuItems model.items
-          |> Select.placeholder "Placeholder"
-      )
-      (selectIdentifier "SingleSelectExample")
+    Html.map SelectMsg (renderSelect model)
+```
+#### **Unstyling elm-css**
+Because all Elm programs emit `Html` type messages which are not directly compatible with elm-css `Styles.Html` type messages, an extra step will be required
+to make everything compatible.
+
+Elm-css exposes a `toUnstyled` function that will convert `Styled.Html` messages to `Html` messages.
+
+Read more about [toUnstyled](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/Html-Styled#toUnstyled).
+```elm
+view : Model -> Html Msg
+view model =
+    Html.map SelectMsg 
+        (Styled.toUnstyled <| renderSelect model)
 ```
 
-## Opt in JS optimizations
-The **@confidenceman02/elm-select** project has some JS performance optimizations that dynamically size the input element. There are some sensible reasons why this optimization makes sense.
+NOTE: You can use elm-select [examples](https://github.com/Confidenceman02/elm-select/tree/main/examples)
+as a resource to help you set up Elm programs with [elm-css]().
 
-Lets think about how we would dynamically resize an input element as someone types in elm.
-- We would handle some sort of "input" event.
-- We would query a hidden sizer node that contains the input text for its dimensions.
-- We would update the width of the input.
+# Advanced
+## Opt in Javascript optimisation
+When using a searchable Select, elm-select renders an input element that can accept keyboard input to 
+filter the menu down to a specific menu item.
 
-Resizing an input dynamically using the above method ends up being not very performant due to how slow it is to react to events and query the DOM. It is certain that someone will experience a lag between them typing and the input resizing. Not a great user experience!
+![elm-select](https://Confidenceman02.github.io/elm-select/SingleFilter.png)
 
-When you opt in to JS optimization, elm-select uses a mutation observer which allows for a zero lag, performant, dynamically sized input.
+For stylistic reasons, this input element dynamically adjusts its width to just accommodate the text. 
 
-If you don't want to use a JS optimization thats totally ok! Elm-select handles dynamic width via the [size atribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/size) by default. The size attribute is not an ideal solution despite the fact it mostly just works. Consider adding the very minimal JS in to your project to get the best performance.
+Without a javascript optimization elm-select achieves this via the [size](https://www.w3schools.com/tags/att_input_size.asp) 
+attribute on the input element. It's performant but not a completely ideal solution.
 
-__Opt in to JS optimization__
+You can see by the gif below, the input width is always a little wider than the text. This is because the size attribute sets the 
+width of the input element to a value that relates to a characters average size.
+
+To allow for characters that are above average in size, elm-select exaggerates the size value to ensure no text outgrows 
+the dynamic input width, but there may exist some edge cases where this doesn't happen.
+
+![elm-select](https://Confidenceman02.github.io/elm-select/SingleSelectInputSize.gif)
+
+*Other pure Elm ways to achieve this involved querying DOM elements but it was found not to be a performant way to 
+dynamically size the input as someone types. This due to how slow DOM queries are compared to how fast someone can input text. 
+The result's were usually an input that widens slower than the text is typed which creates a lagging feel.*
+
+When you opt in to the Javascript optimization you get a zero lag, performant, dynamically sized input with a guarantee that 
+text will never outgrow the input element width.
+
+**Javascript size**: ([1.3kb minified + gzipped](https://bundlephobia.com/package/@confidenceman02/elm-select@1.0.2)).
+
+**Optimized example**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/SingleSelectOptimise.gif)
+
+__Opting in to Javascript optimization__
+
+*Your project will need a `package.json` file to use the @confidenceman02/elm-select npm package. You can use the 
+[example code](https://github.com/Confidenceman02/elm-select/tree/main/examples-optimized) as a reference to set up your project.*
+
+Set the [jsOptimize]() flag in your programs init function.
+
+By default the flag is `False`.
+
 ```elm
 
-{ selectState = initState |> jsOptimize True }
+init : Model
+init = 
+    {  selectState = Select.initState |> Select.jsOptimize True
+    ,  items = 
+           [ { item = Australia, label = "Australia" }
+           , { item = Japan, label = "Japan" }
+           , { item = Taiwan, label = "Taiwan" }
+           ]
+    ,  selectedCountry = Nothing
+    }
 ```
 
-__Importing the JS__
+__Importing the package__
 
-Via npm
+In your projects root directory:
+
 ```sh
 npm install @confidenceman02/elm-select
 ```
 
-Via github packages:
+__Using the package__
 
-NOTE: Using the github package will require you to add the following line to your projects `.npmrc`.
-```
-// .npmrc 
-@confidenceman02:registry=https://npm.pkg.github.com/
-```
-
-install the package.
-
-```sh
-npm install @confidenceman02/elm-select
-```
-
-__Using the JS__
-
-Import the script wherever you are initiating your Elm program.
-```javascript
-
-import { Elm } from "./src/Main";
-import "@confidenceman02/elm-select"
-
-Elm.Main.init({node, flags})
-```
-
-Alternatively you can import a minified script directly into your html file.
+Import the minified script directly into your projects html file.
 
 ```html
 <!DOCTYPE html>
@@ -153,4 +252,38 @@ Alternatively you can import a minified script directly into your html file.
   </body>
 </html>
 ```
+
+Alternatively, you can import the module wherever you are initiating your Elm program.
+
+```javascript
+
+import { Elm } from "./src/Main";
+import "@confidenceman02/elm-select"
+
+Elm.Main.init({
+  node: document.querySelector("main"),
+  flags: // your flags
+})
+```
+
+
+# Still to come
+__Accessibility__
+- Multi select tags to be keyboard navigable and dismissible.
+- Selected multi select items announced by screen reader.
+  
+__Customisable view elements__
+
+**Why?:** Elm-select view elements are not very customisable. there is not much flexibility to allow consumers to "brand" the Select.
+
+**How?:**
+- Expand the Select configuration to allow for custom styling. 
+- Allow consumers to entirely replace Select view elements with their own custom views.
+
+## Why not just use the Kaizen Select?
+- The [Kaizen design system](https://cultureamp.design/) is a wonderful library with both react and elm components/views. Because the library makes many assumptions about the consuming project, it is not easily used by most Elm apps. 
+ 
+  Elm-select can be integrated into any Elm app with no special build requirements or non-Elm dependencies. In particular, it uses [elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/) to provide it's own styles.
+
+- The [Kaizen Elm Select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) has shortcomings around screen reader accessibility. Elm-select has addressed this by implementing the [WAI-ARIA](https://www.w3.org/TR/wai-aria-practices/examples/combobox/aria1.1pattern/listbox-combo.html) best practices for selects.
 

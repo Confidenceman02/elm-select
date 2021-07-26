@@ -2,10 +2,11 @@ module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
-    , disabled, jsOptimize, labelledBy, loading
+    , disabled, labelledBy, loading
+    , jsOptimize
     )
 
-{-| Select items from a drop-down list.
+{-| Select items from a menu list.
 
 
 # Set up
@@ -25,7 +26,12 @@ module Select exposing
 
 # Common
 
-@docs disabled, jsOptimize, labelledBy, loading
+@docs disabled, labelledBy, loading
+
+
+# Advanced
+
+@docs jsOptimize
 
 -}
 
@@ -95,15 +101,43 @@ type Msg item
     | SingleSelectClearButtonKeyDowned SelectId
 
 
-{-| The select actions that your program can react to.
+{-| Specific events happen in the Select that you can react to from your update.
 
-InputChange -> The value of the input has changed
+Maybe you want to find out what country someone is from?
 
-Select -> There has been a selection of a [`MenuItem`](#MenuItem)
+When they select a country from the menu, it will be reflected in the Select action.
 
-DeselectMulti -> A [`multi`](#multi) variant selected tag has been deselected
+    import Select exposing ( Action(..) )
 
-ClearSingleSelectItem -> A [`single`](#single) variant selected menu item has been deselected
+    type Msg
+        = SelectMsg (Select.Msg Country)
+        -- your other Msg's
+
+    type Country
+        = Australia
+        | Japan
+        | Taiwan
+        -- other countries
+
+    update : Msg -> Model -> (Model, Cmd Msg)
+    update msg model =
+        case msg of
+            SelectMsg selectMsg ->
+                let
+                    (maybeAction, selectState, selectCmds) =
+                        Select.update selectMsg model.selectState
+
+                    selectedCountry : Maybe Country
+                    selectedCountry =
+                        case maybeAction of
+                            Just (Select.Select someCountry) ->
+                                Just someCountry
+
+                            Nothing ->
+                                Nothing
+
+                in
+                -- (model, cmd)
 
 -}
 type Action item
@@ -146,7 +180,7 @@ type MenuListElement
 
 
 
--- VIEW FUNCTiON DATA
+-- VIEW FUNCTION DATA
 -- These data structures make using 'lazy' function a breeze
 
 
@@ -237,11 +271,11 @@ type MenuNavigation
     | Mouse
 
 
-{-| The list item that will be represented in the list-box.
+{-| The menu item that will be represented in the menu list.
 
-The `item` property is the value representation of the list-box item that will be used in an Action.
+The `item` property is the type representation of the menu item that will be used in an Action.
 
-The `label` is the text representation that will be shown in the drop-down list.
+The `label` is the text representation that will be shown in the menu.
 
     type Tool
         = Screwdriver
@@ -256,12 +290,13 @@ The `label` is the text representation that will be shown in the drop-down list.
         ]
 
     yourView model =
-        view
-            (single Nothing
-                |> menuItems toolItems
-                |> state model.selectState
-            )
-            (selectIdentifier "SingleSelectExample")
+        Html.map SelectMsg <|
+            view
+                (single Nothing
+                    |> menuItems toolItems
+                    |> state model.selectState
+                )
+                (selectIdentifier "SingleSelectExample")
 
 -}
 type alias MenuItem item =
@@ -274,7 +309,30 @@ type alias MenuItem item =
 -- DEFAULTS
 
 
-{-| An initial state for the State type.
+{-| Set up an initial state in your init function.
+
+    type Country
+        = Australia
+        | Japan
+        | Taiwan
+
+    type alias Model =
+        { selectState : Select.State
+        , items : List (Select.MenuItem Country)
+        , selectedCountry : Maybe Country
+        }
+
+    init : Model
+    init =
+        { selectState = Select.initState
+        , items =
+            [ { item = Australia, label = "Australia" }
+            , { item = Japan, label = "Japan" }
+            , { item = Taiwan, label = "Taiwan" }
+            ]
+        , selectedCountry = Nothing
+        }
+
 -}
 initState : State
 initState =
@@ -319,9 +377,10 @@ multiDefaults =
 {-| Starting value for the ['multi'](*multi) variant.
 
         yourView model =
-            view
-                (multi initMultiConfig)
-                (selectIdentifier "1234")
+            Html.map SelectMsg <|
+                view
+                    (multi initMultiConfig [])
+                    (selectIdentifier "1234")
 
 -}
 initMultiConfig : MultiSelectConfig
@@ -337,9 +396,15 @@ Text that breaches the set width will display as an ellipses.
 Width will be in px values.
 
         yourView model =
-            view
-                (multi (initMultiConfig |> truncateMultitag 30) [])
-                (selectIdentifier "1234")
+            Html.map SelectMsg <|
+                view
+                    (multi
+                        ( initMultiConfig
+                            |> truncateMultitag 30
+                        )
+                        model.selectedCountries
+                    )
+                    (selectIdentifier "1234")
 
 -}
 truncateMultiTag : Float -> MultiSelectConfig -> MultiSelectConfig
@@ -350,9 +415,15 @@ truncateMultiTag w (MultiSelectConfig config) =
 {-| Set the color for the multi select tag.
 
         yourView =
-            view
-                (multi (initMultiConfig |> multiTagColor (Css.hex "#E1E2EA") [])
-                (selectIdentifier "1234")
+            Html.map SelectMsg <|
+                view
+                    (multi
+                        ( initMultiConfig
+                            |> multiTagColor (Css.hex "#E1E2EA"
+                        )
+                        model.selectedCountries
+                    )
+                    (selectIdentifier "1234")
 
 -}
 multiTagColor : Css.Color -> MultiSelectConfig -> MultiSelectConfig
@@ -367,9 +438,10 @@ multiTagColor c (MultiSelectConfig config) =
 {-| The text that will appear as an input placeholder.
 
         yourView model =
-            view
-                (single Nothing |> placeholder "some placeholder")
-                (selectIdentifier "1234")
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> placeholder "some placeholder")
+                    (selectIdentifier "1234")
 
 -}
 placeholder : String -> Config item -> Config item
@@ -377,9 +449,7 @@ placeholder plc (Config config) =
     Config { config | placeholder = plc }
 
 
-{-| Sets the state value.
-
-Should be a persisted value that lives in your model.
+{-|
 
         model : Model
         model =
@@ -387,9 +457,10 @@ Should be a persisted value that lives in your model.
 
         yourView : Model
         yourView model =
-            view
-                (single Nothing |> state model.selectState)
-                (selectIdentifier "1234")
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> state model.selectState)
+                    (selectIdentifier "1234")
 
 -}
 state : State -> Config item -> Config item
@@ -399,8 +470,8 @@ state state_ (Config config) =
 
 {-| The items that will appear in the menu list.
 
-NOTE: When using the Multi select variant, selected items will be visually removed
-from the menu list.
+NOTE: When using the (multi) select, selected items will be reflected as a tags and
+visually removed from the menu list.
 
       items =
           [ { item = SomeValue, label = "Some label" } ]
@@ -416,12 +487,18 @@ menuItems items (Config config) =
     Config { config | menuItems = items }
 
 
-{-| Allows a ['single'](#single) variant selected menu item to be deselected.
+{-| Allows a [single](#single) variant selected menu item to be cleared.
+
+To handle a cleared item refer to the [ClearedSingleSelect](#Action ) action.
 
         yourView model =
-            view
-                (single Nothing |> clearable True)
-                (selectIdentifier "SingleSelectExample")
+            Html.map SelectMsg <|
+                view
+                    ( single Nothing
+                        |> clearable True
+                        |> menuItems -- [ menu items ]
+                    )
+                    (selectIdentifier "SingleSelectExample")
 
 -}
 clearable : Bool -> Config item -> Config item
@@ -429,12 +506,13 @@ clearable clear (Config config) =
     Config { config | clearable = clear }
 
 
-{-| Disable the the select input
+{-| Disables the select input so that it cannot be interacted with.
 
         yourView model =
-            view
-                (single Nothing |> disabled True)
-                (selectIdentifier "SingleSelectExample")
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> disabled True)
+                    (selectIdentifier "SingleSelectExample")
 
 -}
 disabled : Bool -> Config item -> Config item
@@ -442,13 +520,15 @@ disabled predicate (Config config) =
     Config { config | disabled = predicate }
 
 
-{-| Displays the animated loading icon.
+{-| Displays an animated loading icon to visually represent that menu items are being loaded.
+
 This would be useful if you are loading menu options asynchronously, like from a server.
 
         yourView model =
-            view
-                (single Nothing |> loading True)
-                (selectIdentifier "SingleSelectExample")
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> loading True)
+                    (selectIdentifier "SingleSelectExample")
 
 -}
 loading : Bool -> Config item -> Config item
@@ -456,13 +536,19 @@ loading predicate (Config config) =
     Config { config | isLoading = predicate }
 
 
-{-| The ID for the label that describes the select.
+{-| The element ID of the label that describes the select.
+
 It is best practice to render the select with a label.
 
-        yourView model =
-            view
-                (single Nothing |> labelledBy "selectLabelId")
-                (selectIdentifier "SingleSelectExample")
+    yourView model =
+        label
+            [ id "selectLabelId" ]
+            [ text "Select your country"
+            , Html.map SelectMsg <|
+                view
+                    (single Nothing |> labelledBy "selectLabelId")
+                    (selectIdentifier "SingleSelectExample")
+            ]
 
 -}
 labelledBy : String -> Config item -> Config item
@@ -474,51 +560,42 @@ labelledBy s (Config config) =
 -- STATE MODIFIERS
 
 
-{-| Opt in to JS optimizations for the best performance.
+{-| Opt in to a Javascript optimization.
+
+Read the [Advanced](https://package.elm-lang.org/packages/Confidenceman02/elm-select/latest/#opt-in-javascript-optimisation)
+section of the README for a good explanation on why you might like to opt in.
 
         model : Model model =
             { selectState = initState |> jsOptimize True }
 
-Install the JS package:
+Install the Javascript package:
 
 **npm**
 
 > `npm install @confidenceman02/elm-select`
 
-**github packages**
-
-add to projects `.npmrc`
-
-    @confidenceman02:registry=<https://npm.pkg.github.com/>
-
-install
-
-> `npm install @confidenceman02/elm-select`
-
 **Import script**
 
-In the Elm init file
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Viewer</title>
+
+        <script src="/node_modules/@confidenceman02/elm-select/dist/dynamic.min.js"></script>
+      </head>
+      <body>
+        <main></main>
+        <script src="index.js"></script>
+      </body>
+    </html>
+
+Alternatively you can import the script wherever you are initialising your program.
 
     import { Elm } from "./src/Main";
-    import "@confidenceman02/elm-select/dynamic"
+    import "@confidenceman02/elm-select"
 
     Elm.Main.init({node, flags})
-
-Alternatively, you can import the minified JS in the index.html file
-
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Viewer</title>
-
-            <script src="/node_modules/@confidenceman02/elm-select/dist/dynamic.min.js"></script>
-          </head>
-          <body>
-            <main></main>
-            <script src="index.js"></script>
-          </body>
-        </html>
 
 -}
 jsOptimize : Bool -> State -> State
@@ -536,6 +613,20 @@ type Variant item
 
 
 {-| Select a single item.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ { item = Australia, label = "Australia" }
+          , { item = Taiwan, label = "Taiwan"
+          -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                  (Single Nothing |> menuItems countries)
+                  (selectIdentifier "1234")
+
 -}
 single : Maybe (MenuItem item) -> Config item
 single maybeSelectedItem =
@@ -544,10 +635,18 @@ single maybeSelectedItem =
 
 {-| Select multiple items.
 
+Selected items will render as tags and be visually removed from the menu list.
+
     yourView model =
-        view
-            (multi initMultiConfig [])
-            (selectIdentifier "1234")
+        Html.map SelectMsg <|
+            view
+                (multi
+                    (initMultiConfig
+                        |> menuItems model.countries
+                    )
+                    model.selectedCountries
+                )
+                (selectIdentifier "1234")
 
 -}
 multi : MultiSelectConfig -> List (MenuItem item) -> Config item
@@ -561,9 +660,10 @@ NOTE: It is important that the ID's of all selects that exist on
 a page remain unique.
 
     yourView model =
-        view
-            (single Nothing)
-            (selectIdentifier "someUniqueId")
+        Html.map SelectMsg <|
+            view
+                (single Nothing)
+                (selectIdentifier "someUniqueId")
 
 -}
 selectIdentifier : String -> SelectId
@@ -575,12 +675,12 @@ selectIdentifier id_ =
 -- UPDATE
 
 
-{-| Handle all Msg events
+{-| Add a branch in your update to handle the view Msg's.
 
-    yourUpdate msg model =
-        case msg of
-            SelectMsg selectMsg ->
-                update selectMsg model.selectState
+        yourUpdate msg model =
+            case msg of
+                SelectMsg selectMsg ->
+                    update selectMsg model.selectState
 
 -}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
@@ -919,12 +1019,13 @@ update msg (State state_) =
             ( Just ClearSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus inputId) )
 
 
-{-| Renders the select
+{-| Render the select
 
         yourView model =
-            view
-                (single Nothing)
-                (selectIdentifier "SingleSelectExample")
+            Html.map SelectMsg <|
+                view
+                    (single Nothing)
+                    (selectIdentifier "SingleSelectExample")
 
 -}
 view : Config item -> SelectId -> Html (Msg item)
