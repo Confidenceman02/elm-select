@@ -1,5 +1,13 @@
 # elm-select
-Select things in style! Inspired and built on top of Culture Amp's [Kaizen design system](https://cultureamp.design) select component. 
+Select things in style! Inspired and built on top of Culture Amp's [Kaizen design system](https://cultureamp.design) select component.
+
+**Single select** 
+
+![elm-select](https://Confidenceman02.github.io/elm-select/SingleClearable.png)
+
+**Multi select**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/Multi.png)
 
 ## Why not just use the Kaizen select?
 1. The [Kaizen design system](https://cultureamp.design/) is a wonderful project with both react and elm components/views. Because the Kaizen elm select is being styled in scss, your project would need some extra tooling and bundling for things to work correctly. The elm-select package converts all the non elm code to the elm we all know and love. This is achieved largely due to the very excellent [rtfeldman/elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/).
