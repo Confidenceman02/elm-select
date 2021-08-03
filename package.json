@@ -1,6 +1,6 @@
 {
   "name": "@confidenceman02/elm-select",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "JS optimizations for Confidenceman02/elm-select elm package",
   "main": "dist/dynamic.js",
   "module": "dist/dynamic.es.js",
