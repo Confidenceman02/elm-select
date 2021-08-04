@@ -1,7 +1,7 @@
 module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
-    , multi, truncateMultiTag, multiTagColor, initMultiConfig
+    , multi, setMultiTagStyles, initMultiTagStyleConfig, multiTagColor, multiTagTruncation
     , disabled, labelledBy, loading
     , jsOptimize
     )
@@ -21,7 +21,7 @@ module Select exposing
 
 # Multi select
 
-@docs multi, truncateMultiTag, multiTagColor, initMultiConfig
+@docs multi, setMultiTagStyles, initMultiTagStyleConfig, truncateMultiTag, multiTagColor, multiTagTruncation
 
 
 # Common
@@ -61,8 +61,8 @@ type Config item
     = Config (Configuration item)
 
 
-type MultiSelectConfig
-    = MultiSelectConfig MultiSelectConfiguration
+type GlobalStyleConfig
+    = GlobalStyleConfig GlobalStyleConfiguration
 
 
 type SelectId
@@ -244,12 +244,21 @@ type alias Configuration item =
     , disabled : Bool
     , clearable : Bool
     , labelledBy : Maybe String
+    , globalStyles : GlobalStyleConfig
     }
 
 
-type alias MultiSelectConfiguration =
-    { tagTruncation : Maybe Float
-    , multiTagColor : Maybe Css.Color
+type alias GlobalStyleConfiguration =
+    { multiTagStyles : MultiTagStyleConfig }
+
+
+type MultiTagStyleConfig
+    = MultiTagStyleConfig MultiTagStyleConfiguration
+
+
+type alias MultiTagStyleConfiguration =
+    { color : Css.Color
+    , truncationWidth : Maybe Float
     }
 
 
@@ -362,30 +371,42 @@ defaults =
     , clearable = False
     , disabled = False
     , labelledBy = Nothing
+    , globalStyles = GlobalStyleConfig globalStyleConfigDefaults
     }
 
 
-multiDefaults : MultiSelectConfiguration
-multiDefaults =
-    { tagTruncation = Nothing, multiTagColor = Nothing }
+globalStyleConfigDefaults : GlobalStyleConfiguration
+globalStyleConfigDefaults =
+    { multiTagStyles = MultiTagStyleConfig multiTagStyleDefaults }
 
 
+multiTagStyleDefaults : MultiTagStyleConfiguration
+multiTagStyleDefaults =
+    { color = Css.hex "#E1E2EA"
+    , truncationWidth = Nothing
+    }
 
--- MULTI MODIFIERS
 
-
-{-| Starting value for the ['multi'](*multi) variant.
-
-        yourView model =
-            Html.map SelectMsg <|
-                view
-                    (multi initMultiConfig [])
-                    (selectIdentifier "1234")
-
+{-| TODO
 -}
-initMultiConfig : MultiSelectConfig
-initMultiConfig =
-    MultiSelectConfig multiDefaults
+initMultiTagStyleConfig : MultiTagStyleConfig
+initMultiTagStyleConfig =
+    MultiTagStyleConfig multiTagStyleDefaults
+
+
+
+-- STYLE MODIFIERS
+
+
+{-| TODO
+-}
+setMultiTagStyles : MultiTagStyleConfig -> Config item -> Config item
+setMultiTagStyles mc (Config config) =
+    let
+        (GlobalStyleConfig styles) =
+            config.globalStyles
+    in
+    Config { config | globalStyles = GlobalStyleConfig { styles | multiTagStyles = mc } }
 
 
 {-| Limit the width of a multi select tag.
@@ -395,43 +416,47 @@ Text that breaches the set width will display as an ellipses.
 
 Width will be in px values.
 
+        multiTagStyles =
+            initMultiTagStyleConfig |> multiTagTruncation 30
+
         yourView model =
             Html.map SelectMsg <|
                 view
-                    (multi
-                        ( initMultiConfig
-                            |> truncateMultitag 30
-                        )
-                        model.selectedCountries
+                    (multi model.selectedCountries
+                        |> setMultiTagStyles multiTagStyles
                     )
                     (selectIdentifier "1234")
 
 -}
-truncateMultiTag : Float -> MultiSelectConfig -> MultiSelectConfig
-truncateMultiTag w (MultiSelectConfig config) =
-    MultiSelectConfig { config | tagTruncation = Just w }
+multiTagTruncation : Float -> MultiTagStyleConfig -> MultiTagStyleConfig
+multiTagTruncation w (MultiTagStyleConfig config) =
+    MultiTagStyleConfig { config | truncationWidth = Just w }
 
 
-{-| Set the color for the multi select tag.
+{-| Set the background color for the multi select tag.
+The value is expected to be a hex value.
+
+        multiTagStyles =
+            initMultiTagStyleConfig |> multiTagColor "#E1E2EA"
 
         yourView =
             Html.map SelectMsg <|
                 view
-                    (multi
-                        ( initMultiConfig
-                            |> multiTagColor (Css.hex "#E1E2EA"
-                        )
-                        model.selectedCountries
+                    (multi model.selectedCountries
+                        |> setMultiTagStyles multiTagStyles
                     )
                     (selectIdentifier "1234")
 
 -}
-multiTagColor : Css.Color -> MultiSelectConfig -> MultiSelectConfig
-multiTagColor c (MultiSelectConfig config) =
-    MultiSelectConfig { config | multiTagColor = Just c }
+multiTagColor : String -> MultiTagStyleConfig -> MultiTagStyleConfig
+multiTagColor c (MultiTagStyleConfig config) =
+    MultiTagStyleConfig { config | color = Css.hex c }
 
 
 
+-- multiTagBorderColor : Css.Color -> MultiTagStyleConfig -> MultiTagStyleConfig
+-- multiTagBorderColor color (MultiTagStyleConfig c) =
+--     MultiTagStyleConfig { c | borderColor = color }
 -- MODIFIERS
 
 
@@ -609,7 +634,7 @@ jsOptimize pred (State state_) =
 
 type Variant item
     = Single (Maybe (MenuItem item))
-    | Multi MultiSelectConfig (List (MenuItem item))
+    | Multi (List (MenuItem item))
 
 
 {-| Select a single item.
@@ -649,9 +674,9 @@ Selected items will render as tags and be visually removed from the menu list.
                 (selectIdentifier "1234")
 
 -}
-multi : MultiSelectConfig -> List (MenuItem item) -> Config item
-multi multiSelectTagConfig selectedItems =
-    Config { defaults | variant = Multi multiSelectTagConfig selectedItems }
+multi : List (MenuItem item) -> Config item
+multi selectedItems =
+    Config { defaults | variant = Multi selectedItems }
 
 
 {-| The ID for the rendered Select input
@@ -1031,6 +1056,9 @@ update msg (State state_) =
 view : Config item -> SelectId -> Html (Msg item)
 view (Config config) selectId =
     let
+        (GlobalStyleConfig globalStyles) =
+            config.globalStyles
+
         (State state_) =
             config.state
 
@@ -1138,7 +1166,7 @@ view (Config config) selectId =
 
                 buildMulti =
                     case config.variant of
-                        Multi (MultiSelectConfig tagConfig) multiSelectedValues ->
+                        Multi multiSelectedValues ->
                             let
                                 resolveMultiValueStyles =
                                     if 0 < List.length multiSelectedValues then
@@ -1149,7 +1177,7 @@ view (Config config) selectId =
                             in
                             div resolveMultiValueStyles <|
                                 (List.indexedMap
-                                    (viewMultiValue selectId tagConfig state_.initialMousedown)
+                                    (viewMultiValue selectId globalStyles.multiTagStyles state_.initialMousedown)
                                     multiSelectedValues
                                     ++ [ buildInput ]
                                 )
@@ -1159,11 +1187,11 @@ view (Config config) selectId =
 
                 resolvePlaceholder =
                     case config.variant of
-                        Multi _ [] ->
+                        Multi [] ->
                             viewPlaceholder config
 
                         -- Multi selected values render differently
-                        Multi _ _ ->
+                        Multi _ ->
                             text ""
 
                         Single (Just v) ->
@@ -1376,7 +1404,7 @@ viewMenuItem viewMenuItemData =
 
                 resolveMouseUpMsg =
                     case viewMenuItemData.variant of
-                        Multi _ _ ->
+                        Multi _ ->
                             SelectedItemMulti data.menuItem.item viewMenuItemData.selectId
 
                         _ ->
@@ -1507,7 +1535,7 @@ viewSelectInput viewSelectInputData =
 
         resolveEnterMsg mi =
             case viewSelectInputData.variant of
-                Multi _ _ ->
+                Multi _ ->
                     EnterSelectMulti mi.item (SelectId selectId)
 
                 _ ->
@@ -1647,8 +1675,8 @@ viewDummyInput viewDummyInputData =
         []
 
 
-viewMultiValue : SelectId -> MultiSelectConfiguration -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
-viewMultiValue selectId config mousedownedItem index menuItem =
+viewMultiValue : SelectId -> MultiTagStyleConfig -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
+viewMultiValue selectId (MultiTagStyleConfig multiStyles) mousedownedItem index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
@@ -1666,7 +1694,7 @@ viewMultiValue selectId config mousedownedItem index menuItem =
                 tagConfig
 
         resolveTruncationWidth tagConfig =
-            case config.tagTruncation of
+            case multiStyles.truncationWidth of
                 Just width ->
                     Tag.truncateWidth width tagConfig
 
@@ -1675,14 +1703,6 @@ viewMultiValue selectId config mousedownedItem index menuItem =
 
         resolveVariant =
             Tag.default
-
-        withTagColor tagConfig =
-            case config.multiTagColor of
-                Just c ->
-                    Tag.backgroundColor c tagConfig
-
-                _ ->
-                    tagConfig
     in
     Tag.view
         (resolveVariant
@@ -1690,7 +1710,7 @@ viewMultiValue selectId config mousedownedItem index menuItem =
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
-            |> withTagColor
+            |> Tag.backgroundColor multiStyles.color
             |> resolveTruncationWidth
             |> resolveMouseleave
         )
@@ -1795,7 +1815,7 @@ buildMenuItems config state_ =
             else
                 config.menuItems
 
-        Multi _ maybeSelectedMenuItems ->
+        Multi maybeSelectedMenuItems ->
             if config.searchable then
                 List.filter (filterMenuItem state_.inputValue) config.menuItems
                     |> filterMultiSelectedItems maybeSelectedMenuItems
@@ -1812,7 +1832,7 @@ buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation
             viewMenuItem <|
                 ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
-        Multi _ _ ->
+        Multi _ ->
             viewMenuItem <|
                 ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
