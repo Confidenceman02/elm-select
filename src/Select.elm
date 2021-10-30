@@ -1052,47 +1052,9 @@ view (Config config) selectId =
 
         viewableMenuItems =
             buildMenuItems config state_
-
-        preventDefault =
-            if config.searchable then
-                case state_.initialMousedown of
-                    NothingMousedown ->
-                        False
-
-                    InputMousedown ->
-                        False
-
-                    _ ->
-                        True
-
-            else
-                True
-
-        resolveContainerMsg =
-            if config.searchable then
-                SearchableSelectContainerClicked selectId
-
-            else
-                UnsearchableSelectContainerClicked selectId
     in
-    div
-        (StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ]
-            :: (if config.disabled then
-                    []
-
-                else
-                    [ preventDefaultOn "mousedown" <|
-                        Decode.map
-                            (\msg ->
-                                ( msg
-                                , preventDefault
-                                )
-                            )
-                        <|
-                            Decode.succeed resolveContainerMsg
-                    ]
-               )
-        )
+    viewWrapper config
+        selectId
         [ -- container
           let
             controlFocusedStyles =
@@ -1297,6 +1259,54 @@ view (Config config) selectId =
                 )
             ]
         ]
+
+
+viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
+viewWrapper config selectId =
+    let
+        (State state_) =
+            config.state
+
+        preventDefault =
+            if config.searchable then
+                case state_.initialMousedown of
+                    NothingMousedown ->
+                        False
+
+                    InputMousedown ->
+                        False
+
+                    _ ->
+                        True
+
+            else
+                True
+
+        resolveContainerMsg =
+            if config.searchable then
+                SearchableSelectContainerClicked selectId
+
+            else
+                UnsearchableSelectContainerClicked selectId
+    in
+    div
+        (StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ]
+            :: (if config.disabled then
+                    []
+
+                else
+                    [ preventDefaultOn "mousedown" <|
+                        Decode.map
+                            (\msg ->
+                                ( msg
+                                , preventDefault
+                                )
+                            )
+                        <|
+                            Decode.succeed resolveContainerMsg
+                    ]
+               )
+        )
 
 
 viewMenu : ViewMenuData item -> Html (Msg item)
