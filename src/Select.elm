@@ -610,6 +610,12 @@ jsOptimize pred (State state_) =
 type Variant item
     = Single (Maybe (MenuItem item))
     | Multi MultiSelectConfig (List (MenuItem item))
+    | Native NativeVariant
+
+
+type NativeVariant
+    = SingleNative
+    | MultiNative
 
 
 {-| Select a single item.
@@ -1157,6 +1163,9 @@ view (Config config) selectId =
                         Single _ ->
                             buildInput
 
+                        _ ->
+                            text ""
+
                 resolvePlaceholder =
                     case config.variant of
                         Multi _ [] ->
@@ -1171,6 +1180,9 @@ view (Config config) selectId =
 
                         Single Nothing ->
                             viewPlaceholder config
+
+                        _ ->
+                            text ""
 
                 buildPlaceholder =
                     if isEmptyInputValue state_.inputValue then
@@ -1804,6 +1816,9 @@ buildMenuItems config state_ =
                 config.menuItems
                     |> filterMultiSelectedItems maybeSelectedMenuItems
 
+        _ ->
+            []
+
 
 buildMenuItem : SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
 buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
@@ -1812,7 +1827,7 @@ buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation
             viewMenuItem <|
                 ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
-        Multi _ _ ->
+        _ ->
             viewMenuItem <|
                 ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
