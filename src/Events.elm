@@ -1,4 +1,4 @@
-module Events exposing (isDownArrow, isEnter, isEscape, isSpace, isUpArrow, onInputAt)
+module Events exposing (isDownArrow, isEnter, isEscape, isSpace, isUpArrow, onInputAt, onInputAtKeyValue)
 
 import Html.Styled exposing (Attribute)
 import Html.Styled.Events exposing (keyCode, on)
@@ -67,9 +67,19 @@ stringAt path =
     Decode.at path Decode.string
 
 
+keyValueAt : List String -> Decode.Decoder (List ( String, String ))
+keyValueAt path =
+    Decode.at path <| Decode.keyValuePairs <| Decode.field "value" Decode.string
+
+
 mapAt : List String -> (String -> msg) -> Decode.Decoder msg
 mapAt path msg =
     Decode.map msg (stringAt path)
+
+
+mapAtKeyValue : List String -> (List ( String, String ) -> msg) -> Decode.Decoder msg
+mapAtKeyValue path msg =
+    Decode.map msg (keyValueAt path)
 
 
 keyCodeToKey : Int -> Key
@@ -105,6 +115,11 @@ keyCodeToKey keyCode =
 onInputAt : List String -> (String -> msg) -> Attribute msg
 onInputAt path msg =
     on "input" <| mapAt path msg
+
+
+onInputAtKeyValue : List String -> (List ( String, String ) -> msg) -> Attribute msg
+onInputAtKeyValue path msg =
+    on "input" <| mapAtKeyValue path msg
 
 
 isCode : Key -> msg -> Int -> Decode.Decoder msg
