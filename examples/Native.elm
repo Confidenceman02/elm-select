@@ -14,7 +14,7 @@ type Msg
 type alias Model =
     { selectState : Select.State
     , items : List (MenuItem String)
-    , selectedItem : Maybe String
+    , selectedItem : String
     }
 
 
@@ -22,12 +22,13 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elm", label = "Elm" }
+            [ { item = "No Selection", label = "No Selection" }
+            , { item = "Elm", label = "Elm" }
             , { item = "Is", label = "Is" }
             , { item = "Really", label = "Really" }
             , { item = "Great", label = "Great" }
             ]
-      , selectedItem = Nothing
+      , selectedItem = "No Selection"
       }
     , Cmd.none
     )
@@ -54,7 +55,7 @@ update msg model =
                 updatedSelectedItem =
                     case maybeAction of
                         Just (Select.Select i) ->
-                            Just i |> Debug.log "Selected"
+                            i |> Debug.log "Selected"
 
                         _ ->
                             model.selectedItem
@@ -66,12 +67,7 @@ view : Model -> Html Msg
 view m =
     let
         selectedItem =
-            case m.selectedItem of
-                Just i ->
-                    Just { item = i, label = i }
-
-                _ ->
-                    Nothing
+            { item = m.selectedItem, label = m.selectedItem }
     in
     div
         [ StyledAttribs.css
@@ -83,7 +79,7 @@ view m =
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.native
+                (Select.native selectedItem
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
