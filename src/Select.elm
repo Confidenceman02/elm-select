@@ -73,6 +73,7 @@ type SelectId
 {-| -}
 type Msg item
     = InputChanged SelectId String
+    | InputChangedNativeSingle (List (MenuItem item)) (List ( String, String ))
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
     | SelectedItemMulti item SelectId
@@ -698,6 +699,19 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
+        InputChangedNativeSingle allMenuItems selectedOptions ->
+            case selectedOptions of
+                [] ->
+                    ( Nothing, State state_, Cmd.none )
+
+                ( _, value ) :: _ ->
+                    case ListExtra.find (\item -> item.label == value) allMenuItems of
+                        Just mi ->
+                            ( Just <| Select mi.item, State state_, Cmd.none )
+
+                        Nothing ->
+                            ( Nothing, State state_, Cmd.none )
+
         EnterSelect item ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
@@ -1066,7 +1080,7 @@ view (Config config) selectId =
     selectWrapper
         (case config.variant of
             Native _ ->
-                [ viewNative ]
+                [ viewNative config.menuItems ]
 
             _ ->
                 [ -- container
@@ -1276,10 +1290,15 @@ view (Config config) selectId =
         )
 
 
-viewNative : Html msg
-viewNative =
+viewNative : List (MenuItem item) -> Html (Msg item)
+viewNative items =
+    let
+        buildList item =
+            option [ StyledAttribs.value item.label ] [ text item.label ]
+    in
     select
         [ StyledAttribs.name "SomeSelect"
+        , Events.onInputAtKeyValue [ "target", "selectedOptions" ] (InputChangedNativeSingle items)
         , StyledAttribs.css
             [ Css.width (Css.pct 100)
             , Css.height (Css.px controlHeight)
@@ -1295,12 +1314,7 @@ viewNative =
             , controlHover
             ]
         ]
-        [ option [ StyledAttribs.value " ", StyledAttribs.selected True ] [ text "Placeholder" ]
-        , option [ StyledAttribs.value "cat" ] [ text "Cat" ]
-        , option [ StyledAttribs.value "dog" ] [ text "Dog" ]
-        , option [ StyledAttribs.value "hamster" ] [ text "Hamster" ]
-        , option [ StyledAttribs.value "snake" ] [ text "Snake" ]
-        ]
+        (List.map buildList items)
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
