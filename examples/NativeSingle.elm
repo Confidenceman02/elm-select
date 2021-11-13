@@ -55,7 +55,7 @@ update msg model =
                 updatedSelectedItem =
                     case maybeAction of
                         Just (Select.Select i) ->
-                            i |> Debug.log "Selected"
+                            i
 
                         _ ->
                             model.selectedItem
@@ -71,18 +71,14 @@ view m =
     in
     div
         [ StyledAttribs.css
-            [ Css.marginTop (Css.px 20)
-            , Css.width (Css.pct 50)
-            , Css.marginLeft Css.auto
-            , Css.marginRight Css.auto
+            [ Css.margin (Css.px 20)
             ]
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.native selectedItem
+                (Select.singleNative (Just selectedItem)
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
-                    |> Select.placeholder "Placeholder"
                 )
                 (selectIdentifier "SingleSelectExample")
         ]
