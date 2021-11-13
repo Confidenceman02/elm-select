@@ -111,7 +111,7 @@ describe("SingleSearchable", () => {
   });
 });
 
-describe.only("NativeSingle", () => {
+describe("NativeSingle", () => {
   it("Selects item by input", async () => {
     await browser.newContext();
     const page = await browser.newPage();
