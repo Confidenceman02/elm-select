@@ -708,18 +708,13 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
-        InputChangedNativeSingle allMenuItems selectedOptions ->
-            case selectedOptions of
-                [] ->
+        InputChangedNativeSingle allMenuItems selectedOptionIndex ->
+            case ListExtra.getAt selectedOptionIndex allMenuItems of
+                Nothing ->
                     ( Nothing, State state_, Cmd.none )
 
-                ( _, value ) :: _ ->
-                    case ListExtra.find (\item -> item.label == value) allMenuItems of
-                        Just mi ->
-                            ( Just <| Select mi.item, State state_, Cmd.none )
-
-                        Nothing ->
-                            ( Nothing, State state_, Cmd.none )
+                Just mi ->
+                    ( Just <| Select mi.item, State state_, Cmd.none )
 
         EnterSelect item ->
             let
@@ -1088,8 +1083,8 @@ view (Config config) selectId =
     in
     selectWrapper
         (case config.variant of
-            Native _ ->
-                [ viewNative config.menuItems ]
+            Native variant ->
+                [ viewNative variant config.menuItems selectId ]
 
             _ ->
                 [ -- container
@@ -1299,31 +1294,50 @@ view (Config config) selectId =
         )
 
 
-viewNative : List (MenuItem item) -> Html (Msg item)
-viewNative items =
-    let
-        buildList item =
-            option [ StyledAttribs.value item.label ] [ text item.label ]
-    in
-    select
-        [ StyledAttribs.name "SomeSelect"
-        , Events.onInputAtKeyValue [ "target", "selectedOptions" ] (InputChangedNativeSingle items)
-        , StyledAttribs.css
-            [ Css.width (Css.pct 100)
-            , Css.height (Css.px controlHeight)
-            , Css.borderRadius (Css.px controlRadius)
-            , Css.backgroundColor (Css.hex "#FFFFFF")
-            , controlBorder
-            , Css.padding2 (Css.px 2) (Css.px 8)
-            , Css.property "appearance" "none"
-            , Css.property "-webkit-appearance" "none"
-            , Css.fontFamily Css.inherit
-            , Css.focus
-                [ controlBorderFocused, Css.outline Css.none ]
-            , controlHover
-            ]
-        ]
-        (List.map buildList items)
+viewNative : NativeVariant item -> List (MenuItem item) -> SelectId -> Html (Msg item)
+viewNative variant items (SelectId selectId) =
+    case variant of
+        SingleNative maybeSelectedItem ->
+            let
+                withSelectedOption item =
+                    case maybeSelectedItem of
+                        Just selectedItem ->
+                            if selectedItem == item then
+                                [ StyledAttribs.attribute "selected" "" ]
+
+                            else
+                                []
+
+                        _ ->
+                            []
+
+                buildList item =
+                    option ([ StyledAttribs.value item.label ] ++ withSelectedOption item) [ text item.label ]
+            in
+            select
+                [ id ("native-single-select-" ++ selectId)
+                , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
+                , StyledAttribs.name "SomeSelect"
+                , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle items)
+                , StyledAttribs.css
+                    [ Css.width (Css.pct 100)
+                    , Css.height (Css.px controlHeight)
+                    , Css.borderRadius (Css.px controlRadius)
+                    , Css.backgroundColor (Css.hex "#FFFFFF")
+                    , controlBorder
+                    , Css.padding2 (Css.px 2) (Css.px 8)
+                    , Css.property "appearance" "none"
+                    , Css.property "-webkit-appearance" "none"
+                    , Css.fontFamily Css.inherit
+                    , Css.focus
+                        [ controlBorderFocused, Css.outline Css.none ]
+                    , controlHover
+                    ]
+                ]
+                (List.map buildList items)
+
+        MultiNative ->
+            text ""
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
