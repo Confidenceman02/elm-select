@@ -1083,7 +1083,19 @@ view (Config config) selectId =
     selectWrapper
         (case config.variant of
             Native variant ->
-                [ viewNative variant config.menuItems selectId ]
+                [ viewNative variant config.menuItems selectId
+                , span
+                    [ StyledAttribs.css
+                        [ Css.position Css.absolute
+                        , Css.right (Css.px 0)
+                        , Css.top (Css.pct 50)
+                        , Css.transform (Css.translateY (Css.pct -50))
+                        , Css.padding (Css.px 8)
+                        , Css.pointerEvents Css.none
+                        ]
+                    ]
+                    [ dropdownIndicator False ]
+                ]
 
             _ ->
                 [ -- container
