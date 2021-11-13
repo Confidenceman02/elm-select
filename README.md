@@ -1,5 +1,5 @@
 # elm-select
-Select things in style! Inspired and built on top of the [Kaizen design system](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) Select component. 
+Select things in style!
 
 **Single select** 
 
@@ -8,6 +8,10 @@ Select things in style! Inspired and built on top of the [Kaizen design system](
 **Multi select**
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/Multi.png)
+
+**Single native**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/NativeSingle.png)
 
 ## Accessibility
 - Keyboard accessible
@@ -280,10 +284,7 @@ __Customisable view elements__
 - Expand the Select configuration to allow for custom styling. 
 - Allow consumers to entirely replace Select view elements with their own custom views.
 
-## Why not just use the Kaizen Select?
-- The [Kaizen design system](https://cultureamp.design/) is a wonderful library with both react and elm components/views. Because the library makes many assumptions about the consuming project, it is not easily used by most Elm apps. 
- 
-  Elm-select can be integrated into any Elm app with no special build requirements or non-Elm dependencies. In particular, it uses [elm-css](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/) to provide it's own styles.
-
-- The [Kaizen Elm Select](https://cultureamp.design/storybook/?path=/story/select-elm--multi-select-searchable) has shortcomings around screen reader accessibility. Elm-select has addressed this by implementing the [WAI-ARIA](https://www.w3.org/TR/wai-aria-practices/examples/combobox/aria1.1pattern/listbox-combo.html) best practices for selects.
-
+__Native variant consistency__  
+- [Loading](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#disabled) config support
+- [LabelledBy](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#labelledBy) config support
+- [Disabled](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#disabled) config support

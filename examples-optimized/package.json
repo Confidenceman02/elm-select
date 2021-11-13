@@ -5,10 +5,10 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
-    "@confidenceman02/elm-select": "^1.0.2",
-    "@parcel/transformer-elm": "2.0.0-beta.3.1",
+    "@confidenceman02/elm-select": "^1.0.3",
+    "@parcel/transformer-elm": "2.0.1",
     "elm": "^0.19.1-5",
-    "parcel": "^2.0.0-beta.3.1"
+    "parcel": "^2.0.1"
   },
   "scripts": {
     "start": "rm -rf .parcel-cache && parcel index.html"

@@ -2,6 +2,7 @@ module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
+    , singleNative
     , disabled, labelledBy, loading
     , jsOptimize
     )
@@ -24,6 +25,11 @@ module Select exposing
 @docs multi, truncateMultiTag, multiTagColor, initMultiConfig
 
 
+# Native Single select
+
+@docs singleNative
+
+
 # Common
 
 @docs disabled, labelledBy, loading
@@ -40,7 +46,7 @@ import ClearIcon
 import Css
 import DotLoadingIcon
 import Events
-import Html.Styled exposing (Html, button, div, input, li, span, text)
+import Html.Styled exposing (Html, button, div, input, li, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
 import Html.Styled.Attributes.Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
@@ -72,6 +78,7 @@ type SelectId
 {-| -}
 type Msg item
     = InputChanged SelectId String
+    | InputChangedNativeSingle (List (MenuItem item)) Int
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
     | SelectedItemMulti item SelectId
@@ -610,6 +617,11 @@ jsOptimize pred (State state_) =
 type Variant item
     = Single (Maybe (MenuItem item))
     | Multi MultiSelectConfig (List (MenuItem item))
+    | Native (NativeVariant item)
+
+
+type NativeVariant item
+    = SingleNative (Maybe (MenuItem item))
 
 
 {-| Select a single item.
@@ -624,13 +636,45 @@ type Variant item
       yourView =
           Html.map SelectMsg <|
               view
-                  (Single Nothing |> menuItems countries)
+                  (single Nothing |> menuItems countries)
                   (selectIdentifier "1234")
 
 -}
 single : Maybe (MenuItem item) -> Config item
 single maybeSelectedItem =
     Config { defaults | variant = Single maybeSelectedItem }
+
+
+{-| Select a single item with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
+
+Useful for when you want to give a native select experience such as on touch
+devices.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ { item = Australia, label = "Australia" }
+          , { item = Taiwan, label = "Taiwan"
+          -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                  (singleNative Nothing |> menuItems countries)
+                  (selectIdentifier "1234")
+
+**Note**
+
+  - The only [Action](#Action) event that will be fired from the native single select is
+    the `Select` [Action](#Action). The other actions are not currently supported.
+
+  - Some [Config](#Config) values will not currently take effect when using the single native variant
+    i.e. [loading](#loading), [placeholder](#placeholder), [clearable](#clearable), [labelledBy](#labelledBy), [disabled](#disabled)
+
+-}
+singleNative : Maybe (MenuItem item) -> Config item
+singleNative mi =
+    Config { defaults | variant = Native (SingleNative mi) }
 
 
 {-| Select multiple items.
@@ -686,6 +730,14 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
+        InputChangedNativeSingle allMenuItems selectedOptionIndex ->
+            case ListExtra.getAt selectedOptionIndex allMenuItems of
+                Nothing ->
+                    ( Nothing, State state_, Cmd.none )
+
+                Just mi ->
+                    ( Just <| Select mi.item, State state_, Cmd.none )
+
         EnterSelect item ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
@@ -1047,6 +1099,285 @@ view (Config config) selectId =
         viewableMenuItems =
             buildMenuItems config state_
 
+        selectWrapper =
+            viewWrapper config
+                selectId
+    in
+    selectWrapper
+        (case config.variant of
+            Native variant ->
+                [ viewNative variant config.menuItems selectId
+                , span
+                    [ StyledAttribs.css
+                        [ Css.position Css.absolute
+                        , Css.right (Css.px 0)
+                        , Css.top (Css.pct 50)
+                        , Css.transform (Css.translateY (Css.pct -50))
+                        , Css.padding (Css.px 8)
+                        , Css.pointerEvents Css.none
+                        ]
+                    ]
+                    [ dropdownIndicator False ]
+                ]
+
+            _ ->
+                [ -- container
+                  let
+                    controlFocusedStyles =
+                        if state_.controlUiFocused then
+                            [ controlBorderFocused ]
+
+                        else
+                            []
+                  in
+                  div
+                    -- control
+                    (StyledAttribs.css
+                        ([ Css.alignItems Css.center
+                         , Css.backgroundColor (Css.hex "#FFFFFF")
+                         , Css.cursor Css.default
+                         , Css.displayFlex
+                         , Css.flexWrap Css.wrap
+                         , Css.justifyContent Css.spaceBetween
+                         , Css.minHeight (Css.px controlHeight)
+                         , Css.position Css.relative
+                         , Css.boxSizing Css.borderBox
+                         , controlBorder
+                         , Css.borderRadius (Css.px controlRadius)
+                         , Css.outline Css.zero
+                         , if config.disabled then
+                            controlDisabled
+
+                           else
+                            controlHover
+                         ]
+                            ++ controlFocusedStyles
+                        )
+                        :: (if config.disabled then
+                                []
+
+                            else
+                                [ attribute "data-test-id" "selectContainer"
+                                ]
+                           )
+                    )
+                    [ -- valueContainer
+                      let
+                        withDisabledStyles =
+                            if config.disabled then
+                                [ Css.position Css.static ]
+
+                            else
+                                []
+
+                        buildMulti =
+                            case config.variant of
+                                Multi (MultiSelectConfig tagConfig) multiSelectedValues ->
+                                    let
+                                        resolveMultiValueStyles =
+                                            if 0 < List.length multiSelectedValues then
+                                                [ StyledAttribs.css [ Css.marginRight (Css.rem 0.4375) ] ]
+
+                                            else
+                                                []
+                                    in
+                                    div resolveMultiValueStyles <|
+                                        (List.indexedMap
+                                            (viewMultiValue selectId tagConfig state_.initialMousedown)
+                                            multiSelectedValues
+                                            ++ [ buildInput ]
+                                        )
+
+                                Single _ ->
+                                    buildInput
+
+                                _ ->
+                                    text ""
+
+                        resolvePlaceholder =
+                            case config.variant of
+                                Multi _ [] ->
+                                    viewPlaceholder config
+
+                                -- Multi selected values render differently
+                                Multi _ _ ->
+                                    text ""
+
+                                Single (Just v) ->
+                                    viewSelectedPlaceholder v
+
+                                Single Nothing ->
+                                    viewPlaceholder config
+
+                                _ ->
+                                    text ""
+
+                        buildPlaceholder =
+                            if isEmptyInputValue state_.inputValue then
+                                resolvePlaceholder
+
+                            else
+                                text ""
+
+                        buildInput =
+                            if not config.disabled then
+                                if config.searchable then
+                                    lazy viewSelectInput
+                                        (ViewSelectInputData
+                                            selectId
+                                            state_.inputValue
+                                            enterSelectTargetItem
+                                            state_.activeTargetIndex
+                                            totalMenuItems
+                                            state_.menuOpen
+                                            config.variant
+                                            config.labelledBy
+                                            state_.jsOptimize
+                                            state_.controlUiFocused
+                                        )
+
+                                else
+                                    lazy viewDummyInput
+                                        (ViewDummyInputData
+                                            (getSelectId selectId)
+                                            enterSelectTargetItem
+                                            totalMenuItems
+                                            state_.menuOpen
+                                        )
+
+                            else
+                                text ""
+                      in
+                      div
+                        [ StyledAttribs.css
+                            ([ Css.displayFlex
+                             , Css.flexWrap Css.wrap
+                             , Css.position Css.relative
+                             , Css.alignItems Css.center
+                             , Css.boxSizing Css.borderBox
+                             , Css.flex (Css.int 1)
+                             , Css.padding2 (Css.px 2) (Css.px 8)
+                             , Css.overflow Css.hidden
+                             ]
+                                ++ withDisabledStyles
+                            )
+                        ]
+                        [ buildMulti
+                        , buildPlaceholder
+                        ]
+                    , let
+                        resolveLoadingSpinner =
+                            if config.isLoading && config.searchable then
+                                viewLoading
+
+                            else
+                                text ""
+
+                        clearButtonVisible =
+                            if config.clearable && not config.disabled then
+                                case config.variant of
+                                    Single (Just _) ->
+                                        True
+
+                                    _ ->
+                                        False
+
+                            else
+                                False
+                      in
+                      -- indicators
+                      div
+                        [ StyledAttribs.css
+                            [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
+                        ]
+                        [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
+                        , div [ StyledAttribs.css indicatorContainerStyles ] [ resolveLoadingSpinner ]
+
+                        -- indicatorSeparator
+                        , span
+                            [ StyledAttribs.css
+                                [ Css.alignSelf Css.stretch
+                                , Css.backgroundColor (Css.rgb 204 204 204)
+                                , Css.marginBottom (Css.px 8)
+                                , Css.marginTop (Css.px 8)
+                                , Css.width (Css.px 1)
+                                , Css.boxSizing Css.borderBox
+                                ]
+                            ]
+                            []
+                        , -- indicatorContainer
+                          div
+                            [ StyledAttribs.css indicatorContainerStyles ]
+                            [ dropdownIndicator config.disabled
+                            ]
+                        ]
+                    , viewIf state_.menuOpen
+                        (lazy viewMenu
+                            (ViewMenuData
+                                config.variant
+                                selectId
+                                viewableMenuItems
+                                state_.initialMousedown
+                                state_.activeTargetIndex
+                                state_.menuNavigation
+                                config.isLoading
+                            )
+                        )
+                    ]
+                ]
+        )
+
+
+viewNative : NativeVariant item -> List (MenuItem item) -> SelectId -> Html (Msg item)
+viewNative variant items (SelectId selectId) =
+    case variant of
+        SingleNative maybeSelectedItem ->
+            let
+                withSelectedOption item =
+                    case maybeSelectedItem of
+                        Just selectedItem ->
+                            if selectedItem == item then
+                                [ StyledAttribs.attribute "selected" "" ]
+
+                            else
+                                []
+
+                        _ ->
+                            []
+
+                buildList item =
+                    option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
+            in
+            select
+                [ id ("native-single-select-" ++ selectId)
+                , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
+                , StyledAttribs.name "SomeSelect"
+                , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle items)
+                , StyledAttribs.css
+                    [ Css.width (Css.pct 100)
+                    , Css.height (Css.px controlHeight)
+                    , Css.borderRadius (Css.px controlRadius)
+                    , Css.backgroundColor (Css.hex "#FFFFFF")
+                    , controlBorder
+                    , Css.padding2 (Css.px 2) (Css.px 8)
+                    , Css.property "appearance" "none"
+                    , Css.property "-webkit-appearance" "none"
+                    , Css.color (Css.hex "#000000")
+                    , Css.fontSize (Css.px 16)
+                    , Css.focus
+                        [ controlBorderFocused, Css.outline Css.none ]
+                    , controlHover
+                    ]
+                ]
+                (List.map buildList items)
+
+
+viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
+viewWrapper config selectId =
+    let
+        (State state_) =
+            config.state
+
         preventDefault =
             if config.searchable then
                 case state_.initialMousedown of
@@ -1071,7 +1402,7 @@ view (Config config) selectId =
     in
     div
         (StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ]
-            :: (if config.disabled then
+            :: (if config.disabled || isNativeVariant config.variant then
                     []
 
                 else
@@ -1087,204 +1418,6 @@ view (Config config) selectId =
                     ]
                )
         )
-        [ -- container
-          let
-            controlFocusedStyles =
-                if state_.controlUiFocused then
-                    [ Css.borderColor (Css.hex "#0168b3") ]
-
-                else
-                    []
-          in
-          div
-            -- control
-            (StyledAttribs.css
-                ([ Css.alignItems Css.center
-                 , Css.backgroundColor (Css.hex "#FFFFFF")
-                 , Css.cursor Css.default
-                 , Css.displayFlex
-                 , Css.flexWrap Css.wrap
-                 , Css.justifyContent Css.spaceBetween
-                 , Css.minHeight (Css.px 48)
-                 , Css.position Css.relative
-                 , Css.boxSizing Css.borderBox
-                 , Css.border3 (Css.px 2) Css.solid (Css.hex "#898BA9")
-                 , Css.borderRadius (Css.px 7)
-                 , Css.outline Css.zero
-                 , if config.disabled then
-                    Css.opacity (Css.num 0.3)
-
-                   else
-                    Css.hover [ Css.backgroundColor (Css.hex "#F0F1F4"), Css.borderColor (Css.hex "#4B4D68") ]
-                 ]
-                    ++ controlFocusedStyles
-                )
-                :: (if config.disabled then
-                        []
-
-                    else
-                        [ attribute "data-test-id" "selectContainer"
-                        ]
-                   )
-            )
-            [ -- valueContainer
-              let
-                withDisabledStyles =
-                    if config.disabled then
-                        [ Css.position Css.static ]
-
-                    else
-                        []
-
-                buildMulti =
-                    case config.variant of
-                        Multi (MultiSelectConfig tagConfig) multiSelectedValues ->
-                            let
-                                resolveMultiValueStyles =
-                                    if 0 < List.length multiSelectedValues then
-                                        [ StyledAttribs.css [ Css.marginRight (Css.rem 0.4375) ] ]
-
-                                    else
-                                        []
-                            in
-                            div resolveMultiValueStyles <|
-                                (List.indexedMap
-                                    (viewMultiValue selectId tagConfig state_.initialMousedown)
-                                    multiSelectedValues
-                                    ++ [ buildInput ]
-                                )
-
-                        Single _ ->
-                            buildInput
-
-                resolvePlaceholder =
-                    case config.variant of
-                        Multi _ [] ->
-                            viewPlaceholder config
-
-                        -- Multi selected values render differently
-                        Multi _ _ ->
-                            text ""
-
-                        Single (Just v) ->
-                            viewSelectedPlaceholder v
-
-                        Single Nothing ->
-                            viewPlaceholder config
-
-                buildPlaceholder =
-                    if isEmptyInputValue state_.inputValue then
-                        resolvePlaceholder
-
-                    else
-                        text ""
-
-                buildInput =
-                    if not config.disabled then
-                        if config.searchable then
-                            lazy viewSelectInput
-                                (ViewSelectInputData
-                                    selectId
-                                    state_.inputValue
-                                    enterSelectTargetItem
-                                    state_.activeTargetIndex
-                                    totalMenuItems
-                                    state_.menuOpen
-                                    config.variant
-                                    config.labelledBy
-                                    state_.jsOptimize
-                                    state_.controlUiFocused
-                                )
-
-                        else
-                            lazy viewDummyInput
-                                (ViewDummyInputData
-                                    (getSelectId selectId)
-                                    enterSelectTargetItem
-                                    totalMenuItems
-                                    state_.menuOpen
-                                )
-
-                    else
-                        text ""
-              in
-              div
-                [ StyledAttribs.css
-                    ([ Css.displayFlex
-                     , Css.flexWrap Css.wrap
-                     , Css.position Css.relative
-                     , Css.alignItems Css.center
-                     , Css.boxSizing Css.borderBox
-                     , Css.flex (Css.int 1)
-                     , Css.padding2 (Css.px 2) (Css.px 8)
-                     , Css.overflow Css.hidden
-                     ]
-                        ++ withDisabledStyles
-                    )
-                ]
-                [ buildMulti
-                , buildPlaceholder
-                ]
-            , let
-                resolveLoadingSpinner =
-                    if config.isLoading && config.searchable then
-                        viewLoading
-
-                    else
-                        text ""
-
-                clearButtonVisible =
-                    if config.clearable && not config.disabled then
-                        case config.variant of
-                            Single (Just _) ->
-                                True
-
-                            _ ->
-                                False
-
-                    else
-                        False
-              in
-              -- indicators
-              div
-                [ StyledAttribs.css
-                    [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
-                ]
-                [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
-                , div [ StyledAttribs.css indicatorContainerStyles ] [ resolveLoadingSpinner ]
-
-                -- indicatorSeprator
-                , span
-                    [ StyledAttribs.css
-                        [ Css.alignSelf Css.stretch
-                        , Css.backgroundColor (Css.rgb 204 204 204)
-                        , Css.marginBottom (Css.px 8)
-                        , Css.marginTop (Css.px 8)
-                        , Css.width (Css.px 1)
-                        , Css.boxSizing Css.borderBox
-                        ]
-                    ]
-                    []
-                , -- indicatorContainer
-                  div
-                    [ StyledAttribs.css indicatorContainerStyles ]
-                    [ dropdownIndicator config
-                    ]
-                ]
-            , viewIf state_.menuOpen
-                (lazy viewMenu
-                    (ViewMenuData
-                        config.variant
-                        selectId
-                        viewableMenuItems
-                        state_.initialMousedown
-                        state_.activeTargetIndex
-                        state_.menuNavigation
-                        config.isLoading
-                    )
-                )
-            ]
-        ]
 
 
 viewMenu : ViewMenuData item -> Html (Msg item)
@@ -1772,6 +1905,16 @@ canBeSpaceToggled menuOpen inputValue =
     not menuOpen && isEmptyInputValue inputValue
 
 
+isNativeVariant : Variant item -> Bool
+isNativeVariant variant =
+    case variant of
+        Native _ ->
+            True
+
+        _ ->
+            False
+
+
 
 -- CALC
 
@@ -1804,6 +1947,9 @@ buildMenuItems config state_ =
                 config.menuItems
                     |> filterMultiSelectedItems maybeSelectedMenuItems
 
+        _ ->
+            []
+
 
 buildMenuItem : SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
 buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
@@ -1812,7 +1958,7 @@ buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation
             viewMenuItem <|
                 ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
-        Multi _ _ ->
+        _ ->
             viewMenuItem <|
                 ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
 
@@ -1962,11 +2108,11 @@ clearIndicator config id =
         ]
 
 
-dropdownIndicator : Configuration item -> Html msg
-dropdownIndicator config =
+dropdownIndicator : Bool -> Html msg
+dropdownIndicator disabledInput =
     let
         resolveIconButtonStyles =
-            if config.disabled then
+            if disabledInput then
                 [ Css.height (Css.px 20) ]
 
             else
@@ -2028,3 +2174,33 @@ listBoxPaddingTop =
 listBoxBorder : Float
 listBoxBorder =
     6
+
+
+controlRadius : Float
+controlRadius =
+    7
+
+
+controlHeight : Float
+controlHeight =
+    48
+
+
+controlBorder : Css.Style
+controlBorder =
+    Css.border3 (Css.px 2) Css.solid (Css.hex "#898BA9")
+
+
+controlBorderFocused : Css.Style
+controlBorderFocused =
+    Css.borderColor (Css.hex "#0168b3")
+
+
+controlDisabled : Css.Style
+controlDisabled =
+    Css.opacity (Css.num 0.3)
+
+
+controlHover : Css.Style
+controlHover =
+    Css.hover [ Css.backgroundColor (Css.hex "#F0F1F4"), Css.borderColor (Css.hex "#4B4D68") ]

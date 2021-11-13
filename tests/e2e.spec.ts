@@ -20,6 +20,7 @@ describe("examples", () => {
     const singleExampleVisible = await page.isVisible(
       "text=SingleSearchable.elm"
     );
+    const nativeSingle = await page.isVisible("text=NativeSingle.elm");
     const truncationExampleVisible = await page.isVisible(
       "text=MultiTruncation.elm"
     );
@@ -34,6 +35,7 @@ describe("examples", () => {
     const longMenuVisible = await page.isVisible("text=LongMenu.elm");
 
     expect(singleExampleVisible).toBeTruthy();
+    expect(nativeSingle).toBeTruthy();
     expect(truncationExampleVisible).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
@@ -106,6 +108,57 @@ describe("SingleSearchable", () => {
     );
 
     expect(updatedInputValue).toBe("");
+  });
+});
+
+describe("NativeSingle", () => {
+  it("Selects item by input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.type("[data-test-id=nativeSingleSelect]", "e");
+
+    const selectedIndex: number = await page.$eval(
+      "[data-test-id=nativeSingleSelect]",
+      (el: HTMLSelectElement) => el.selectedIndex
+    );
+
+    expect(selectedIndex).toBe(1);
+  });
+
+  it("selects item by dropdown select", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.selectOption("select#native-single-select-SingleSelectExample", {
+      label: "Great",
+    });
+
+    const selectedIndex: number = await page.$eval(
+      "[data-test-id=nativeSingleSelect]",
+      (el: HTMLSelectElement) => el.selectedIndex
+    );
+
+    expect(selectedIndex).toBe(4);
+  });
+
+  it("selected item has selected attribute", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.selectOption("select#native-single-select-SingleSelectExample", {
+      label: "Great",
+    });
+
+    const isSelected: boolean = await page.$eval(
+      "#native-single-select-SingleSelectExample",
+      (el: HTMLSelectElement) => {
+        const selectedIndex = el.selectedIndex;
+        return el.options[selectedIndex].selected;
+      }
+    );
+
+    expect(isSelected).toBeTruthy();
   });
 });
 
