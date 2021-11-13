@@ -1258,7 +1258,7 @@ view (Config config) selectId =
                         [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
                         , div [ StyledAttribs.css indicatorContainerStyles ] [ resolveLoadingSpinner ]
 
-                        -- indicatorSeprator
+                        -- indicatorSeparator
                         , span
                             [ StyledAttribs.css
                                 [ Css.alignSelf Css.stretch
@@ -1273,7 +1273,7 @@ view (Config config) selectId =
                         , -- indicatorContainer
                           div
                             [ StyledAttribs.css indicatorContainerStyles ]
-                            [ dropdownIndicator config
+                            [ dropdownIndicator config.disabled
                             ]
                         ]
                     , viewIf state_.menuOpen
@@ -2072,11 +2072,11 @@ clearIndicator config id =
         ]
 
 
-dropdownIndicator : Configuration item -> Html msg
-dropdownIndicator config =
+dropdownIndicator : Bool -> Html msg
+dropdownIndicator disabledInput =
     let
         resolveIconButtonStyles =
-            if config.disabled then
+            if disabledInput then
                 [ Css.height (Css.px 20) ]
 
             else
