@@ -75,10 +75,7 @@ view m =
     in
     div
         [ StyledAttribs.css
-            [ Css.marginTop (Css.px 20)
-            , Css.width (Css.pct 50)
-            , Css.marginLeft Css.auto
-            , Css.marginRight Css.auto
+            [ Css.margin (Css.px 20)
             ]
         ]
         [ Styled.map SelectMsg <|
