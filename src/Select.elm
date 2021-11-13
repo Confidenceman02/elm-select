@@ -4,7 +4,7 @@ module Select exposing
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , disabled, labelledBy, loading
     , jsOptimize
-    , native
+    , singleNative
     )
 
 {-| Select items from a menu list.
@@ -73,7 +73,7 @@ type SelectId
 {-| -}
 type Msg item
     = InputChanged SelectId String
-    | InputChangedNativeSingle (List (MenuItem item)) (List ( String, String ))
+    | InputChangedNativeSingle (List (MenuItem item)) Int
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
     | SelectedItemMulti item SelectId
