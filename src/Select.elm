@@ -2,9 +2,9 @@ module Select exposing
     ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
+    , singleNative
     , disabled, labelledBy, loading
     , jsOptimize
-    , singleNative
     )
 
 {-| Select items from a menu list.
@@ -23,6 +23,11 @@ module Select exposing
 # Multi select
 
 @docs multi, truncateMultiTag, multiTagColor, initMultiConfig
+
+
+# Native Single select
+
+@docs singleNative
 
 
 # Common
@@ -631,7 +636,7 @@ type NativeVariant item
       yourView =
           Html.map SelectMsg <|
               view
-                  (Single Nothing |> menuItems countries)
+                  (single Nothing |> menuItems countries)
                   (selectIdentifier "1234")
 
 -}
@@ -645,8 +650,26 @@ single maybeSelectedItem =
 Useful for when you want to give a native select experience such as on touch
 devices.
 
-NOTE: The only [Action](#Action) event that will be fired from the native single select is
-the `Select` [Action](#Action). The other actions are not currently supported.
+      countries : List (MenuItem Country)
+      countries =
+          [ { item = Australia, label = "Australia" }
+          , { item = Taiwan, label = "Taiwan"
+          -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                  (singleNative Nothing |> menuItems countries)
+                  (selectIdentifier "1234")
+
+**Note**
+
+  - The only [Action](#Action) event that will be fired from the native single select is
+    the `Select` [Action](#Action). The other actions are not currently supported.
+
+  - Some [Config](#Config) values will not currently take effect when using the single native variant
+    i.e. [loading](#loading), [placeholder](#placeholder), [clearable](#clearable), [labelledBy](#labelledBy), [disabled](#disabled)
 
 -}
 singleNative : Maybe (MenuItem item) -> Config item
