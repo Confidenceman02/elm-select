@@ -80,7 +80,7 @@ view m =
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.singleNative selectedItem
+                (Select.single selectedItem
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
