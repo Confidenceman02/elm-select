@@ -1339,7 +1339,8 @@ viewNative variant items (SelectId selectId) =
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
-                    , Css.fontFamily Css.inherit
+                    , Css.color (Css.hex "#000000")
+                    , Css.fontSize (Css.px 16)
                     , Css.focus
                         [ controlBorderFocused, Css.outline Css.none ]
                     , controlHover
