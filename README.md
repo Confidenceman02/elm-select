@@ -285,6 +285,6 @@ __Customisable view elements__
 - Allow consumers to entirely replace Select view elements with their own custom views.
 
 __Native variant consistency__  
-- [Loading](#) config support
-- [LabelledBy](#) config support
-- [Disabled](#) config support
+- [Loading](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#disabled) config support
+- [LabelledBy](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#labelledBy) config support
+- [Disabled](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#disabled) config support
