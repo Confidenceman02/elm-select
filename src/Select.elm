@@ -617,7 +617,6 @@ type Variant item
 
 type NativeVariant item
     = SingleNative (Maybe (MenuItem item))
-    | MultiNative
 
 
 {-| Select a single item.
@@ -1312,7 +1311,7 @@ viewNative variant items (SelectId selectId) =
                             []
 
                 buildList item =
-                    option ([ StyledAttribs.value item.label ] ++ withSelectedOption item) [ text item.label ]
+                    option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
             in
             select
                 [ id ("native-single-select-" ++ selectId)
@@ -1335,9 +1334,6 @@ viewNative variant items (SelectId selectId) =
                     ]
                 ]
                 (List.map buildList items)
-
-        MultiNative ->
-            text ""
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
