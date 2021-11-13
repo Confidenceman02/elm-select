@@ -183,7 +183,7 @@ view (Config config) id_ =
         resolveInputId =
             inputId id_
 
-        buildDynamcSelectInputProps =
+        buildDynamicSelectInputProps =
             Encode.encode 0 <|
                 Encode.object
                     [ ( "sizerId", Encode.string resolveSizerId )
@@ -200,7 +200,7 @@ view (Config config) id_ =
                         [ size <| String.length inputValue + config.minWidth ]
 
                 DynamicJsOptimized True ->
-                    [ style "width" (String.fromInt config.minWidth ++ "px"), attribute "data-es-dynamic-select-input" buildDynamcSelectInputProps ]
+                    [ style "width" (String.fromInt config.minWidth ++ "px"), attribute "data-es-dynamic-select-input" buildDynamicSelectInputProps ]
 
                 DynamicJsOptimized False ->
                     [ style "width" (String.fromInt config.minWidth ++ "px") ]
