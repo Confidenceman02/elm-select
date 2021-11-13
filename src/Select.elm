@@ -641,6 +641,20 @@ single maybeSelectedItem =
     Config { defaults | variant = Single maybeSelectedItem }
 
 
+{-| Select a single item with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
+
+Useful for when you want to give a native select experience such as on touch
+devices.
+
+NOTE: The only [Action](#Action) event that will be fired from the native single select is
+the `Select` [Action](#Action). The other actions are not currently supported.
+
+-}
+singleNative : Maybe (MenuItem item) -> Config item
+singleNative mi =
+    Config { defaults | variant = Native (SingleNative mi) }
+
+
 {-| Select multiple items.
 
 Selected items will render as tags and be visually removed from the menu list.
@@ -660,11 +674,6 @@ Selected items will render as tags and be visually removed from the menu list.
 multi : MultiSelectConfig -> List (MenuItem item) -> Config item
 multi multiSelectTagConfig selectedItems =
     Config { defaults | variant = Multi multiSelectTagConfig selectedItems }
-
-
-native : Config item
-native =
-    Config { defaults | variant = Native SingleNative }
 
 
 {-| The ID for the rendered Select input
