@@ -612,11 +612,11 @@ jsOptimize pred (State state_) =
 type Variant item
     = Single (Maybe (MenuItem item))
     | Multi MultiSelectConfig (List (MenuItem item))
-    | Native NativeVariant
+    | Native (NativeVariant item)
 
 
-type NativeVariant
-    = SingleNative
+type NativeVariant item
+    = SingleNative (Maybe (MenuItem item))
     | MultiNative
 
 
