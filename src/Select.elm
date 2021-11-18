@@ -1777,6 +1777,7 @@ viewDummyInput viewDummyInputData =
         , readonly True
         , value ""
         , tabindex 0
+        , attribute "data-test-id" "dummyInputSelect"
         , id ("dummy-input-" ++ viewDummyInputData.id)
         , onFocus (InputReceivedFocused Nothing)
         , onBlur (OnInputBlurred Nothing)
