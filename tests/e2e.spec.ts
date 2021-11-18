@@ -33,6 +33,7 @@ describe("examples", () => {
       "text=SingleClearable.elm"
     );
     const longMenuVisible = await page.isVisible("text=LongMenu.elm");
+    const singleMenuVisible = await page.isVisible("text=Single.elm");
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -42,6 +43,7 @@ describe("examples", () => {
     expect(disabledExampleVisible).toBeTruthy();
     expect(clearableExampleVisible).toBeTruthy();
     expect(longMenuVisible).toBeTruthy();
+    expect(singleMenuVisible).toBeTruthy();
   });
 });
 
@@ -163,7 +165,7 @@ describe("NativeSingle", () => {
 });
 
 describe("Keyboard ArrowDown", () => {
-  it("displays list box", async () => {
+  it("displays list box for searchable", async () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/SingleSearchable.elm`);
@@ -183,12 +185,42 @@ describe("Keyboard ArrowDown", () => {
     );
     expect(listBoxVisibleAfterAction).toBeTruthy();
   });
+
+  it("displays list box for non searchable", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.focus("[data-test-id=dummyInputSelect]");
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(100);
+
+    const firstItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus0]"
+    );
+
+    expect(firstItemFocused).toBeTruthy();
+  });
   // Target focusing refers to the menu item being visually highlighted as the item that will be selected on selection.
-  it("target focuses the first menu item", async () => {
+  it("target focuses the first menu item for searchable", async () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/SingleSearchable.elm`);
     await page.focus("[data-test-id=selectInput]");
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(100);
+
+    const firstItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus0]"
+    );
+
+    expect(firstItemFocused).toBeTruthy();
+  });
+
+  it("target focuses the first menu item for non searchable", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.focus("[data-test-id=dummyInputSelect]");
     await page.keyboard.press("ArrowDown");
     await page.waitForTimeout(100);
 
@@ -225,7 +257,7 @@ describe("Keyboard ArrowDown", () => {
 });
 
 describe("Keyboard ArrowUp", () => {
-  it("target focuses the last menu item", async () => {
+  it("target focuses the last menu item for searchable", async () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/SingleSearchable.elm`);
@@ -239,13 +271,50 @@ describe("Keyboard ArrowUp", () => {
 
     expect(lastItemFocused).toBeTruthy();
   });
+
+  it("target focuses the last menu item for non searchable", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
+    await page.focus("[data-test-id=dummyInputSelect]");
+    await page.keyboard.press("ArrowUp");
+    await page.waitForTimeout(100);
+
+    const lastItemFocused = await page.isVisible(
+      "[data-test-id=listBoxItemTargetFocus3]"
+    );
+
+    expect(lastItemFocused).toBeTruthy();
+  });
 });
 
 describe("Keyboard Enter", () => {
-  it("automatically selects first target focused menu item", async () => {
+  it("automatically selects first target focused menu item for searchable", async () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+
+    const firstListItemSelected = await page.isVisible(
+      "[data-test-id=selectedItem]"
+    );
+
+    expect(firstListItemSelected).toBeTruthy();
+
+    const selectedItemInnerText = await page.innerText(
+      "data-test-id=selectedItem"
+    );
+    // Assuming menu items are Elm, Is, Really, Great
+    expect(selectedItemInnerText).toBe("Elm");
+  });
+
+  it("automatically selects first target focused menu item for non searchable", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
     await page.click("[data-test-id=selectContainer]");
     await page.waitForSelector("[data-test-id=listBox]");
     await page.keyboard.press("Enter");
