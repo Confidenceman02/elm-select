@@ -1,5 +1,5 @@
 module Select exposing
-    ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
+    ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
@@ -12,7 +12,7 @@ module Select exposing
 
 # Set up
 
-@docs State, MenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view
+@docs State, MenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable
 
 
 # Single select
@@ -440,6 +440,23 @@ multiTagColor c (MultiSelectConfig config) =
 
 
 -- MODIFIERS
+
+
+{-| Renders an input that let's you input text to search for menu items.
+
+        yourView model =
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> searchable True)
+                    (selectIdentifier "1234")
+
+NOTE: This doesn't affect the [Native single select](#native-single-select)
+variant.
+
+-}
+searchable : Bool -> Config item -> Config item
+searchable pred (Config config) =
+    Config { config | searchable = pred }
 
 
 {-| The text that will appear as an input placeholder.
@@ -1760,6 +1777,7 @@ viewDummyInput viewDummyInputData =
         , readonly True
         , value ""
         , tabindex 0
+        , attribute "data-test-id" "dummyInputSelect"
         , id ("dummy-input-" ++ viewDummyInputData.id)
         , onFocus (InputReceivedFocused Nothing)
         , onBlur (OnInputBlurred Nothing)
