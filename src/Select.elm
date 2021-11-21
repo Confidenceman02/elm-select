@@ -43,8 +43,6 @@ module Select exposing
 
 import Browser.Dom as Dom
 import Css
-import DotLoadingIcon
-import Events
 import Html.Styled exposing (Html, button, div, input, li, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
 import Html.Styled.Attributes.Aria exposing (ariaSelected, role)
@@ -55,6 +53,8 @@ import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.ClearIcon as ClearIcon
+import Select.DotLoadingIcon as DotLoadingIcon
+import Select.Events as Events
 import Select.Internal as Internal
 import Select.SelectInput as SelectInput
 import Svg.Styled exposing (path, svg)

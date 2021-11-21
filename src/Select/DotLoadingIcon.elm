@@ -1,4 +1,4 @@
-module DotLoadingIcon exposing (view)
+module Select.DotLoadingIcon exposing (view)
 
 import Css
 import Css.Animations as CssAnimation
