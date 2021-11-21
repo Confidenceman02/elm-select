@@ -42,7 +42,6 @@ module Select exposing
 -}
 
 import Browser.Dom as Dom
-import ClearIcon
 import Css
 import DotLoadingIcon
 import Events
@@ -55,6 +54,7 @@ import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import List.Extra as ListExtra
+import Select.ClearIcon as ClearIcon
 import Select.Internal as Internal
 import Select.SelectInput as SelectInput
 import Svg.Styled exposing (path, svg)

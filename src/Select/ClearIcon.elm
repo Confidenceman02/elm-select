@@ -1,4 +1,4 @@
-module ClearIcon exposing (view)
+module Select.ClearIcon exposing (view)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (path, svg)
