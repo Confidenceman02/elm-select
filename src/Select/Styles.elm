@@ -3,7 +3,7 @@ module Select.Styles exposing
     , default
     , getControlBackgroundColorHover
     , getControlBorderColor
-    , getControlBorderColorFocused
+    , getControlBorderColorFocus
     , getControlBorderColorHover
     , getControlClearIndicatorColor
     , getControlClearIndicatorColorHover
@@ -13,6 +13,19 @@ module Select.Styles exposing
     , getControlLoadingIndicatorColor
     , getControlPlaceholderOpacity
     , getControlSeparatorColor
+    , setControlBackgroundColorHover
+    , setControlBorderColor
+    , setControlBorderColorFocus
+    , setControlBorderColorHover
+    , setControlClearIndicatorColor
+    , setControlClearIndicatorColorHover
+    , setControlDisabledOpacity
+    , setControlDropdownIndicatorColor
+    , setControlDropdownIndicatorColorHover
+    , setControlLoadingIndicatorColor
+    , setControlPlaceholderOpacity
+    , setControlSeparatorColor
+    , setControlStyles
     )
 
 import Css
@@ -27,17 +40,17 @@ type ControlConfig
 
 
 type alias ControlConfiguration =
-    { borderColor : Css.Color
-    , borderColorFocused : Css.Color
+    { backgroundColorHover : Css.Color
+    , borderColor : Css.Color
+    , borderColorFocus : Css.Color
     , borderColorHover : Css.Color
     , clearIndicatorColor : Css.Color
     , clearIndicatorColorHover : Css.Color
+    , disabledOpacity : Float
     , dropdownIndicatorColor : Css.Color
     , dropdownIndicatorColorHover : Css.Color
     , loadingIndicatorColor : Css.Color
-    , backgroundColorHover : Css.Color
     , placeholderOpacity : Float
-    , disabledOpacity : Float
     , separatorColor : Css.Color
     }
 
@@ -49,34 +62,107 @@ type alias Configuration =
 defaultsControl : ControlConfiguration
 defaultsControl =
     { borderColor = Css.hex "#898BA9"
-    , borderColorFocused = Css.hex "#0168b3"
-    , backgroundColorHover = Css.hex "#F0F1F4"
+    , borderColorFocus = Css.hex "#0168b3"
     , borderColorHover = Css.hex "#4B4D68"
+    , backgroundColorHover = Css.hex "#F0F1F4"
     , clearIndicatorColor = Css.rgb 102 102 102
     , clearIndicatorColorHover = Css.rgb 51 51 51
+    , disabledOpacity = 0.3
     , dropdownIndicatorColor = Css.rgb 102 102 102
     , dropdownIndicatorColorHover = Css.rgb 51 51 51
     , loadingIndicatorColor = Css.rgb 102 102 102
     , placeholderOpacity = 0.5
-    , disabledOpacity = 0.3
     , separatorColor = Css.rgb 204 204 204
     }
 
 
-defaultControl : ControlConfig
-defaultControl =
+controlDefault : ControlConfig
+controlDefault =
     ControlConfig defaultsControl
 
 
 defaults : Configuration
 defaults =
-    { controlStyles = defaultControl
+    { controlStyles = controlDefault
     }
 
 
 default : Config
 default =
     Config defaults
+
+
+
+-- MODIFIERS CONTROL
+
+
+setControlBackgroundColorHover : Css.Color -> ControlConfig -> ControlConfig
+setControlBackgroundColorHover c (ControlConfig config) =
+    ControlConfig { config | backgroundColorHover = c }
+
+
+setControlBorderColor : Css.Color -> ControlConfig -> ControlConfig
+setControlBorderColor c (ControlConfig config) =
+    ControlConfig { config | borderColor = c }
+
+
+setControlBorderColorFocus : Css.Color -> ControlConfig -> ControlConfig
+setControlBorderColorFocus c (ControlConfig config) =
+    ControlConfig { config | borderColorFocus = c }
+
+
+setControlBorderColorHover : Css.Color -> ControlConfig -> ControlConfig
+setControlBorderColorHover c (ControlConfig config) =
+    ControlConfig { config | borderColorHover = c }
+
+
+setControlClearIndicatorColor : Css.Color -> ControlConfig -> ControlConfig
+setControlClearIndicatorColor c (ControlConfig config) =
+    ControlConfig { config | clearIndicatorColor = c }
+
+
+setControlClearIndicatorColorHover : Css.Color -> ControlConfig -> ControlConfig
+setControlClearIndicatorColorHover c (ControlConfig config) =
+    ControlConfig { config | clearIndicatorColorHover = c }
+
+
+setControlDisabledOpacity : Float -> ControlConfig -> ControlConfig
+setControlDisabledOpacity f (ControlConfig config) =
+    ControlConfig { config | disabledOpacity = f }
+
+
+setControlDropdownIndicatorColor : Css.Color -> ControlConfig -> ControlConfig
+setControlDropdownIndicatorColor c (ControlConfig config) =
+    ControlConfig { config | dropdownIndicatorColor = c }
+
+
+setControlDropdownIndicatorColorHover : Css.Color -> ControlConfig -> ControlConfig
+setControlDropdownIndicatorColorHover c (ControlConfig config) =
+    ControlConfig { config | dropdownIndicatorColorHover = c }
+
+
+setControlLoadingIndicatorColor : Css.Color -> ControlConfig -> ControlConfig
+setControlLoadingIndicatorColor c (ControlConfig config) =
+    ControlConfig { config | loadingIndicatorColor = c }
+
+
+setControlPlaceholderOpacity : Float -> ControlConfig -> ControlConfig
+setControlPlaceholderOpacity f (ControlConfig config) =
+    ControlConfig { config | placeholderOpacity = f }
+
+
+setControlSeparatorColor : Css.Color -> ControlConfig -> ControlConfig
+setControlSeparatorColor c (ControlConfig config) =
+    ControlConfig { config | separatorColor = c }
+
+
+
+-- MODIFIERS
+
+
+setControlStyles : Config -> ControlConfig -> Config
+setControlStyles (Config config) controlConfig =
+    Config { config | controlStyles = controlConfig }
 
 
 
@@ -92,13 +178,13 @@ getControlBorderColor (Config config) =
     controlConfig.borderColor
 
 
-getControlBorderColorFocused : Config -> Css.Color
-getControlBorderColorFocused (Config config) =
+getControlBorderColorFocus : Config -> Css.Color
+getControlBorderColorFocus (Config config) =
     let
         (ControlConfig controlConfig) =
             config.controlStyles
     in
-    controlConfig.borderColorFocused
+    controlConfig.borderColorFocus
 
 
 getControlPlaceholderOpacity : Config -> Float
