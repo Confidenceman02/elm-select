@@ -410,7 +410,7 @@ describe("JsOptimized", () => {
     );
 
     await page.type("[data-test-id=selectInput]", "JAIME");
-    await page.waitForTimeout(90);
+    await page.waitForTimeout(100);
     const currentInputWidth = await page.$eval(
       "[data-test-id=selectInput]",
       (el: HTMLInputElement) => el.getBoundingClientRect().width
