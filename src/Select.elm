@@ -60,8 +60,6 @@ import Select.Internal as Internal
 import Select.SelectInput as SelectInput
 import Select.Styles as Styles
 import Select.Tag as Tag
-import Svg.Styled exposing (path, svg)
-import Svg.Styled.Attributes exposing (d, height, viewBox)
 import Task
 
 
