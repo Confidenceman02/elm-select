@@ -58,6 +58,7 @@ import Select.DropdownIcon as DropdownIcon
 import Select.Events as Events
 import Select.Internal as Internal
 import Select.SelectInput as SelectInput
+import Select.Styles as Styles
 import Select.Tag as Tag
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, height, viewBox)
@@ -252,6 +253,7 @@ type alias Configuration item =
     , disabled : Bool
     , clearable : Bool
     , labelledBy : Maybe String
+    , styles : Styles.Config
     }
 
 
@@ -370,6 +372,7 @@ defaults =
     , clearable = False
     , disabled = False
     , labelledBy = Nothing
+    , styles = Styles.default
     }
 
 
@@ -1124,7 +1127,7 @@ view (Config config) selectId =
     selectWrapper
         (case config.variant of
             Native variant ->
-                [ viewNative variant config.menuItems selectId
+                [ viewNative config.styles variant config.menuItems selectId
                 , span
                     [ StyledAttribs.css
                         [ Css.position Css.absolute
@@ -1135,7 +1138,7 @@ view (Config config) selectId =
                         , Css.pointerEvents Css.none
                         ]
                     ]
-                    [ dropdownIndicator False ]
+                    [ dropdownIndicator config.styles False ]
                 ]
 
             _ ->
@@ -1143,7 +1146,7 @@ view (Config config) selectId =
                   let
                     controlFocusedStyles =
                         if state_.controlUiFocused then
-                            [ controlBorderFocused ]
+                            [ controlBorderFocused config.styles ]
 
                         else
                             []
@@ -1160,14 +1163,14 @@ view (Config config) selectId =
                          , Css.minHeight (Css.px controlHeight)
                          , Css.position Css.relative
                          , Css.boxSizing Css.borderBox
-                         , controlBorder
+                         , controlBorder config.styles
                          , Css.borderRadius (Css.px controlRadius)
                          , Css.outline Css.zero
                          , if config.disabled then
-                            controlDisabled
+                            controlDisabled config.styles
 
                            else
-                            controlHover
+                            controlHover config.styles
                          ]
                             ++ controlFocusedStyles
                         )
@@ -1309,24 +1312,20 @@ view (Config config) selectId =
                             [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
                         ]
                         [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
-                        , div [ StyledAttribs.css indicatorContainerStyles ] [ resolveLoadingSpinner ]
-
-                        -- indicatorSeparator
-                        , span
-                            [ StyledAttribs.css
-                                [ Css.alignSelf Css.stretch
-                                , Css.backgroundColor (Css.rgb 204 204 204)
-                                , Css.marginBottom (Css.px 8)
-                                , Css.marginTop (Css.px 8)
-                                , Css.width (Css.px 1)
-                                , Css.boxSizing Css.borderBox
+                        , div [ StyledAttribs.css indicatorContainerStyles ]
+                            [ span
+                                [ StyledAttribs.css
+                                    [ Css.color (Styles.getControlLoadingIndicatorColor config.styles)
+                                    , Css.height (Css.px 20)
+                                    ]
                                 ]
+                                [ resolveLoadingSpinner ]
                             ]
-                            []
+                        , indicatorSeparator config.styles
                         , -- indicatorContainer
                           div
                             [ StyledAttribs.css indicatorContainerStyles ]
-                            [ dropdownIndicator config.disabled
+                            [ dropdownIndicator config.styles config.disabled
                             ]
                         ]
                     , viewIf state_.menuOpen
@@ -1346,8 +1345,8 @@ view (Config config) selectId =
         )
 
 
-viewNative : NativeVariant item -> List (MenuItem item) -> SelectId -> Html (Msg item)
-viewNative variant items (SelectId selectId) =
+viewNative : Styles.Config -> NativeVariant item -> List (MenuItem item) -> SelectId -> Html (Msg item)
+viewNative styles variant items (SelectId selectId) =
     case variant of
         SingleNative maybeSelectedItem ->
             let
@@ -1376,15 +1375,15 @@ viewNative variant items (SelectId selectId) =
                     , Css.height (Css.px controlHeight)
                     , Css.borderRadius (Css.px controlRadius)
                     , Css.backgroundColor (Css.hex "#FFFFFF")
-                    , controlBorder
+                    , controlBorder styles
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
                     , Css.color (Css.hex "#000000")
                     , Css.fontSize (Css.px 16)
                     , Css.focus
-                        [ controlBorderFocused, Css.outline Css.none ]
-                    , controlHover
+                        [ controlBorderFocused styles, Css.outline Css.none ]
+                    , controlHover styles
                     ]
                 ]
                 (List.map buildList items)
@@ -1624,7 +1623,7 @@ viewPlaceholder config =
     div
         [ -- baseplaceholder
           StyledAttribs.css
-            placeholderStyles
+            (placeholderStyles config.styles)
         ]
         [ text config.placeholder ]
 
@@ -2087,9 +2086,9 @@ basePlaceholder =
     ]
 
 
-placeholderStyles : List Css.Style
-placeholderStyles =
-    Css.opacity (Css.num 0.5) :: basePlaceholder
+placeholderStyles : Styles.Config -> List Css.Style
+placeholderStyles styles =
+    Css.opacity (Css.num (Styles.getControlPlaceholderOpacity styles)) :: basePlaceholder
 
 
 
@@ -2106,10 +2105,10 @@ clearIndicator config id =
     let
         resolveIconButtonStyles =
             if config.disabled then
-                [ Css.height (Css.px 20) ]
+                [ Css.height (Css.px 16) ]
 
             else
-                [ Css.height (Css.px 20), Css.cursor Css.pointer ]
+                [ Css.height (Css.px 16), Css.cursor Css.pointer ]
     in
     button
         [ custom "mousedown" <|
@@ -2123,24 +2122,51 @@ clearIndicator config id =
                 ]
             )
         ]
-        [ ClearIcon.view
+        [ span
+            [ StyledAttribs.css
+                [ Css.color <| Styles.getControlClearIndicatorColor config.styles
+                , Css.displayFlex
+                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover config.styles) ]
+                ]
+            ]
+            [ ClearIcon.view
+            ]
         ]
 
 
-dropdownIndicator : Bool -> Html msg
-dropdownIndicator disabledInput =
+indicatorSeparator : Styles.Config -> Html msg
+indicatorSeparator styles =
+    span
+        [ StyledAttribs.css
+            [ Css.alignSelf Css.stretch
+            , Css.backgroundColor (Styles.getControlSeparatorColor styles)
+            , Css.marginBottom (Css.px 8)
+            , Css.marginTop (Css.px 8)
+            , Css.width (Css.px 1)
+            , Css.boxSizing Css.borderBox
+            ]
+        ]
+        []
+
+
+dropdownIndicator : Styles.Config -> Bool -> Html msg
+dropdownIndicator styles disabledInput =
     let
         resolveIconButtonStyles =
             if disabledInput then
-                [ Css.height (Css.px 20) ]
+                [ Css.height (Css.px 20)
+                ]
 
             else
-                [ Css.height (Css.px 20), Css.cursor Css.pointer ]
+                [ Css.height (Css.px 20)
+                , Css.cursor Css.pointer
+                , Css.color (Styles.getControlDropdownIndicatorColor styles)
+                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover styles) ]
+                ]
     in
     span
         [ StyledAttribs.css resolveIconButtonStyles ]
-        [ svg svgCommonStyles [ path [ d "M6.18 6.845L10 10.747l3.82-3.902L15 8.049l-5 5.106-5-5.106z" ] [] ]
-        ]
+        [ DropdownIcon.view ]
 
 
 
@@ -2200,21 +2226,24 @@ controlHeight =
     48
 
 
-controlBorder : Css.Style
-controlBorder =
-    Css.border3 (Css.px 2) Css.solid (Css.hex "#898BA9")
+controlBorder : Styles.Config -> Css.Style
+controlBorder styles =
+    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor styles)
 
 
-controlBorderFocused : Css.Style
-controlBorderFocused =
-    Css.borderColor (Css.hex "#0168b3")
+controlBorderFocused : Styles.Config -> Css.Style
+controlBorderFocused styles =
+    Css.borderColor (Styles.getControlBorderColorFocused styles)
 
 
-controlDisabled : Css.Style
-controlDisabled =
-    Css.opacity (Css.num 0.3)
+controlDisabled : Styles.Config -> Css.Style
+controlDisabled styles =
+    Css.opacity (Css.num (Styles.getControlDisabledOpacity styles))
 
 
-controlHover : Css.Style
-controlHover =
-    Css.hover [ Css.backgroundColor (Css.hex "#F0F1F4"), Css.borderColor (Css.hex "#4B4D68") ]
+controlHover : Styles.Config -> Css.Style
+controlHover styles =
+    Css.hover
+        [ Css.backgroundColor (Styles.getControlBackgroundColorHover styles)
+        , Css.borderColor (Styles.getControlBorderColorHover styles)
+        ]
