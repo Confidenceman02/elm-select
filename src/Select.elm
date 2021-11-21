@@ -1,5 +1,5 @@
 module Select exposing
-    ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable
+    ( State, MenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
@@ -12,7 +12,7 @@ module Select exposing
 
 # Set up
 
-@docs State, MenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable
+@docs State, MenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -442,6 +442,32 @@ multiTagColor c (MultiSelectConfig config) =
 
 
 -- MODIFIERS
+
+
+{-| Change some of the visual styles of the select.
+
+Useful for styling the select using your
+color branding.
+
+        import Select.Styles as Styles
+
+        branding : Styles.Config
+        branding =
+            Styles.controlDefault
+                |> Styles.setControlBorderColor (Css.hex "#FFFFFF")
+                |> Styles.setControlBorderColorFocus (Css.hex "#0168B3")
+                |> Styles.setControlStyles Styles.default
+
+        yourView model =
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> setStyles branding)
+                    (selectIdentifier "1234")
+
+-}
+setStyles : Styles.Config -> Config item -> Config item
+setStyles sc (Config config) =
+    Config { config | styles = sc }
 
 
 {-| Renders an input that let's you input text to search for menu items.
@@ -2231,7 +2257,7 @@ controlBorder styles =
 
 controlBorderFocused : Styles.Config -> Css.Style
 controlBorderFocused styles =
-    Css.borderColor (Styles.getControlBorderColorFocused styles)
+    Css.borderColor (Styles.getControlBorderColorFocus styles)
 
 
 controlDisabled : Styles.Config -> Css.Style
