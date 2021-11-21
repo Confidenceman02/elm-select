@@ -1,4 +1,4 @@
-module Tag exposing (backgroundColor, dataTestId, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
+module Select.Tag exposing (backgroundColor, dataTestId, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
 
 import Css
 import Html.Styled exposing (Html, div, span, text)

@@ -57,9 +57,9 @@ import Select.DotLoadingIcon as DotLoadingIcon
 import Select.Events as Events
 import Select.Internal as Internal
 import Select.SelectInput as SelectInput
+import Select.Tag as Tag
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, height, viewBox)
-import Tag
 import Task
 
 
