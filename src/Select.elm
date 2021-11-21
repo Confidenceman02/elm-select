@@ -54,6 +54,7 @@ import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.ClearIcon as ClearIcon
 import Select.DotLoadingIcon as DotLoadingIcon
+import Select.DropdownIcon as DropdownIcon
 import Select.Events as Events
 import Select.Internal as Internal
 import Select.SelectInput as SelectInput
@@ -2149,11 +2150,6 @@ dropdownIndicator disabledInput =
 indicatorContainerStyles : List Css.Style
 indicatorContainerStyles =
     [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ]
-
-
-svgCommonStyles : List (Svg.Styled.Attribute msg)
-svgCommonStyles =
-    [ height "20", viewBox "0 0 20 20" ]
 
 
 iconButtonStyles : List Css.Style
