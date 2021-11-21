@@ -1,5 +1,6 @@
 module Select.Styles exposing
     ( Config
+    , controlDefault
     , default
     , getControlBackgroundColorHover
     , getControlBorderColor
