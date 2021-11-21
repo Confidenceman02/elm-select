@@ -19,13 +19,13 @@ module Select.SelectInput exposing
     , view
     )
 
-import Events
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
 import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Select.Events as Events
 
 
 type Config msg
