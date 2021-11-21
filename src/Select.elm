@@ -56,7 +56,7 @@ import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.Internal as Internal
-import SelectInput
+import Select.SelectInput as SelectInput
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, height, viewBox)
 import Tag
