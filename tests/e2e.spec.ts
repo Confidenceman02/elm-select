@@ -392,6 +392,7 @@ describe("JsOptimized", () => {
     expect(dynamicAttribsVisibleBeforeFocus).toBeFalsy();
 
     await page.focus("[data-test-id=selectInput]");
+    await page.waitForTimeout(100);
     const dynamicAttribsVisibleAfterFocus = await page.isVisible(
       `[data-es-dynamic-select-input]`
     );
@@ -410,7 +411,7 @@ describe("JsOptimized", () => {
     );
 
     await page.type("[data-test-id=selectInput]", "JAIME");
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(200);
     const currentInputWidth = await page.$eval(
       "[data-test-id=selectInput]",
       (el: HTMLInputElement) => el.getBoundingClientRect().width
