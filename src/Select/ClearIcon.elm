@@ -1,8 +1,8 @@
-module ClearIcon exposing (view)
+module Select.ClearIcon exposing (view)
 
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (path, svg)
-import Svg.Styled.Attributes exposing (d, height, viewBox)
+import Svg.Styled.Attributes exposing (d, fill, height, viewBox)
 
 
 view : Html msg
@@ -17,4 +17,4 @@ view =
 
 svgCommonStyles : List (Svg.Styled.Attribute msg)
 svgCommonStyles =
-    [ height "16", viewBox "0 0 20 20" ]
+    [ height "16", viewBox "0 0 20 20", fill "currentColor" ]

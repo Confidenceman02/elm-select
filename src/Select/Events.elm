@@ -1,4 +1,4 @@
-module Events exposing (isDownArrow, isEnter, isEscape, isSpace, isUpArrow, onInputAt, onInputAtInt)
+module Select.Events exposing (isDownArrow, isEnter, isEscape, isSpace, isUpArrow, onInputAt, onInputAtInt)
 
 import Html.Styled exposing (Attribute)
 import Html.Styled.Events exposing (keyCode, on)

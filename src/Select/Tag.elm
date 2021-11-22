@@ -1,11 +1,11 @@
-module Tag exposing (backgroundColor, dataTestId, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
+module Select.Tag exposing (backgroundColor, dataTestId, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
 
-import ClearIcon
 import Css
 import Html.Styled exposing (Html, div, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute)
 import Html.Styled.Events exposing (on, onClick)
 import Json.Decode as Decode
+import Select.ClearIcon as ClearIcon
 
 
 type Config msg

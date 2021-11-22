@@ -1,10 +1,10 @@
-module DotLoadingIcon exposing (view)
+module Select.DotLoadingIcon exposing (view)
 
 import Css
 import Css.Animations as CssAnimation
 import Html.Styled exposing (Html)
 import Svg.Styled exposing (path, svg)
-import Svg.Styled.Attributes as SvgAttribs exposing (d, height, viewBox, width)
+import Svg.Styled.Attributes as SvgAttribs exposing (d, fill, height, viewBox, width)
 
 
 view : Html msg
@@ -68,7 +68,7 @@ view =
 
 svgCommonStyles : List (Svg.Styled.Attribute msg)
 svgCommonStyles =
-    [ width "29", height "5", viewBox "0 0 32 8" ]
+    [ width "29", height "5", viewBox "0 0 32 8", fill "currentColor" ]
 
 
 
