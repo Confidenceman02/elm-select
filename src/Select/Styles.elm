@@ -61,7 +61,7 @@ type alias ControlConfiguration =
 
 
 type alias Configuration =
-    { controlStyles : ControlConfig }
+    ControlConfig
 
 
 defaultsControl : ControlConfiguration
@@ -90,8 +90,7 @@ controlDefault =
 
 defaults : Configuration
 defaults =
-    { controlStyles = controlDefault
-    }
+    controlDefault
 
 
 {-| The default styling for the select
@@ -195,8 +194,8 @@ setControlSeparatorColor c (ControlConfig config) =
 
 -}
 setControlStyles : Config -> ControlConfig -> Config
-setControlStyles (Config config) controlConfig =
-    Config { config | controlStyles = controlConfig }
+setControlStyles _ controlConfig =
+    Config controlConfig
 
 
 
@@ -205,119 +204,71 @@ setControlStyles (Config config) controlConfig =
 
 {-| -}
 getControlBorderColor : Config -> Css.Color
-getControlBorderColor (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlBorderColor (Config (ControlConfig controlConfig)) =
     controlConfig.borderColor
 
 
 {-| -}
 getControlBorderColorFocus : Config -> Css.Color
-getControlBorderColorFocus (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlBorderColorFocus (Config (ControlConfig controlConfig)) =
     controlConfig.borderColorFocus
 
 
 {-| -}
 getControlPlaceholderOpacity : Config -> Float
-getControlPlaceholderOpacity (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlPlaceholderOpacity (Config (ControlConfig controlConfig)) =
     controlConfig.placeholderOpacity
 
 
 {-| -}
 getControlBackgroundColorHover : Config -> Css.Color
-getControlBackgroundColorHover (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlBackgroundColorHover (Config (ControlConfig controlConfig)) =
     controlConfig.backgroundColorHover
 
 
 {-| -}
 getControlBorderColorHover : Config -> Css.Color
-getControlBorderColorHover (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlBorderColorHover (Config (ControlConfig controlConfig)) =
     controlConfig.borderColorHover
 
 
 {-| -}
 getControlSeparatorColor : Config -> Css.Color
-getControlSeparatorColor (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlSeparatorColor (Config (ControlConfig controlConfig)) =
     controlConfig.separatorColor
 
 
 {-| -}
 getControlClearIndicatorColor : Config -> Css.Color
-getControlClearIndicatorColor (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlClearIndicatorColor (Config (ControlConfig controlConfig)) =
     controlConfig.clearIndicatorColor
 
 
 {-| -}
 getControlClearIndicatorColorHover : Config -> Css.Color
-getControlClearIndicatorColorHover (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlClearIndicatorColorHover (Config (ControlConfig controlConfig)) =
     controlConfig.clearIndicatorColorHover
 
 
 {-| -}
 getControlDropdownIndicatorColor : Config -> Css.Color
-getControlDropdownIndicatorColor (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlDropdownIndicatorColor (Config (ControlConfig controlConfig)) =
     controlConfig.dropdownIndicatorColor
 
 
 {-| -}
 getControlDropdownIndicatorColorHover : Config -> Css.Color
-getControlDropdownIndicatorColorHover (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlDropdownIndicatorColorHover (Config (ControlConfig controlConfig)) =
     controlConfig.dropdownIndicatorColorHover
 
 
 {-| -}
 getControlLoadingIndicatorColor : Config -> Css.Color
-getControlLoadingIndicatorColor (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlLoadingIndicatorColor (Config (ControlConfig controlConfig)) =
     controlConfig.loadingIndicatorColor
 
 
 {-| -}
 getControlDisabledOpacity : Config -> Float
-getControlDisabledOpacity (Config config) =
-    let
-        (ControlConfig controlConfig) =
-            config.controlStyles
-    in
+getControlDisabledOpacity (Config (ControlConfig controlConfig)) =
     controlConfig.disabledOpacity
