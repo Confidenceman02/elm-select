@@ -106,6 +106,7 @@ default =
 -- MODIFIERS CONTROL
 
 
+{-| -}
 setControlBackgroundColor : Css.Color -> ControlConfig -> ControlConfig
 setControlBackgroundColor c (ControlConfig config) =
     ControlConfig { config | backgroundColor = c }
