@@ -1179,7 +1179,7 @@ view (Config config) selectId =
                     -- control
                     (StyledAttribs.css
                         ([ Css.alignItems Css.center
-                         , Css.backgroundColor (Css.hex "#FFFFFF")
+                         , Css.backgroundColor (Styles.getControlBackgroundColor config.styles)
                          , Css.cursor Css.default
                          , Css.displayFlex
                          , Css.flexWrap Css.wrap
@@ -1398,7 +1398,7 @@ viewNative styles variant items (SelectId selectId) =
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
                     , Css.borderRadius (Css.px controlRadius)
-                    , Css.backgroundColor (Css.hex "#FFFFFF")
+                    , Css.backgroundColor (Styles.getControlBackgroundColor styles)
                     , controlBorder styles
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"

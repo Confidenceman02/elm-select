@@ -1,9 +1,9 @@
 module Select.Styles exposing
     ( Config, ControlConfig, controlDefault, default, setControlStyles
-    , setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
+    , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
-    , getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
+    , getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
     )
@@ -18,14 +18,14 @@ module Select.Styles exposing
 
 # Set styles for control
 
-@docs setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
+@docs setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
 @docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
 @docs setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
 # Get styles for control
 
-@docs getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
+@docs getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
 @docs getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
 
@@ -45,7 +45,8 @@ type ControlConfig
 
 
 type alias ControlConfiguration =
-    { backgroundColorHover : Css.Color
+    { backgroundColor : Css.Color
+    , backgroundColorHover : Css.Color
     , borderColor : Css.Color
     , borderColorFocus : Css.Color
     , borderColorHover : Css.Color
@@ -66,10 +67,11 @@ type alias Configuration =
 
 defaultsControl : ControlConfiguration
 defaultsControl =
-    { borderColor = Css.hex "#898BA9"
+    { backgroundColor = Css.hex "FFFFFF"
+    , backgroundColorHover = Css.hex "#F0F1F4"
+    , borderColor = Css.hex "#898BA9"
     , borderColorFocus = Css.hex "#0168b3"
     , borderColorHover = Css.hex "#4B4D68"
-    , backgroundColorHover = Css.hex "#F0F1F4"
     , clearIndicatorColor = Css.rgb 102 102 102
     , clearIndicatorColorHover = Css.rgb 51 51 51
     , disabledOpacity = 0.3
@@ -102,6 +104,12 @@ default =
 
 
 -- MODIFIERS CONTROL
+
+
+{-| -}
+setControlBackgroundColor : Css.Color -> ControlConfig -> ControlConfig
+setControlBackgroundColor c (ControlConfig config) =
+    ControlConfig { config | backgroundColor = c }
 
 
 {-| -}
@@ -203,6 +211,18 @@ setControlStyles _ controlConfig =
 
 
 {-| -}
+getControlBackgroundColor : Config -> Css.Color
+getControlBackgroundColor (Config (ControlConfig controlConfig)) =
+    controlConfig.backgroundColor
+
+
+{-| -}
+getControlBackgroundColorHover : Config -> Css.Color
+getControlBackgroundColorHover (Config (ControlConfig controlConfig)) =
+    controlConfig.backgroundColorHover
+
+
+{-| -}
 getControlBorderColor : Config -> Css.Color
 getControlBorderColor (Config (ControlConfig controlConfig)) =
     controlConfig.borderColor
@@ -218,12 +238,6 @@ getControlBorderColorFocus (Config (ControlConfig controlConfig)) =
 getControlPlaceholderOpacity : Config -> Float
 getControlPlaceholderOpacity (Config (ControlConfig controlConfig)) =
     controlConfig.placeholderOpacity
-
-
-{-| -}
-getControlBackgroundColorHover : Config -> Css.Color
-getControlBackgroundColorHover (Config (ControlConfig controlConfig)) =
-    controlConfig.backgroundColorHover
 
 
 {-| -}
