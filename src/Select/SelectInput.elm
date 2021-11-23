@@ -13,6 +13,7 @@ module Select.SelectInput exposing
     , onMousedown
     , preventKeydownOn
     , setAriaControls
+    , setAriaDescribedBy
     , setAriaExpanded
     , setAriaLabelledBy
     , sizerId
@@ -21,7 +22,7 @@ module Select.SelectInput exposing
 
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
+import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaDescribedby, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -55,6 +56,7 @@ type alias Configuration msg =
     , ariaActiveDescendant : Maybe String
     , ariaControls : Maybe String
     , ariaLabelledBy : Maybe String
+    , ariaDescribedBy : Maybe String
     , ariaExpanded : Bool
     }
 
@@ -77,6 +79,7 @@ defaults =
     , dataTestId = "selectInput"
     , ariaActiveDescendant = Nothing
     , ariaLabelledBy = Nothing
+    , ariaDescribedBy = Nothing
     , ariaControls = Nothing
     , ariaExpanded = False
     }
@@ -108,6 +111,11 @@ defaultWidth =
 
 
 -- MODIFIERS
+
+
+setAriaDescribedBy : String -> Config msg -> Config msg
+setAriaDescribedBy s (Config config) =
+    Config { config | ariaDescribedBy = Just s }
 
 
 setAriaExpanded : Bool -> Config msg -> Config msg
@@ -263,6 +271,14 @@ view (Config config) id_ =
                 _ ->
                     []
 
+        withAriaDescribedBy =
+            case config.ariaDescribedBy of
+                Just s ->
+                    [ ariaDescribedby s ]
+
+                _ ->
+                    []
+
         inputStyles =
             [ style "box-sizing" "content-box"
             , style "background" "0px center"
@@ -330,6 +346,7 @@ view (Config config) id_ =
                 ++ withAriaActiveDescendant
                 ++ withAriaControls
                 ++ withAriaLabelledBy
+                ++ withAriaDescribedBy
             )
             []
 

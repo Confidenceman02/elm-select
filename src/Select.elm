@@ -3,7 +3,7 @@ module Select exposing
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
-    , disabled, labelledBy, loading
+    , disabled, labelledBy, ariaDescribedBy, loading
     , jsOptimize
     )
 
@@ -32,7 +32,7 @@ module Select exposing
 
 # Common
 
-@docs disabled, labelledBy, loading
+@docs disabled, labelledBy, ariaDescribedBy, loading
 
 
 # Advanced
@@ -45,7 +45,7 @@ import Browser.Dom as Dom
 import Css
 import Html.Styled exposing (Html, button, div, input, li, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
-import Html.Styled.Attributes.Aria exposing (ariaSelected, role)
+import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
@@ -224,6 +224,7 @@ type alias ViewSelectInputData item =
     , menuOpen : Bool
     , variant : Variant item
     , labelledBy : Maybe String
+    , ariaDescribedBy : Maybe String
     , jsOptmized : Bool
     , controlUiFocused : Bool
     }
@@ -234,6 +235,18 @@ type alias ViewDummyInputData item =
     , maybeTargetItem : Maybe (MenuItem item)
     , totalViewableMenuItems : Int
     , menuOpen : Bool
+    , labelledBy : Maybe String
+    , ariaDescribedBy : Maybe String
+    }
+
+
+type alias ViewNativeData item =
+    { styles : Styles.Config
+    , variant : NativeVariant item
+    , menuItems : List (MenuItem item)
+    , selectId : SelectId
+    , labelledBy : Maybe String
+    , ariaDescribedBy : Maybe String
     }
 
 
@@ -251,6 +264,7 @@ type alias Configuration item =
     , disabled : Bool
     , clearable : Bool
     , labelledBy : Maybe String
+    , ariaDescribedBy : Maybe String
     , styles : Styles.Config
     }
 
@@ -370,6 +384,7 @@ defaults =
     , clearable = False
     , disabled = False
     , labelledBy = Nothing
+    , ariaDescribedBy = Nothing
     , styles = Styles.default
     }
 
@@ -588,7 +603,7 @@ loading predicate (Config config) =
     Config { config | isLoading = predicate }
 
 
-{-| The element ID of the label that describes the select.
+{-| The element ID of the label for the select.
 
 It is best practice to render the select with a label.
 
@@ -605,6 +620,28 @@ It is best practice to render the select with a label.
 -}
 labelledBy : String -> Config item -> Config item
 labelledBy s (Config config) =
+    Config { config | labelledBy = Just s }
+
+
+{-| The ID of element that describes the select.
+
+    yourView model =
+        label
+            [ id "selectLabelId" ]
+            [ text "Select your country"
+            , Html.map SelectMsg <|
+                view
+                    (single Nothing
+                        |> labelledBy "selectLabelId"
+                        |> ariaDescribedBy "selectDescriptionId"
+                    )
+                    (selectIdentifier "SingleSelectExample")
+            , div [ id "selectDescriptionId" ] [ text "This text describes the select" ]
+            ]
+
+-}
+ariaDescribedBy : String -> Config item -> Config item
+ariaDescribedBy s (Config config) =
     Config { config | labelledBy = Just s }
 
 
@@ -1151,7 +1188,8 @@ view (Config config) selectId =
     selectWrapper
         (case config.variant of
             Native variant ->
-                [ viewNative config.styles variant config.menuItems selectId
+                [ viewNative
+                    (ViewNativeData config.styles variant config.menuItems selectId config.labelledBy config.ariaDescribedBy)
                 , span
                     [ StyledAttribs.css
                         [ Css.position Css.absolute
@@ -1277,6 +1315,7 @@ view (Config config) selectId =
                                             state_.menuOpen
                                             config.variant
                                             config.labelledBy
+                                            config.ariaDescribedBy
                                             state_.jsOptimize
                                             state_.controlUiFocused
                                         )
@@ -1288,6 +1327,8 @@ view (Config config) selectId =
                                             enterSelectTargetItem
                                             totalMenuItems
                                             state_.menuOpen
+                                            config.labelledBy
+                                            config.ariaDescribedBy
                                         )
 
                             else
@@ -1369,9 +1410,9 @@ view (Config config) selectId =
         )
 
 
-viewNative : Styles.Config -> NativeVariant item -> List (MenuItem item) -> SelectId -> Html (Msg item)
-viewNative styles variant items (SelectId selectId) =
-    case variant of
+viewNative : ViewNativeData item -> Html (Msg item)
+viewNative viewNativeData =
+    case viewNativeData.variant of
         SingleNative maybeSelectedItem ->
             let
                 withSelectedOption item =
@@ -1388,29 +1429,51 @@ viewNative styles variant items (SelectId selectId) =
 
                 buildList item =
                     option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
+
+                (SelectId selectId) =
+                    viewNativeData.selectId
+
+                withLabelledBy =
+                    case viewNativeData.labelledBy of
+                        Just s ->
+                            [ Aria.ariaLabelledby s ]
+
+                        _ ->
+                            []
+
+                withAriaDescribedBy =
+                    case viewNativeData.ariaDescribedBy of
+                        Just s ->
+                            [ Aria.ariaDescribedby s ]
+
+                        _ ->
+                            []
             in
             select
-                [ id ("native-single-select-" ++ selectId)
-                , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
-                , StyledAttribs.name "SomeSelect"
-                , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle items)
-                , StyledAttribs.css
+                ([ id ("native-single-select-" ++ selectId)
+                 , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
+                 , StyledAttribs.name "SomeSelect"
+                 , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems)
+                 , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
                     , Css.borderRadius (Css.px controlRadius)
-                    , Css.backgroundColor (Styles.getControlBackgroundColor styles)
-                    , controlBorder styles
+                    , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.styles)
+                    , controlBorder viewNativeData.styles
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
                     , Css.color (Css.hex "#000000")
                     , Css.fontSize (Css.px 16)
                     , Css.focus
-                        [ controlBorderFocused styles, Css.outline Css.none ]
-                    , controlHover styles
+                        [ controlBorderFocused viewNativeData.styles, Css.outline Css.none ]
+                    , controlHover viewNativeData.styles
                     ]
-                ]
-                (List.map buildList items)
+                 ]
+                    ++ withLabelledBy
+                    ++ withAriaDescribedBy
+                )
+                (List.map buildList viewNativeData.menuItems)
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
@@ -1742,6 +1805,14 @@ viewSelectInput viewSelectInputData =
                 _ ->
                     config
 
+        resolveAriaDescribedBy config =
+            case viewSelectInputData.ariaDescribedBy of
+                Just s ->
+                    SelectInput.setAriaDescribedBy s config
+
+                _ ->
+                    config
+
         resolveAriaExpanded config =
             SelectInput.setAriaExpanded viewSelectInputData.menuOpen config
     in
@@ -1756,6 +1827,7 @@ viewSelectInput viewSelectInputData =
             |> resolveAriaActiveDescendant
             |> resolveAriaControls
             |> resolveAriaLabelledBy
+            |> resolveAriaDescribedBy
             |> resolveAriaExpanded
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
@@ -1788,24 +1860,40 @@ viewDummyInput viewDummyInputData =
                 [ Events.isDownArrow (KeyboardDown (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
                 , Events.isUpArrow (KeyboardUp (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
                 ]
+
+        withLabelledBy =
+            case viewDummyInputData.labelledBy of
+                Just s ->
+                    [ Aria.ariaLabelledby s ]
+
+                _ ->
+                    []
+
+        withAriaDescribedBy =
+            case viewDummyInputData.ariaDescribedBy of
+                Just s ->
+                    [ Aria.ariaDescribedby s ]
+
+                _ ->
+                    []
     in
     input
-        [ style "label" "dummyinput"
-        , style "background" "0"
-        , style "border" "0"
-        , style "font-size" "inherit"
-        , style "outline" "0"
-        , style "padding" "0"
-        , style "width" "1px"
-        , style "color" "transparent"
-        , readonly True
-        , value ""
-        , tabindex 0
-        , attribute "data-test-id" "dummyInputSelect"
-        , id ("dummy-input-" ++ viewDummyInputData.id)
-        , onFocus (InputReceivedFocused Nothing)
-        , onBlur (OnInputBlurred Nothing)
-        , preventDefaultOn "keydown" <|
+        ([ style "label" "dummyinput"
+         , style "background" "0"
+         , style "border" "0"
+         , style "font-size" "inherit"
+         , style "outline" "0"
+         , style "padding" "0"
+         , style "width" "1px"
+         , style "color" "transparent"
+         , readonly True
+         , value ""
+         , tabindex 0
+         , attribute "data-test-id" "dummyInputSelect"
+         , id ("dummy-input-" ++ viewDummyInputData.id)
+         , onFocus (InputReceivedFocused Nothing)
+         , onBlur (OnInputBlurred Nothing)
+         , preventDefaultOn "keydown" <|
             Decode.map
                 (\msg -> ( msg, True ))
                 (Decode.oneOf
@@ -1818,7 +1906,10 @@ viewDummyInput viewDummyInputData =
                         ++ whenArrowEvents
                     )
                 )
-        ]
+         ]
+            ++ withLabelledBy
+            ++ withAriaDescribedBy
+        )
         []
 
 
