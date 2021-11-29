@@ -124,7 +124,7 @@ update msg model =
 ```
 
 #### **Render your Select view**
-The elm-select view's first argument is a `Select.Config Country` value which can be built using our model. 
+The select [view](/packages/Confidenceman02/elm-select/latest/Select#view) functions first argument is a `Select.Config Country` value which can be built using our model. 
 
 ```elm
 selectedCountryToMenuItem : Country -> Select.MenuItem Country
@@ -137,15 +137,14 @@ selectedCountryToMenuItem country =
         
         
 renderSelect : Model -> Styled.Html (Select.Msg Country)
-renderSelect mdl =
-    Html.map SelectMsg <| 
-      Select.view 
-          ((Select.single <| Maybe.map selectedCountryToMenuItem model.selectedCountry)
-              |> Select.state model.selectState
-              |> Select.menuItems model.items
-              |> Select.placeholder "Select your country"
-          )
-          (selectIdentifier "CountrySelector")
+renderSelect model =
+    Select.view 
+        ((Select.single <| Maybe.map selectedCountryToMenuItem model.selectedCountry)
+            |> Select.state model.selectState
+            |> Select.menuItems model.items
+            |> Select.placeholder "Select your country"
+        )
+        (selectIdentifier "CountrySelector")
 ```
 It is required to map the `Select.Msg` that the `Select.view` outputs to a `Msg` type that our `view` is compatible with.
 
