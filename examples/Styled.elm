@@ -74,11 +74,26 @@ view m =
                 _ ->
                     Nothing
 
-        branding : Styles.Config
-        branding =
-            Styles.controlDefault
-                |> Styles.setControlBorderColor (Css.hex "#C93B55")
-                |> Styles.setControlStyles Styles.default
+        baseBranding : Styles.Config
+        baseBranding =
+            Styles.default
+                |> Styles.setControlStyles controlBranding
+                |> Styles.setMenuStyles menuBranding
+
+        controlBranding : Styles.ControlConfig
+        controlBranding =
+            Styles.getControlConfig Styles.default
+                |> Styles.setControlBorderColor (Css.hex "#FF0018")
+                |> Styles.setControlBorderColorHover (Css.hex "#FF0018")
+                |> Styles.setControlBorderColorFocus (Css.hex "#FF0018")
+                |> Styles.setControlBackgroundColorHover (Css.rgba 255 255 65 0.2)
+                |> Styles.setControlSeparatorColor (Css.rgba 0 128 24 1)
+                |> Styles.setControlDropdownIndicatorColor (Css.rgba 0 128 24 1)
+
+        menuBranding : Styles.MenuConfig
+        menuBranding =
+            Styles.getMenuConfig Styles.default
+                |> Styles.setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
     in
     div
         [ StyledAttribs.css
@@ -95,7 +110,7 @@ view m =
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
                     |> Select.searchable False
-                    |> Select.setStyles branding
+                    |> Select.setStyles baseBranding
                 )
                 (selectIdentifier "SingleSelectExample")
         ]

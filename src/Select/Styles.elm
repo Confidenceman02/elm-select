@@ -1,11 +1,13 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, controlDefault, default, setControlStyles
+    ( Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
     , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
-    , getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
+    , setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
+    , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
+    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
     )
 
 {-| Add custom styling to the select.
@@ -13,7 +15,7 @@ module Select.Styles exposing
 
 # Set up
 
-@docs Config, ControlConfig, controlDefault, default, setControlStyles
+@docs Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
 
 
 # Set styles for control
@@ -23,11 +25,21 @@ module Select.Styles exposing
 @docs setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
+# Set styles for menu
+
+@docs setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
+
+
 # Get styles for control
 
-@docs getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
+@docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
 @docs getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
+
+
+# Get styles for menu
+
+@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
 
 -}
 
@@ -42,6 +54,21 @@ type Config
 {-| -}
 type ControlConfig
     = ControlConfig ControlConfiguration
+
+
+{-| -}
+type MenuConfig
+    = MenuConfig MenuConfiguration
+
+
+type alias MenuConfiguration =
+    { backgroundColor : Css.Color
+    , borderRadius : Float
+    , boxShadowBlur : Float
+    , boxShadowColor : Css.Color
+    , boxShadowHOffset : Float
+    , boxShadowVOffset : Float
+    }
 
 
 type alias ControlConfiguration =
@@ -62,12 +89,25 @@ type alias ControlConfiguration =
 
 
 type alias Configuration =
-    ControlConfig
+    { controlConfig : ControlConfig
+    , menuConfig : MenuConfig
+    }
+
+
+defaultsMenu : MenuConfiguration
+defaultsMenu =
+    { backgroundColor = Css.hex "#FFFFFF"
+    , borderRadius = 7
+    , boxShadowBlur = 12
+    , boxShadowColor = Css.rgba 0 0 0 0.19
+    , boxShadowHOffset = 0
+    , boxShadowVOffset = 0
+    }
 
 
 defaultsControl : ControlConfiguration
 defaultsControl =
-    { backgroundColor = Css.hex "FFFFFF"
+    { backgroundColor = Css.hex "#FFFFFF"
     , backgroundColorHover = Css.hex "#F0F1F4"
     , borderColor = Css.hex "#898BA9"
     , borderColorFocus = Css.hex "#0168b3"
@@ -83,8 +123,11 @@ defaultsControl =
     }
 
 
-{-| The default styling for the select control
--}
+menuDefault : MenuConfig
+menuDefault =
+    MenuConfig defaultsMenu
+
+
 controlDefault : ControlConfig
 controlDefault =
     ControlConfig defaultsControl
@@ -92,7 +135,9 @@ controlDefault =
 
 defaults : Configuration
 defaults =
-    controlDefault
+    { controlConfig = controlDefault
+    , menuConfig = menuDefault
+    }
 
 
 {-| The default styling for the select
@@ -103,7 +148,47 @@ default =
 
 
 
--- MODIFIERS CONTROL
+-- SETTERS MENU STYLES
+
+
+{-| -}
+setMenuBackgroundColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuBackgroundColor c (MenuConfig config) =
+    MenuConfig { config | backgroundColor = c }
+
+
+{-| -}
+setMenuBorderRadius : Float -> MenuConfig -> MenuConfig
+setMenuBorderRadius f (MenuConfig config) =
+    MenuConfig { config | borderRadius = f }
+
+
+{-| -}
+setMenuBoxShadowBlur : Float -> MenuConfig -> MenuConfig
+setMenuBoxShadowBlur f (MenuConfig config) =
+    MenuConfig { config | boxShadowBlur = f }
+
+
+{-| -}
+setMenuBoxShadowColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuBoxShadowColor c (MenuConfig config) =
+    MenuConfig { config | boxShadowColor = c }
+
+
+{-| -}
+setMenuBoxShadowHOffset : Float -> MenuConfig -> MenuConfig
+setMenuBoxShadowHOffset f (MenuConfig config) =
+    MenuConfig { config | boxShadowHOffset = f }
+
+
+{-| -}
+setMenuBoxShadowVOffset : Float -> MenuConfig -> MenuConfig
+setMenuBoxShadowVOffset f (MenuConfig config) =
+    MenuConfig { config | boxShadowVOffset = f }
+
+
+
+-- SETTERS CONTROL STYLES
 
 
 {-| -}
@@ -190,99 +275,213 @@ setControlSeparatorColor c (ControlConfig config) =
 
 {-| Set styles for the select control
 
-        controlBranding : ControlConfig
+        import Select.Styles as Styles
+
+
+        controlBranding : Styles.ControlConfig
         controlBranding =
-            Styles.controlDefault
+            Styles.getControlConfig default
                 |> setControlBorderColor (Css.hex "#FFFFFF")
                 |> setControlBorderColorFocus (Css.hex "#0168B3")
 
-        selectBranding : Config
+        selectBranding : Styles.Config
         selectBranding
-                setControlStyles Styles.default controlBranding
+            Styles.default
+                |> setControlStyles controlBranding
 
 -}
-setControlStyles : Config -> ControlConfig -> Config
-setControlStyles _ controlConfig =
-    Config controlConfig
+setControlStyles : ControlConfig -> Config -> Config
+setControlStyles controlConfig (Config config) =
+    Config { config | controlConfig = controlConfig }
+
+
+{-| Set styles for the select menu
+
+        import Select.Styles as Styles
+
+
+        menuBranding : MenuConfig
+        menuBranding =
+            Styles.getMenuConfig Styles.default
+                |> setMenuBackgroundColor (Css.hex "#000000")
+                |> setMenuBorderRadius 4
+
+
+        selectBranding : Styles.Config
+        selectBranding
+                Styles.default
+                    |> setMenuStyles menuBranding
+
+-}
+setMenuStyles : MenuConfig -> Config -> Config
+setMenuStyles menuConfig (Config config) =
+    Config { config | menuConfig = menuConfig }
 
 
 
--- GETTERS CONTROL
+-- GETTERS MENU STYLES
+
+
+{-| Get the MenuConfig
+
+    import Select.Styles as Styles
+
+    baseStyles : Styles.Config
+    baseStyles =
+        Styles.default
+
+    baseMenuStyles : Styles.ControlConfig
+    baseMenuStyles =
+        Styles.getMenuConfig baseStyles
+            |> Styles.setMenuBorderRadius 4
+
+-}
+getMenuConfig : Config -> MenuConfig
+getMenuConfig (Config config) =
+    config.menuConfig
+
+
+{-| -}
+getMenuBackgroundColor : MenuConfig -> Css.Color
+getMenuBackgroundColor (MenuConfig config) =
+    config.backgroundColor
+
+
+{-| -}
+getMenuBorderRadius : MenuConfig -> Float
+getMenuBorderRadius (MenuConfig config) =
+    config.borderRadius
+
+
+{-| -}
+getMenuBoxShadowBlur : MenuConfig -> Float
+getMenuBoxShadowBlur (MenuConfig config) =
+    config.boxShadowBlur
+
+
+{-| -}
+getMenuBoxShadowColor : MenuConfig -> Css.Color
+getMenuBoxShadowColor (MenuConfig config) =
+    config.boxShadowColor
+
+
+{-| -}
+getMenuBoxShadowHOffset : MenuConfig -> Float
+getMenuBoxShadowHOffset (MenuConfig config) =
+    config.boxShadowHOffset
+
+
+{-| -}
+getMenuBoxShadowVOffset : MenuConfig -> Float
+getMenuBoxShadowVOffset (MenuConfig config) =
+    config.boxShadowVOffset
+
+
+
+-- GETTERS CONTROL STYLES
+
+
+{-| Get the ControlConfig
+
+    import Select.Styles as Styles
+
+    baseStyles : Styles.Config
+    baseStyles =
+        Styles.default
+
+    baseControlStyles : Styles.ControlConfig
+    baseControlStyles =
+        Styles.getControlConfig baseStyles
+            |> Styles.setControlBorderColor (Css.hex "ffffff")
+
+-}
+getControlConfig : Config -> ControlConfig
+getControlConfig (Config config) =
+    config.controlConfig
+
+
+getControlConfiguration : Configuration -> ControlConfiguration
+getControlConfiguration config =
+    let
+        (ControlConfig controlConfig) =
+            config.controlConfig
+    in
+    controlConfig
 
 
 {-| -}
 getControlBackgroundColor : Config -> Css.Color
-getControlBackgroundColor (Config (ControlConfig controlConfig)) =
-    controlConfig.backgroundColor
+getControlBackgroundColor (Config config) =
+    getControlConfiguration config |> .backgroundColor
 
 
 {-| -}
 getControlBackgroundColorHover : Config -> Css.Color
-getControlBackgroundColorHover (Config (ControlConfig controlConfig)) =
-    controlConfig.backgroundColorHover
+getControlBackgroundColorHover (Config config) =
+    getControlConfiguration config |> .backgroundColorHover
 
 
 {-| -}
 getControlBorderColor : Config -> Css.Color
-getControlBorderColor (Config (ControlConfig controlConfig)) =
-    controlConfig.borderColor
+getControlBorderColor (Config config) =
+    getControlConfiguration config |> .borderColor
 
 
 {-| -}
 getControlBorderColorFocus : Config -> Css.Color
-getControlBorderColorFocus (Config (ControlConfig controlConfig)) =
-    controlConfig.borderColorFocus
+getControlBorderColorFocus (Config config) =
+    getControlConfiguration config |> .borderColorFocus
 
 
 {-| -}
 getControlPlaceholderOpacity : Config -> Float
-getControlPlaceholderOpacity (Config (ControlConfig controlConfig)) =
-    controlConfig.placeholderOpacity
+getControlPlaceholderOpacity (Config config) =
+    getControlConfiguration config |> .placeholderOpacity
 
 
 {-| -}
 getControlBorderColorHover : Config -> Css.Color
-getControlBorderColorHover (Config (ControlConfig controlConfig)) =
-    controlConfig.borderColorHover
+getControlBorderColorHover (Config config) =
+    getControlConfiguration config |> .borderColorHover
 
 
 {-| -}
 getControlSeparatorColor : Config -> Css.Color
-getControlSeparatorColor (Config (ControlConfig controlConfig)) =
-    controlConfig.separatorColor
+getControlSeparatorColor (Config config) =
+    getControlConfiguration config |> .separatorColor
 
 
 {-| -}
 getControlClearIndicatorColor : Config -> Css.Color
-getControlClearIndicatorColor (Config (ControlConfig controlConfig)) =
-    controlConfig.clearIndicatorColor
+getControlClearIndicatorColor (Config config) =
+    getControlConfiguration config |> .clearIndicatorColor
 
 
 {-| -}
 getControlClearIndicatorColorHover : Config -> Css.Color
-getControlClearIndicatorColorHover (Config (ControlConfig controlConfig)) =
-    controlConfig.clearIndicatorColorHover
+getControlClearIndicatorColorHover (Config config) =
+    getControlConfiguration config |> .clearIndicatorColorHover
 
 
 {-| -}
 getControlDropdownIndicatorColor : Config -> Css.Color
-getControlDropdownIndicatorColor (Config (ControlConfig controlConfig)) =
-    controlConfig.dropdownIndicatorColor
+getControlDropdownIndicatorColor (Config config) =
+    getControlConfiguration config |> .dropdownIndicatorColor
 
 
 {-| -}
 getControlDropdownIndicatorColorHover : Config -> Css.Color
-getControlDropdownIndicatorColorHover (Config (ControlConfig controlConfig)) =
-    controlConfig.dropdownIndicatorColorHover
+getControlDropdownIndicatorColorHover (Config config) =
+    getControlConfiguration config |> .dropdownIndicatorColorHover
 
 
 {-| -}
 getControlLoadingIndicatorColor : Config -> Css.Color
-getControlLoadingIndicatorColor (Config (ControlConfig controlConfig)) =
-    controlConfig.loadingIndicatorColor
+getControlLoadingIndicatorColor (Config config) =
+    getControlConfiguration config |> .loadingIndicatorColor
 
 
 {-| -}
 getControlDisabledOpacity : Config -> Float
-getControlDisabledOpacity (Config (ControlConfig controlConfig)) =
-    controlConfig.disabledOpacity
+getControlDisabledOpacity (Config config) =
+    getControlConfiguration config |> .disabledOpacity

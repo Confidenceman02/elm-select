@@ -212,6 +212,7 @@ type alias ViewMenuData item =
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
     , loading : Bool
+    , menuStyles : Styles.MenuConfig
     }
 
 
@@ -1403,6 +1404,7 @@ view (Config config) selectId =
                                 state_.activeTargetIndex
                                 state_.menuNavigation
                                 config.isLoading
+                                (Styles.getMenuConfig config.styles)
                             )
                         )
                     ]
@@ -1536,17 +1538,18 @@ viewMenu viewMenuData =
 
         menuStyles =
             [ Css.top (Css.pct 100)
-            , Css.backgroundColor (Css.hex "#FFFFFF")
+            , Css.backgroundColor (Styles.getMenuBackgroundColor viewMenuData.menuStyles)
             , Css.marginBottom (Css.px 8)
             , Css.position Css.absolute
             , Css.width (Css.pct 100)
             , Css.boxSizing Css.borderBox
             , Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
-            , Css.borderRadius (Css.px 4)
-
-            -- , Css.border3 (Css.px 6) Css.solid Css.transparent
-            , Css.borderRadius (Css.px 7)
-            , Css.boxShadow4 (Css.px 0) (Css.px 0) (Css.px 12) (Css.rgba 0 0 0 0.19)
+            , Css.borderRadius (Css.px (Styles.getMenuBorderRadius viewMenuData.menuStyles))
+            , Css.boxShadow4
+                (Css.px <| Styles.getMenuBoxShadowHOffset viewMenuData.menuStyles)
+                (Css.px <| Styles.getMenuBoxShadowVOffset viewMenuData.menuStyles)
+                (Css.px <| Styles.getMenuBoxShadowBlur viewMenuData.menuStyles)
+                (Styles.getMenuBoxShadowColor viewMenuData.menuStyles)
             , Css.marginTop (Css.px menuMarginTop)
             , Css.zIndex (Css.int 1)
             ]
