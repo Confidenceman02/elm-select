@@ -1,5 +1,5 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, MenuConfig, controlDefault, default, setControlStyles
+    ( Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
     , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
@@ -15,7 +15,7 @@ module Select.Styles exposing
 
 # Set up
 
-@docs Config, ControlConfig, MenuConfig, controlDefault, default, setControlStyles
+@docs Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
 
 
 # Set styles for control
@@ -123,15 +123,11 @@ defaultsControl =
     }
 
 
-{-| The default styling for the select menu
--}
 menuDefault : MenuConfig
 menuDefault =
     MenuConfig defaultsMenu
 
 
-{-| The default styling for the select control
--}
 controlDefault : ControlConfig
 controlDefault =
     ControlConfig defaultsControl
@@ -279,20 +275,47 @@ setControlSeparatorColor c (ControlConfig config) =
 
 {-| Set styles for the select control
 
-        controlBranding : ControlConfig
+        import Select.Styles as Styles
+
+
+        controlBranding : Styles.ControlConfig
         controlBranding =
-            Styles.controlDefault
+            Styles.getControlConfig default
                 |> setControlBorderColor (Css.hex "#FFFFFF")
                 |> setControlBorderColorFocus (Css.hex "#0168B3")
 
-        selectBranding : Config
+        selectBranding : Styles.Config
         selectBranding
-                setControlStyles Styles.default controlBranding
+            Styles.default
+                |> setControlStyles controlBranding
 
 -}
-setControlStyles : Config -> ControlConfig -> Config
-setControlStyles (Config config) controlConfig =
+setControlStyles : ControlConfig -> Config -> Config
+setControlStyles controlConfig (Config config) =
     Config { config | controlConfig = controlConfig }
+
+
+{-| Set styles for the select menu
+
+        import Select.Styles as Styles
+
+
+        menuBranding : MenuConfig
+        menuBranding =
+            Styles.getMenuConfig Styles.default
+                |> setMenuBackgroundColor (Css.hex "#000000")
+                |> setMenuBorderRadius 4
+
+
+        selectBranding : Styles.Config
+        selectBranding
+                Styles.default
+                    |> setMenuStyles menuBranding
+
+-}
+setMenuStyles : MenuConfig -> Config -> Config
+setMenuStyles menuConfig (Config config) =
+    Config { config | menuConfig = menuConfig }
 
 
 
