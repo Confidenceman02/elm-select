@@ -1,4 +1,6 @@
-module Select.Internal exposing (Direction(..), calculateNextActiveTarget, shouldQueryNextTargetElement)
+module Select.Internal exposing (Direction(..), calculateNextActiveTarget, shouldQueryNextTargetElement, viewIf)
+
+import Html.Styled as Styled
 
 
 type Direction
@@ -35,3 +37,17 @@ calculateNextActiveTarget currentTargetIndex totalTargetCount direction =
 shouldQueryNextTargetElement : Int -> Int -> Bool
 shouldQueryNextTargetElement nextTargetIndex activeTargetIndex =
     nextTargetIndex /= activeTargetIndex
+
+
+nothing : Styled.Html msg
+nothing =
+    Styled.text ""
+
+
+viewIf : Bool -> Styled.Html msg -> Styled.Html msg
+viewIf condition html =
+    if condition then
+        html
+
+    else
+        nothing
