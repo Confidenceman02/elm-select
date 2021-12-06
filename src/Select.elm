@@ -47,7 +47,6 @@ import Html.Styled exposing (Html, button, div, input, li, option, select, span,
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
-import Html.Styled.Extra exposing (viewIf)
 import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy)
 import Json.Decode as Decode
@@ -1377,7 +1376,7 @@ view (Config config) selectId =
                         [ StyledAttribs.css
                             [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
                         ]
-                        [ viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
+                        [ Internal.viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config selectId ]
                         , div [ StyledAttribs.css indicatorContainerStyles ]
                             [ span
                                 [ StyledAttribs.css
@@ -1394,7 +1393,7 @@ view (Config config) selectId =
                             [ dropdownIndicator config.styles config.disabled
                             ]
                         ]
-                    , viewIf state_.menuOpen
+                    , Internal.viewIf state_.menuOpen
                         (lazy viewMenu
                             (ViewMenuData
                                 config.variant
