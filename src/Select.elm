@@ -200,6 +200,7 @@ type alias ViewMenuItemData item =
     , menuNavigation : MenuNavigation
     , initialMousedown : InitialMousedown
     , variant : Variant item
+    , menuItemStyles : Styles.MenuItemConfig
     }
 
 
@@ -212,6 +213,7 @@ type alias ViewMenuData item =
     , menuNavigation : MenuNavigation
     , loading : Bool
     , menuStyles : Styles.MenuConfig
+    , menuItemStyles : Styles.MenuItemConfig
     }
 
 
@@ -1404,6 +1406,7 @@ view (Config config) selectId =
                                 state_.menuNavigation
                                 config.isLoading
                                 (Styles.getMenuConfig config.styles)
+                                (Styles.getMenuItemConfig config.styles)
                             )
                         )
                     ]
@@ -1595,7 +1598,14 @@ viewMenu viewMenuData =
                     ++ resolveAttributes
                 )
                 (List.indexedMap
-                    (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
+                    (buildMenuItem
+                        viewMenuData.menuItemStyles
+                        viewMenuData.selectId
+                        viewMenuData.variant
+                        viewMenuData.initialMousedown
+                        viewMenuData.activeTargetIndex
+                        viewMenuData.menuNavigation
+                    )
                     viewMenuData.viewableMenuItems
                 )
 
@@ -1638,21 +1648,25 @@ viewMenuItem viewMenuItemData =
 
                 withTargetStyles =
                     if data.menuItemIsTarget && not data.itemSelected then
-                        [ Css.color (Css.hex "#0168B3"), Css.backgroundColor (Css.hex "#E6F0F7") ]
+                        [ Css.color (Styles.getMenuItemColorHoverNotSelected viewMenuItemData.menuItemStyles)
+                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected viewMenuItemData.menuItemStyles)
+                        ]
 
                     else
                         []
 
                 withIsClickedStyles =
                     if data.isClickFocused then
-                        [ Css.backgroundColor (Css.hex "#E6F0F7") ]
+                        [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked viewMenuItemData.menuItemStyles) ]
 
                     else
                         []
 
                 withIsSelectedStyles =
                     if data.itemSelected then
-                        [ Css.backgroundColor (Css.hex "#E6F0F7"), Css.hover [ Css.color (Css.hex "#0168B3") ] ]
+                        [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected viewMenuItemData.menuItemStyles)
+                        , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected viewMenuItemData.menuItemStyles) ]
+                        ]
 
                     else
                         []
@@ -2086,16 +2100,36 @@ buildMenuItems config state_ =
             []
 
 
-buildMenuItem : SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
-buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
+buildMenuItem : Styles.MenuItemConfig -> SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
+buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
     case variant of
         Single maybeSelectedItem ->
             viewMenuItem <|
-                ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
+                ViewMenuItemData
+                    idx
+                    (isSelected item maybeSelectedItem)
+                    (isMenuItemClickFocused initialMousedown idx)
+                    (isTarget activeTargetIndex idx)
+                    selectId
+                    item
+                    menuNavigation
+                    initialMousedown
+                    variant
+                    menuItemStyles
 
         _ ->
             viewMenuItem <|
-                ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
+                ViewMenuItemData
+                    idx
+                    False
+                    (isMenuItemClickFocused initialMousedown idx)
+                    (isTarget activeTargetIndex idx)
+                    selectId
+                    item
+                    menuNavigation
+                    initialMousedown
+                    variant
+                    menuItemStyles
 
 
 filterMenuItem : Maybe String -> MenuItem item -> Bool
