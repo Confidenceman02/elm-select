@@ -1186,6 +1186,9 @@ view (Config config) selectId =
         selectWrapper =
             viewWrapper config
                 selectId
+
+        controlStyles =
+            Styles.getControlConfig config.styles
     in
     selectWrapper
         (case config.variant of
@@ -1220,6 +1223,7 @@ view (Config config) selectId =
                     (StyledAttribs.css
                         ([ Css.alignItems Css.center
                          , Css.backgroundColor (Styles.getControlBackgroundColor config.styles)
+                         , Css.color (Styles.getControlColor controlStyles)
                          , Css.cursor Css.default
                          , Css.displayFlex
                          , Css.flexWrap Css.wrap
@@ -1289,7 +1293,7 @@ view (Config config) selectId =
                                     text ""
 
                                 Single (Just v) ->
-                                    viewSelectedPlaceholder v
+                                    viewSelectedPlaceholder (Styles.getControlConfig config.styles) v
 
                                 Single Nothing ->
                                     viewPlaceholder config
@@ -1728,20 +1732,21 @@ viewPlaceholder config =
         [ text config.placeholder ]
 
 
-viewSelectedPlaceholder : MenuItem item -> Html (Msg item)
-viewSelectedPlaceholder item =
+viewSelectedPlaceholder : Styles.ControlConfig -> MenuItem item -> Html (Msg item)
+viewSelectedPlaceholder controlStyles item =
     let
         addedStyles =
             [ Css.maxWidth (Css.calc (Css.pct 100) Css.minus (Css.px 8))
             , Css.textOverflow Css.ellipsis
             , Css.whiteSpace Css.noWrap
             , Css.overflow Css.hidden
+            , Css.color (Styles.getControlSelectedColor controlStyles)
+            , Css.fontWeight (Css.int 400)
             ]
     in
     div
         [ StyledAttribs.css
             (basePlaceholder
-                ++ bold
                 ++ addedStyles
             )
         , attribute "data-test-id" "selectedItem"
@@ -2340,13 +2345,6 @@ iconButtonStyles =
 menuMarginTop : Float
 menuMarginTop =
     8
-
-
-bold : List Css.Style
-bold =
-    [ Css.color (Css.hex "#35374A")
-    , Css.fontWeight (Css.int 400)
-    ]
 
 
 listBoxPaddingBottom : Float
