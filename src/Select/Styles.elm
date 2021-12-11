@@ -4,7 +4,7 @@ module Select.Styles exposing
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
-    , setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+    , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
@@ -36,7 +36,7 @@ module Select.Styles exposing
 
 # Set styles for menu item
 
-@docs setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+@docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
 @docs setMenItemColorHoverNotSelected
 
 
@@ -400,6 +400,28 @@ setMenuStyles menuConfig (Config config) =
     Config { config | menuConfig = menuConfig }
 
 
+{-| Set styles for select menu item
+
+        import Select.Styles as Styles
+
+
+        menuItemBranding : MenuItemConfig
+        menuItemBranding =
+            Styles.getMenuItemConfig Styles.default
+                |> setMenuItemBackgroundColorNotSelected (Css.hex "#000000")
+
+
+        selectBranding : Styles.Config
+        selectBranding
+                Styles.default
+                    |> setMenuItemStyles menuItemBranding
+
+-}
+setMenuItemStyles : MenuItemConfig -> Config -> Config
+setMenuItemStyles menuItemConfig (Config config) =
+    Config { config | menuItemConfig = menuItemConfig }
+
+
 
 -- GETTERS MENU ITEM
 
@@ -438,7 +460,7 @@ getMenuItemBackgroundColorSelected (MenuItemConfig config) =
 {-| -}
 getMenuItemBackgroundColorNotSelected : MenuItemConfig -> Css.Color
 getMenuItemBackgroundColorNotSelected (MenuItemConfig config) =
-    config.backgroundColorSelected
+    config.backgroundColorNotSelected
 
 
 {-| -}
