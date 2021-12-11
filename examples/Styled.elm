@@ -79,38 +79,64 @@ view m =
             Styles.default
                 |> Styles.setControlStyles controlBranding
                 |> Styles.setMenuStyles menuBranding
+                |> Styles.setMenuItemStyles menuItemBranding
 
         controlBranding : Styles.ControlConfig
         controlBranding =
             Styles.getControlConfig Styles.default
-                |> Styles.setControlBorderColor (Css.hex "#FF0018")
-                |> Styles.setControlBorderColorHover (Css.hex "#FF0018")
-                |> Styles.setControlBorderColorFocus (Css.hex "#FF0018")
+                |> Styles.setControlBorderColor (Css.hex "#ff79c6")
+                |> Styles.setControlBorderColorHover (Css.hex "#ff79c6")
+                |> Styles.setControlBorderColorFocus (Css.hex "#ff79c6")
                 |> Styles.setControlBackgroundColorHover (Css.rgba 255 255 65 0.2)
-                |> Styles.setControlSeparatorColor (Css.rgba 0 128 24 1)
-                |> Styles.setControlDropdownIndicatorColor (Css.rgba 0 128 24 1)
+                |> Styles.setControlSeparatorColor (Css.hex "#ff79c6")
+                |> Styles.setControlDropdownIndicatorColor (Css.hex "#ff79c6")
+                |> Styles.setControlDropdownIndicatorColorHover (Css.hex "#e66db2")
+                |> Styles.setControlClearIndicatorColor (Css.hex "#ff79c6")
+                |> Styles.setControlClearIndicatorColorHover (Css.hex "#e66db2")
+                |> Styles.setControlBackgroundColor (Css.hex "#282a36")
+                |> Styles.setControlBackgroundColorHover (Css.hex "#282a36")
 
         menuBranding : Styles.MenuConfig
         menuBranding =
             Styles.getMenuConfig Styles.default
                 |> Styles.setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
+                |> Styles.setMenuBackgroundColor (Css.hex "#282a36")
+
+        menuItemBranding : Styles.MenuItemConfig
+        menuItemBranding =
+            Styles.getMenuItemConfig Styles.default
+                |> Styles.setMenuItemBackgroundColorNotSelected (Css.hex "#44475a")
+                |> Styles.setMenuItemBackgroundColorSelected (Css.hex "#ff79c6")
+                |> Styles.setMenuItemBackgroundColorClicked (Css.hex "#44475a")
     in
     div
         [ StyledAttribs.css
-            [ Css.marginTop (Css.px 20)
-            , Css.width (Css.pct 50)
-            , Css.marginLeft Css.auto
-            , Css.marginRight Css.auto
+            [ Css.position Css.absolute
+            , Css.left (Css.px 0)
+            , Css.right (Css.px 0)
+            , Css.top (Css.px 0)
+            , Css.bottom (Css.px 0)
+            , Css.backgroundColor (Css.hex "#0D1117")
             ]
         ]
-        [ Styled.map SelectMsg <|
-            Select.view
-                (Select.single selectedItem
-                    |> Select.state m.selectState
-                    |> Select.menuItems m.items
-                    |> Select.placeholder "Placeholder"
-                    |> Select.searchable False
-                    |> Select.setStyles baseBranding
-                )
-                (selectIdentifier "SingleSelectExample")
+        [ div
+            [ StyledAttribs.css
+                [ Css.marginTop (Css.px 20)
+                , Css.width (Css.pct 50)
+                , Css.marginLeft Css.auto
+                , Css.marginRight Css.auto
+                ]
+            ]
+            [ Styled.map SelectMsg <|
+                Select.view
+                    (Select.single selectedItem
+                        |> Select.state m.selectState
+                        |> Select.menuItems m.items
+                        |> Select.placeholder "Placeholder"
+                        |> Select.searchable False
+                        |> Select.setStyles baseBranding
+                        |> Select.clearable True
+                    )
+                    (selectIdentifier "SingleSelectExample")
+            ]
         ]
