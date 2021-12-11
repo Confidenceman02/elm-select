@@ -108,6 +108,7 @@ view m =
                 |> Styles.setMenuItemBackgroundColorNotSelected (Css.hex "#44475a")
                 |> Styles.setMenuItemBackgroundColorSelected (Css.hex "#ff79c6")
                 |> Styles.setMenuItemBackgroundColorClicked (Css.hex "#44475a")
+                |> Styles.setMenuItemColor (Css.hex "#aeaea9")
     in
     div
         [ StyledAttribs.css
