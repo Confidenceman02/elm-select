@@ -1,13 +1,13 @@
 module Select.Styles exposing
     ( Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
-    , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
+    , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-    , setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
+    , setControlLoadingIndicatorColor, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
-    , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
+    , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-    , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
+    , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
     , getMenuItemBackgroundColorNotSelected
@@ -24,9 +24,9 @@ module Select.Styles exposing
 
 # Set styles for control
 
-@docs setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlClearIndicatorColor
+@docs setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
 @docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-@docs setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
+@docs setControlLoadingIndicatorColor, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
 # Set styles for menu
@@ -42,9 +42,9 @@ module Select.Styles exposing
 
 # Get styles for control
 
-@docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
+@docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-@docs getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
+@docs getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
 
 
 # Get styles for menu
@@ -111,11 +111,13 @@ type alias ControlConfiguration =
     , borderColorHover : Css.Color
     , clearIndicatorColor : Css.Color
     , clearIndicatorColorHover : Css.Color
+    , color : Css.Color
     , disabledOpacity : Float
     , dropdownIndicatorColor : Css.Color
     , dropdownIndicatorColorHover : Css.Color
     , loadingIndicatorColor : Css.Color
     , placeholderOpacity : Float
+    , selectedColor : Css.Color
     , separatorColor : Css.Color
     }
 
@@ -158,11 +160,13 @@ defaultsControl =
     , borderColorHover = Css.hex "#4B4D68"
     , clearIndicatorColor = Css.rgb 102 102 102
     , clearIndicatorColorHover = Css.rgb 51 51 51
+    , color = Css.hex "#000000"
     , disabledOpacity = 0.3
     , dropdownIndicatorColor = Css.rgb 102 102 102
     , dropdownIndicatorColorHover = Css.rgb 51 51 51
     , loadingIndicatorColor = Css.rgb 102 102 102
     , placeholderOpacity = 0.5
+    , selectedColor = Css.hex "#35374A"
     , separatorColor = Css.rgb 204 204 204
     }
 
@@ -324,6 +328,12 @@ setControlClearIndicatorColorHover c (ControlConfig config) =
 
 
 {-| -}
+setControlColor : Css.Color -> ControlConfig -> ControlConfig
+setControlColor c (ControlConfig config) =
+    ControlConfig { config | color = c }
+
+
+{-| -}
 setControlDisabledOpacity : Float -> ControlConfig -> ControlConfig
 setControlDisabledOpacity f (ControlConfig config) =
     ControlConfig { config | disabledOpacity = f }
@@ -351,6 +361,12 @@ setControlLoadingIndicatorColor c (ControlConfig config) =
 setControlPlaceholderOpacity : Float -> ControlConfig -> ControlConfig
 setControlPlaceholderOpacity f (ControlConfig config) =
     ControlConfig { config | placeholderOpacity = f }
+
+
+{-| -}
+setControlSelectedColor : Css.Color -> ControlConfig -> ControlConfig
+setControlSelectedColor c (ControlConfig config) =
+    ControlConfig { config | selectedColor = c }
 
 
 {-| -}
@@ -614,6 +630,18 @@ getControlPlaceholderOpacity (Config config) =
 getControlBorderColorHover : Config -> Css.Color
 getControlBorderColorHover (Config config) =
     getControlConfiguration config |> .borderColorHover
+
+
+{-| -}
+getControlColor : ControlConfig -> Css.Color
+getControlColor (ControlConfig config) =
+    config.color
+
+
+{-| -}
+getControlSelectedColor : ControlConfig -> Css.Color
+getControlSelectedColor (ControlConfig config) =
+    config.selectedColor
 
 
 {-| -}
