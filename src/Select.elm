@@ -243,7 +243,7 @@ type alias ViewDummyInputData item =
 
 
 type alias ViewNativeData item =
-    { styles : Styles.Config
+    { controlStyles : Styles.ControlConfig
     , variant : NativeVariant item
     , menuItems : List (MenuItem item)
     , selectId : SelectId
@@ -1194,7 +1194,7 @@ view (Config config) selectId =
         (case config.variant of
             Native variant ->
                 [ viewNative
-                    (ViewNativeData config.styles variant config.menuItems selectId config.labelledBy config.ariaDescribedBy)
+                    (ViewNativeData controlStyles variant config.menuItems selectId config.labelledBy config.ariaDescribedBy)
                 , span
                     [ StyledAttribs.css
                         [ Css.position Css.absolute
@@ -1205,7 +1205,7 @@ view (Config config) selectId =
                         , Css.pointerEvents Css.none
                         ]
                     ]
-                    [ dropdownIndicator config.styles False ]
+                    [ dropdownIndicator controlStyles False ]
                 ]
 
             _ ->
@@ -1213,7 +1213,7 @@ view (Config config) selectId =
                   let
                     controlFocusedStyles =
                         if state_.controlUiFocused then
-                            [ controlBorderFocused config.styles ]
+                            [ controlBorderFocused controlStyles ]
 
                         else
                             []
@@ -1222,7 +1222,7 @@ view (Config config) selectId =
                     -- control
                     (StyledAttribs.css
                         ([ Css.alignItems Css.center
-                         , Css.backgroundColor (Styles.getControlBackgroundColor config.styles)
+                         , Css.backgroundColor (Styles.getControlBackgroundColor controlStyles)
                          , Css.color (Styles.getControlColor controlStyles)
                          , Css.cursor Css.default
                          , Css.displayFlex
@@ -1231,14 +1231,14 @@ view (Config config) selectId =
                          , Css.minHeight (Css.px controlHeight)
                          , Css.position Css.relative
                          , Css.boxSizing Css.borderBox
-                         , controlBorder config.styles
+                         , controlBorder controlStyles
                          , Css.borderRadius (Css.px controlRadius)
                          , Css.outline Css.zero
                          , if config.disabled then
-                            controlDisabled config.styles
+                            controlDisabled controlStyles
 
                            else
-                            controlHover config.styles
+                            controlHover controlStyles
                          ]
                             ++ controlFocusedStyles
                         )
@@ -1386,17 +1386,17 @@ view (Config config) selectId =
                         , div [ StyledAttribs.css indicatorContainerStyles ]
                             [ span
                                 [ StyledAttribs.css
-                                    [ Css.color (Styles.getControlLoadingIndicatorColor config.styles)
+                                    [ Css.color (Styles.getControlLoadingIndicatorColor controlStyles)
                                     , Css.height (Css.px 20)
                                     ]
                                 ]
                                 [ resolveLoadingSpinner ]
                             ]
-                        , indicatorSeparator config.styles
+                        , indicatorSeparator controlStyles
                         , -- indicatorContainer
                           div
                             [ StyledAttribs.css indicatorContainerStyles ]
-                            [ dropdownIndicator config.styles config.disabled
+                            [ dropdownIndicator controlStyles config.disabled
                             ]
                         ]
                     , Internal.viewIf state_.menuOpen
@@ -1466,16 +1466,16 @@ viewNative viewNativeData =
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
                     , Css.borderRadius (Css.px controlRadius)
-                    , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.styles)
-                    , controlBorder viewNativeData.styles
+                    , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.controlStyles)
+                    , controlBorder viewNativeData.controlStyles
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
                     , Css.color (Css.hex "#000000")
                     , Css.fontSize (Css.px 16)
                     , Css.focus
-                        [ controlBorderFocused viewNativeData.styles, Css.outline Css.none ]
-                    , controlHover viewNativeData.styles
+                        [ controlBorderFocused viewNativeData.controlStyles, Css.outline Css.none ]
+                    , controlHover viewNativeData.controlStyles
                     ]
                  ]
                     ++ withLabelledBy
@@ -1724,10 +1724,14 @@ viewMenuItem viewMenuItemData =
 
 viewPlaceholder : Configuration item -> Html (Msg item)
 viewPlaceholder config =
+    let
+        controlStyles =
+            Styles.getControlConfig config.styles
+    in
     div
         [ -- baseplaceholder
           StyledAttribs.css
-            (placeholderStyles config.styles)
+            (placeholderStyles controlStyles)
         ]
         [ text config.placeholder ]
 
@@ -2239,7 +2243,7 @@ basePlaceholder =
     ]
 
 
-placeholderStyles : Styles.Config -> List Css.Style
+placeholderStyles : Styles.ControlConfig -> List Css.Style
 placeholderStyles styles =
     Css.opacity (Css.num (Styles.getControlPlaceholderOpacity styles)) :: basePlaceholder
 
@@ -2262,6 +2266,9 @@ clearIndicator config id =
 
             else
                 [ Css.height (Css.px 16), Css.cursor Css.pointer ]
+
+        controlStyles =
+            Styles.getControlConfig config.styles
     in
     button
         [ custom "mousedown" <|
@@ -2277,9 +2284,9 @@ clearIndicator config id =
         ]
         [ span
             [ StyledAttribs.css
-                [ Css.color <| Styles.getControlClearIndicatorColor config.styles
+                [ Css.color <| Styles.getControlClearIndicatorColor controlStyles
                 , Css.displayFlex
-                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover config.styles) ]
+                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover controlStyles) ]
                 ]
             ]
             [ ClearIcon.view
@@ -2287,12 +2294,12 @@ clearIndicator config id =
         ]
 
 
-indicatorSeparator : Styles.Config -> Html msg
-indicatorSeparator styles =
+indicatorSeparator : Styles.ControlConfig -> Html msg
+indicatorSeparator controlStyles =
     span
         [ StyledAttribs.css
             [ Css.alignSelf Css.stretch
-            , Css.backgroundColor (Styles.getControlSeparatorColor styles)
+            , Css.backgroundColor (Styles.getControlSeparatorColor controlStyles)
             , Css.marginBottom (Css.px 8)
             , Css.marginTop (Css.px 8)
             , Css.width (Css.px 1)
@@ -2302,8 +2309,8 @@ indicatorSeparator styles =
         []
 
 
-dropdownIndicator : Styles.Config -> Bool -> Html msg
-dropdownIndicator styles disabledInput =
+dropdownIndicator : Styles.ControlConfig -> Bool -> Html msg
+dropdownIndicator controlStyles disabledInput =
     let
         resolveIconButtonStyles =
             if disabledInput then
@@ -2313,8 +2320,8 @@ dropdownIndicator styles disabledInput =
             else
                 [ Css.height (Css.px 20)
                 , Css.cursor Css.pointer
-                , Css.color (Styles.getControlDropdownIndicatorColor styles)
-                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover styles) ]
+                , Css.color (Styles.getControlDropdownIndicatorColor controlStyles)
+                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover controlStyles) ]
                 ]
     in
     span
@@ -2372,24 +2379,24 @@ controlHeight =
     48
 
 
-controlBorder : Styles.Config -> Css.Style
-controlBorder styles =
-    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor styles)
+controlBorder : Styles.ControlConfig -> Css.Style
+controlBorder controlStyles =
+    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor controlStyles)
 
 
-controlBorderFocused : Styles.Config -> Css.Style
+controlBorderFocused : Styles.ControlConfig -> Css.Style
 controlBorderFocused styles =
     Css.borderColor (Styles.getControlBorderColorFocus styles)
 
 
-controlDisabled : Styles.Config -> Css.Style
-controlDisabled styles =
-    Css.opacity (Css.num (Styles.getControlDisabledOpacity styles))
+controlDisabled : Styles.ControlConfig -> Css.Style
+controlDisabled controlStyles =
+    Css.opacity (Css.num (Styles.getControlDisabledOpacity controlStyles))
 
 
-controlHover : Styles.Config -> Css.Style
-controlHover styles =
+controlHover : Styles.ControlConfig -> Css.Style
+controlHover controlStyles =
     Css.hover
-        [ Css.backgroundColor (Styles.getControlBackgroundColorHover styles)
-        , Css.borderColor (Styles.getControlBorderColorHover styles)
+        [ Css.backgroundColor (Styles.getControlBackgroundColorHover controlStyles)
+        , Css.borderColor (Styles.getControlBorderColorHover controlStyles)
         ]

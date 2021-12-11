@@ -587,49 +587,40 @@ getControlConfig (Config config) =
     config.controlConfig
 
 
-getControlConfiguration : Configuration -> ControlConfiguration
-getControlConfiguration config =
-    let
-        (ControlConfig controlConfig) =
-            config.controlConfig
-    in
-    controlConfig
+{-| -}
+getControlBackgroundColor : ControlConfig -> Css.Color
+getControlBackgroundColor (ControlConfig config) =
+    config.backgroundColor
 
 
 {-| -}
-getControlBackgroundColor : Config -> Css.Color
-getControlBackgroundColor (Config config) =
-    getControlConfiguration config |> .backgroundColor
+getControlBackgroundColorHover : ControlConfig -> Css.Color
+getControlBackgroundColorHover (ControlConfig config) =
+    config.backgroundColorHover
 
 
 {-| -}
-getControlBackgroundColorHover : Config -> Css.Color
-getControlBackgroundColorHover (Config config) =
-    getControlConfiguration config |> .backgroundColorHover
+getControlBorderColor : ControlConfig -> Css.Color
+getControlBorderColor (ControlConfig config) =
+    config.borderColor
 
 
 {-| -}
-getControlBorderColor : Config -> Css.Color
-getControlBorderColor (Config config) =
-    getControlConfiguration config |> .borderColor
+getControlBorderColorFocus : ControlConfig -> Css.Color
+getControlBorderColorFocus (ControlConfig config) =
+    config.borderColorFocus
 
 
 {-| -}
-getControlBorderColorFocus : Config -> Css.Color
-getControlBorderColorFocus (Config config) =
-    getControlConfiguration config |> .borderColorFocus
+getControlPlaceholderOpacity : ControlConfig -> Float
+getControlPlaceholderOpacity (ControlConfig config) =
+    config.placeholderOpacity
 
 
 {-| -}
-getControlPlaceholderOpacity : Config -> Float
-getControlPlaceholderOpacity (Config config) =
-    getControlConfiguration config |> .placeholderOpacity
-
-
-{-| -}
-getControlBorderColorHover : Config -> Css.Color
-getControlBorderColorHover (Config config) =
-    getControlConfiguration config |> .borderColorHover
+getControlBorderColorHover : ControlConfig -> Css.Color
+getControlBorderColorHover (ControlConfig config) =
+    config.borderColorHover
 
 
 {-| -}
@@ -645,42 +636,42 @@ getControlSelectedColor (ControlConfig config) =
 
 
 {-| -}
-getControlSeparatorColor : Config -> Css.Color
-getControlSeparatorColor (Config config) =
-    getControlConfiguration config |> .separatorColor
+getControlSeparatorColor : ControlConfig -> Css.Color
+getControlSeparatorColor (ControlConfig config) =
+    config.separatorColor
 
 
 {-| -}
-getControlClearIndicatorColor : Config -> Css.Color
-getControlClearIndicatorColor (Config config) =
-    getControlConfiguration config |> .clearIndicatorColor
+getControlClearIndicatorColor : ControlConfig -> Css.Color
+getControlClearIndicatorColor (ControlConfig config) =
+    config.clearIndicatorColor
 
 
 {-| -}
-getControlClearIndicatorColorHover : Config -> Css.Color
-getControlClearIndicatorColorHover (Config config) =
-    getControlConfiguration config |> .clearIndicatorColorHover
+getControlClearIndicatorColorHover : ControlConfig -> Css.Color
+getControlClearIndicatorColorHover (ControlConfig config) =
+    config.clearIndicatorColorHover
 
 
 {-| -}
-getControlDropdownIndicatorColor : Config -> Css.Color
-getControlDropdownIndicatorColor (Config config) =
-    getControlConfiguration config |> .dropdownIndicatorColor
+getControlDropdownIndicatorColor : ControlConfig -> Css.Color
+getControlDropdownIndicatorColor (ControlConfig config) =
+    config.dropdownIndicatorColor
 
 
 {-| -}
-getControlDropdownIndicatorColorHover : Config -> Css.Color
-getControlDropdownIndicatorColorHover (Config config) =
-    getControlConfiguration config |> .dropdownIndicatorColorHover
+getControlDropdownIndicatorColorHover : ControlConfig -> Css.Color
+getControlDropdownIndicatorColorHover (ControlConfig config) =
+    config.dropdownIndicatorColorHover
 
 
 {-| -}
-getControlLoadingIndicatorColor : Config -> Css.Color
-getControlLoadingIndicatorColor (Config config) =
-    getControlConfiguration config |> .loadingIndicatorColor
+getControlLoadingIndicatorColor : ControlConfig -> Css.Color
+getControlLoadingIndicatorColor (ControlConfig config) =
+    config.loadingIndicatorColor
 
 
 {-| -}
-getControlDisabledOpacity : Config -> Float
-getControlDisabledOpacity (Config config) =
-    getControlConfiguration config |> .disabledOpacity
+getControlDisabledOpacity : ControlConfig -> Float
+getControlDisabledOpacity (ControlConfig config) =
+    config.disabledOpacity
