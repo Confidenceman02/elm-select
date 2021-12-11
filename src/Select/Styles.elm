@@ -4,12 +4,12 @@ module Select.Styles exposing
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
-    , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+    , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
-    , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
+    , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
     , getMenuItemBackgroundColorNotSelected
     , MenuItemConfig, setMenuItemColorHoverNotSelected
     )
@@ -36,7 +36,7 @@ module Select.Styles exposing
 
 # Set styles for menu item
 
-@docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+@docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
 @docs setMenItemColorHoverNotSelected
 
 
@@ -54,7 +54,7 @@ module Select.Styles exposing
 
 # Get styles for menu item
 
-@docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
+@docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
 
 @docs getMenuItemBackgroundColorNotSelected
 
@@ -87,6 +87,7 @@ type alias MenuItemConfiguration =
     { backgroundColorClicked : Css.Color
     , backgroundColorSelected : Css.Color
     , backgroundColorNotSelected : Css.Color
+    , color : Css.Color
     , colorHoverSelected : Css.Color
     , colorHoverNotSelected : Css.Color
     }
@@ -131,6 +132,7 @@ defaultsMenuItem =
     { backgroundColorClicked = Css.hex "#E6F0F7"
     , backgroundColorSelected = Css.hex "#E6F0F7"
     , backgroundColorNotSelected = Css.hex "#E6F0F7"
+    , color = Css.hex "#000000"
     , colorHoverSelected = Css.hex "#0168B3"
     , colorHoverNotSelected = Css.hex "#0168B3"
     }
@@ -215,6 +217,12 @@ setMenuItemBackgroundColorSelected c (MenuItemConfig config) =
 setMenuItemBackgroundColorNotSelected : Css.Color -> MenuItemConfig -> MenuItemConfig
 setMenuItemBackgroundColorNotSelected c (MenuItemConfig config) =
     MenuItemConfig { config | backgroundColorNotSelected = c }
+
+
+{-| -}
+setMenuItemColor : Css.Color -> MenuItemConfig -> MenuItemConfig
+setMenuItemColor c (MenuItemConfig config) =
+    MenuItemConfig { config | color = c }
 
 
 {-| -}
@@ -461,6 +469,12 @@ getMenuItemBackgroundColorSelected (MenuItemConfig config) =
 getMenuItemBackgroundColorNotSelected : MenuItemConfig -> Css.Color
 getMenuItemBackgroundColorNotSelected (MenuItemConfig config) =
     config.backgroundColorNotSelected
+
+
+{-| -}
+getMenuItemColor : MenuItemConfig -> Css.Color
+getMenuItemColor (MenuItemConfig config) =
+    config.color
 
 
 {-| -}

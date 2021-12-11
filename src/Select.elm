@@ -1699,7 +1699,7 @@ viewMenuItem viewMenuItemData =
                      , Css.borderRadius (Css.px 4)
                      , Css.padding2 (Css.px 8) (Css.px 8)
                      , Css.outline Css.none
-                     , Css.color (Css.hex "#000000")
+                     , Css.color (Styles.getMenuItemColor viewMenuItemData.menuItemStyles)
                      ]
                         ++ withTargetStyles
                         ++ withIsClickedStyles
