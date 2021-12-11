@@ -95,6 +95,8 @@ view m =
                 |> Styles.setControlClearIndicatorColorHover (Css.hex "#e66db2")
                 |> Styles.setControlBackgroundColor (Css.hex "#282a36")
                 |> Styles.setControlBackgroundColorHover (Css.hex "#282a36")
+                |> Styles.setControlColor (Css.hex "#ff79c6")
+                |> Styles.setControlSelectedColor (Css.hex "#ff79c6")
 
         menuBranding : Styles.MenuConfig
         menuBranding =
@@ -134,7 +136,7 @@ view m =
                         |> Select.state m.selectState
                         |> Select.menuItems m.items
                         |> Select.placeholder "Placeholder"
-                        |> Select.searchable False
+                        |> Select.searchable True
                         |> Select.setStyles baseBranding
                         |> Select.clearable True
                     )
