@@ -1689,8 +1689,7 @@ viewMenuItem viewMenuItemData =
                  , on "mouseover" <| Decode.succeed (HoverFocused data.index)
                  , id (menuItemId data.selectId data.index)
                  , StyledAttribs.css
-                    ([ Css.backgroundColor Css.transparent
-                     , Css.color Css.inherit
+                    ([ Css.color Css.inherit
                      , Css.cursor Css.default
                      , Css.display Css.block
                      , Css.fontSize Css.inherit
@@ -1698,8 +1697,6 @@ viewMenuItem viewMenuItemData =
                      , Css.property "user-select" "none"
                      , Css.boxSizing Css.borderBox
                      , Css.borderRadius (Css.px 4)
-
-                     -- kaizen uses a calc here
                      , Css.padding2 (Css.px 8) (Css.px 8)
                      , Css.outline Css.none
                      , Css.color (Css.hex "#000000")
