@@ -11,6 +11,7 @@ module Select.Styles exposing
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
     , getMenuItemBackgroundColorNotSelected
+    , dracula
     , MenuItemConfig, setMenuItemColorHoverNotSelected
     )
 
@@ -57,6 +58,11 @@ module Select.Styles exposing
 @docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
 
 @docs getMenuItemBackgroundColorNotSelected
+
+
+# Theme
+
+@docs dracula
 
 -}
 
@@ -675,3 +681,47 @@ getControlLoadingIndicatorColor (ControlConfig config) =
 getControlDisabledOpacity : ControlConfig -> Float
 getControlDisabledOpacity (ControlConfig config) =
     config.disabledOpacity
+
+
+{-| -}
+dracula : Config
+dracula =
+    default
+        |> setControlStyles draculaControl
+        |> setMenuStyles draculaMenu
+        |> setMenuItemStyles draculaMenuItem
+
+
+draculaControl : ControlConfig
+draculaControl =
+    getControlConfig default
+        |> setControlBorderColor (Css.hex "#ff79c6")
+        |> setControlBorderColorHover (Css.hex "#ff79c6")
+        |> setControlBorderColorFocus (Css.hex "#ff79c6")
+        |> setControlBackgroundColorHover (Css.rgba 255 255 65 0.2)
+        |> setControlSeparatorColor (Css.hex "#ff79c6")
+        |> setControlDropdownIndicatorColor (Css.hex "#ff79c6")
+        |> setControlDropdownIndicatorColorHover (Css.hex "#e66db2")
+        |> setControlClearIndicatorColor (Css.hex "#ff79c6")
+        |> setControlClearIndicatorColorHover (Css.hex "#e66db2")
+        |> setControlBackgroundColor (Css.hex "#282a36")
+        |> setControlBackgroundColorHover (Css.hex "#282a36")
+        |> setControlColor (Css.hex "#ff79c6")
+        |> setControlSelectedColor (Css.hex "#ff79c6")
+        |> setControlLoadingIndicatorColor (Css.hex "#ff79c6")
+
+
+draculaMenu : MenuConfig
+draculaMenu =
+    getMenuConfig default
+        |> setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
+        |> setMenuBackgroundColor (Css.hex "#282a36")
+
+
+draculaMenuItem : MenuItemConfig
+draculaMenuItem =
+    getMenuItemConfig default
+        |> setMenuItemBackgroundColorNotSelected (Css.hex "#44475a")
+        |> setMenuItemBackgroundColorSelected (Css.hex "#ff79c6")
+        |> setMenuItemBackgroundColorClicked (Css.hex "#44475a")
+        |> setMenuItemColor (Css.hex "#aeaea9")
