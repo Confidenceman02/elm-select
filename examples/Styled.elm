@@ -4,17 +4,25 @@ import Browser
 import Css
 import Html.Styled as Styled exposing (Html, div)
 import Html.Styled.Attributes as StyledAttribs
+import Process
 import Select exposing (MenuItem, initState, selectIdentifier, update)
 import Select.Styles as Styles
+import Task
 
 
 type Msg
     = SelectMsg (Select.Msg String)
+    | FetchedItems
+
+
+type Items
+    = Loading
+    | Loaded (List (MenuItem String))
 
 
 type alias Model =
     { selectState : Select.State
-    , items : List (MenuItem String)
+    , items : Items
     , selectedItem : Maybe String
     }
 
@@ -23,11 +31,8 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elm", label = "Elm" }
-            , { item = "Is", label = "Is" }
-            , { item = "Really", label = "Really" }
-            , { item = "Great", label = "Great" }
-            ]
+            Loaded
+                []
       , selectedItem = Nothing
       }
     , Cmd.none
@@ -52,15 +57,34 @@ update msg model =
                 ( maybeAction, selectState, cmds ) =
                     Select.update sm model.selectState
 
-                updatedSelectedItem =
+                ( updatedModel, actionCmds ) =
                     case maybeAction of
                         Just (Select.Select i) ->
-                            Just i |> Debug.log "Selected"
+                            ( { model | selectState = selectState, selectedItem = Just i }, Cmd.none )
+
+                        Just (Select.InputChange i) ->
+                            ( { model | items = Loading, selectState = selectState }
+                            , Task.perform (\_ -> FetchedItems)
+                                (Process.sleep 1000)
+                            )
 
                         _ ->
-                            model.selectedItem
+                            ( { model | selectState = selectState }, Cmd.none )
             in
-            ( { model | selectState = selectState, selectedItem = updatedSelectedItem }, Cmd.map SelectMsg cmds )
+            ( updatedModel, Cmd.batch [ Cmd.map SelectMsg cmds, actionCmds ] )
+
+        FetchedItems ->
+            ( { model
+                | items =
+                    Loaded
+                        [ { item = "Elm", label = "Elm" }
+                        , { item = "Really", label = "Really" }
+                        , { item = "Inspires", label = "Inspires" }
+                        , { item = "Learning", label = "Learning" }
+                        ]
+              }
+            , Cmd.none
+            )
 
 
 view : Model -> Html Msg
@@ -112,6 +136,22 @@ view m =
                 |> Styles.setMenuItemBackgroundColorSelected (Css.hex "#ff79c6")
                 |> Styles.setMenuItemBackgroundColorClicked (Css.hex "#44475a")
                 |> Styles.setMenuItemColor (Css.hex "#aeaea9")
+
+        withLoading config =
+            case m.items of
+                Loading ->
+                    Select.loading True config
+
+                Loaded items ->
+                    Select.loading False config
+
+        withItems config =
+            case m.items of
+                Loaded i ->
+                    Select.menuItems i config
+
+                Loading ->
+                    Select.menuItems [] config
     in
     div
         [ StyledAttribs.css
@@ -135,12 +175,12 @@ view m =
                 Select.view
                     (Select.single selectedItem
                         |> Select.state m.selectState
-                        |> Select.menuItems m.items
                         |> Select.placeholder "Placeholder"
                         |> Select.searchable True
                         |> Select.setStyles baseBranding
                         |> Select.clearable True
-                        |> Select.loading True
+                        |> withLoading
+                        |> withItems
                     )
                     (selectIdentifier "SingleSelectExample")
             ]
