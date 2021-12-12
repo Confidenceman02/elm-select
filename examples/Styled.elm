@@ -24,6 +24,7 @@ type alias Model =
     { selectState : Select.State
     , items : Items
     , selectedItem : Maybe String
+    , selectedItems : List (Select.MenuItem String)
     }
 
 
@@ -34,6 +35,7 @@ init =
             Loaded
                 []
       , selectedItem = Nothing
+      , selectedItems = []
       }
     , Cmd.none
     )
@@ -60,7 +62,13 @@ update msg model =
                 ( updatedModel, actionCmds ) =
                     case maybeAction of
                         Just (Select.Select i) ->
-                            ( { model | selectState = selectState, selectedItem = Just i }, Cmd.none )
+                            ( { model
+                                | selectState = selectState
+                                , selectedItem = Just i
+                                , selectedItems = model.selectedItems ++ [ { label = i, item = i } ]
+                              }
+                            , Cmd.none
+                            )
 
                         Just (Select.InputChange i) ->
                             ( { model | items = Loading, selectState = selectState }
@@ -141,8 +149,18 @@ view m =
                         |> Select.setStyles Styles.dracula
                         |> Select.clearable True
                         |> withLoading
+                        -- |> Select.menuItems allItems
                         |> withItems
                     )
                     (selectIdentifier "SingleSelectExample")
             ]
         ]
+
+
+allItems : List (Select.MenuItem String)
+allItems =
+    [ { item = "Elm", label = "Elm" }
+    , { item = "Really", label = "Really" }
+    , { item = "Inspires", label = "Inspires" }
+    , { item = "Learning", label = "Learning" }
+    ]
