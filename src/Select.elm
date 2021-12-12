@@ -1471,7 +1471,7 @@ viewNative viewNativeData =
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
-                    , Css.color (Css.hex "#000000")
+                    , Css.color (Styles.getControlColor viewNativeData.controlStyles)
                     , Css.fontSize (Css.px 16)
                     , Css.focus
                         [ controlBorderFocused viewNativeData.controlStyles, Css.outline Css.none ]
