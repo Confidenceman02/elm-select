@@ -1,10 +1,11 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
+    ( Config, ControlConfig, MenuConfig, MenuItemConfig, default, setControlStyles, setMenuStyles
     , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+    , setMenuItemColorHoverNotSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
@@ -12,7 +13,6 @@ module Select.Styles exposing
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
     , getMenuItemBackgroundColorNotSelected
     , dracula
-    , MenuItemConfig, setMenuItemColorHoverNotSelected
     )
 
 {-| Add custom styling to the select.
@@ -20,7 +20,7 @@ module Select.Styles exposing
 
 # Set up
 
-@docs Config, ControlConfig, MenuConfig, default, setControlStyles, setMenuStyles
+@docs Config, ControlConfig, MenuConfig, MenuItemConfig, default, setControlStyles, setMenuStyles
 
 
 # Set styles for control
@@ -38,7 +38,7 @@ module Select.Styles exposing
 # Set styles for menu item
 
 @docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
-@docs setMenItemColorHoverNotSelected
+@docs setMenuItemColorHoverNotSelected
 
 
 # Get styles for control
