@@ -97,6 +97,7 @@ view m =
                 |> Styles.setControlBackgroundColorHover (Css.hex "#282a36")
                 |> Styles.setControlColor (Css.hex "#ff79c6")
                 |> Styles.setControlSelectedColor (Css.hex "#ff79c6")
+                |> Styles.setControlLoadingIndicatorColor (Css.hex "#ff79c6")
 
         menuBranding : Styles.MenuConfig
         menuBranding =
@@ -139,6 +140,7 @@ view m =
                         |> Select.searchable True
                         |> Select.setStyles baseBranding
                         |> Select.clearable True
+                        |> Select.loading True
                     )
                     (selectIdentifier "SingleSelectExample")
             ]
