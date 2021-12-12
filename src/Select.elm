@@ -1576,10 +1576,8 @@ viewMenu viewMenuData =
     case viewMenuData.viewableMenuItems of
         [] ->
             if viewMenuData.loading then
-                div [ StyledAttribs.css menuStyles ]
-                    [ div
-                        [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
-                        [ text "Loading..." ]
+                div [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
+                    [ text "Loading..."
                     ]
 
             else
