@@ -98,45 +98,6 @@ view m =
                 _ ->
                     Nothing
 
-        baseBranding : Styles.Config
-        baseBranding =
-            Styles.default
-                |> Styles.setControlStyles controlBranding
-                |> Styles.setMenuStyles menuBranding
-                |> Styles.setMenuItemStyles menuItemBranding
-
-        controlBranding : Styles.ControlConfig
-        controlBranding =
-            Styles.getControlConfig Styles.default
-                |> Styles.setControlBorderColor (Css.hex "#ff79c6")
-                |> Styles.setControlBorderColorHover (Css.hex "#ff79c6")
-                |> Styles.setControlBorderColorFocus (Css.hex "#ff79c6")
-                |> Styles.setControlBackgroundColorHover (Css.rgba 255 255 65 0.2)
-                |> Styles.setControlSeparatorColor (Css.hex "#ff79c6")
-                |> Styles.setControlDropdownIndicatorColor (Css.hex "#ff79c6")
-                |> Styles.setControlDropdownIndicatorColorHover (Css.hex "#e66db2")
-                |> Styles.setControlClearIndicatorColor (Css.hex "#ff79c6")
-                |> Styles.setControlClearIndicatorColorHover (Css.hex "#e66db2")
-                |> Styles.setControlBackgroundColor (Css.hex "#282a36")
-                |> Styles.setControlBackgroundColorHover (Css.hex "#282a36")
-                |> Styles.setControlColor (Css.hex "#ff79c6")
-                |> Styles.setControlSelectedColor (Css.hex "#ff79c6")
-                |> Styles.setControlLoadingIndicatorColor (Css.hex "#ff79c6")
-
-        menuBranding : Styles.MenuConfig
-        menuBranding =
-            Styles.getMenuConfig Styles.default
-                |> Styles.setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
-                |> Styles.setMenuBackgroundColor (Css.hex "#282a36")
-
-        menuItemBranding : Styles.MenuItemConfig
-        menuItemBranding =
-            Styles.getMenuItemConfig Styles.default
-                |> Styles.setMenuItemBackgroundColorNotSelected (Css.hex "#44475a")
-                |> Styles.setMenuItemBackgroundColorSelected (Css.hex "#ff79c6")
-                |> Styles.setMenuItemBackgroundColorClicked (Css.hex "#44475a")
-                |> Styles.setMenuItemColor (Css.hex "#aeaea9")
-
         withLoading config =
             case m.items of
                 Loading ->
@@ -177,7 +138,7 @@ view m =
                         |> Select.state m.selectState
                         |> Select.placeholder "Placeholder"
                         |> Select.searchable True
-                        |> Select.setStyles baseBranding
+                        |> Select.setStyles Styles.dracula
                         |> Select.clearable True
                         |> withLoading
                         |> withItems
