@@ -13,6 +13,10 @@ Select things in style!
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/NativeSingle.png)
 
+**Themeable**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
+
 ## Accessibility
 - Keyboard accessible
 - Screen reader accessible
@@ -208,7 +212,7 @@ __Opting in to Javascript optimization__
 *Your project will need a `package.json` file to use the @confidenceman02/elm-select npm package. You can use the 
 [example code](https://github.com/Confidenceman02/elm-select/tree/main/examples-optimized) as a reference to set up your project.*
 
-Set the [jsOptimize]() flag in your programs init function.
+Set the [jsOptimize](/packages/Confidenceman02/elm-select/2.0.2/Select#jsOptimize) flag wherever you are using [initState](/packages/Confidenceman02/elm-select/2.0.2/Select#initState).
 
 By default the flag is `False`.
 

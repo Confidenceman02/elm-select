@@ -1,9 +1,9 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, MenuConfig, MenuItemConfig, default, setControlStyles, setMenuStyles
-    , setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
+    ( Config, ControlConfig, MenuConfig, MenuItemConfig, default
+    , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
-    , setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
+    , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
     , setMenuItemColorHoverNotSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
@@ -15,45 +15,64 @@ module Select.Styles exposing
     , dracula
     )
 
-{-| Add custom styling to the select.
+{-| Add custom styling to the Select control, menu and menu item.
+
+![elm-select](https://Confidenceman02.github.io/elm-select/StylesModules.png)
 
 
 # Set up
 
-@docs Config, ControlConfig, MenuConfig, MenuItemConfig, default, setControlStyles, setMenuStyles
+Styles for the different sections of the Select all have their own configuration.
+This means when you are setting styles to the [MenuConfig](#MenuConfig) you can only use the
+[Setters](#setters) for the MenuConfig.
+
+NOTE: The [native](/packages/Confidenceman02/elm-select/latest/Select#singleNative) Select variant
+only respects some of the styles.
+
+@docs Config, ControlConfig, MenuConfig, MenuItemConfig, default
 
 
-# Set styles for control
+# Setters
 
-@docs setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
+Set styles
+
+
+## Control
+
+@docs setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlColor, setControlClearIndicatorColor
 @docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
 @docs setControlLoadingIndicatorColor, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
-# Set styles for menu
+# Menu
 
-@docs setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
+@docs setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
 
 
-# Set styles for menu item
+# Menu item
 
 @docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
 @docs setMenuItemColorHoverNotSelected
 
 
-# Get styles for control
+# Getters
+
+Get styles
+
+
+## Control
 
 @docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
 @docs getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
 
 
-# Get styles for menu
+# Menu
 
 @docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
 
 
-# Get styles for menu item
+# Menu item
 
 @docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
 
@@ -201,6 +220,10 @@ defaults =
 
 
 {-| The default styling for the select
+
+This is the [Config](#Config) that all select variants use if no styles
+have been configured.
+
 -}
 default : Config
 default =
@@ -387,18 +410,15 @@ setControlSeparatorColor c (ControlConfig config) =
 
 {-| Set styles for the select control
 
-        import Select.Styles as Styles
-
-
-        controlBranding : Styles.ControlConfig
+        controlBranding : ControlConfig
         controlBranding =
-            Styles.getControlConfig default
+            getControlConfig default
                 |> setControlBorderColor (Css.hex "#FFFFFF")
                 |> setControlBorderColorFocus (Css.hex "#0168B3")
 
-        selectBranding : Styles.Config
+        selectBranding : Config
         selectBranding
-            Styles.default
+            default
                 |> setControlStyles controlBranding
 
 -}
@@ -407,22 +427,19 @@ setControlStyles controlConfig (Config config) =
     Config { config | controlConfig = controlConfig }
 
 
-{-| Set styles for the select menu
-
-        import Select.Styles as Styles
-
+{-| Set styles for the Select menu
 
         menuBranding : MenuConfig
         menuBranding =
-            Styles.getMenuConfig Styles.default
+            getMenuConfig default
                 |> setMenuBackgroundColor (Css.hex "#000000")
                 |> setMenuBorderRadius 4
 
 
-        selectBranding : Styles.Config
+        selectBranding : Config
         selectBranding
-                Styles.default
-                    |> setMenuStyles menuBranding
+            default
+                |> setMenuStyles menuBranding
 
 -}
 setMenuStyles : MenuConfig -> Config -> Config
@@ -430,20 +447,17 @@ setMenuStyles menuConfig (Config config) =
     Config { config | menuConfig = menuConfig }
 
 
-{-| Set styles for select menu item
-
-        import Select.Styles as Styles
-
+{-| Set styles for Select menu item
 
         menuItemBranding : MenuItemConfig
         menuItemBranding =
-            Styles.getMenuItemConfig Styles.default
+            getMenuItemConfig default
                 |> setMenuItemBackgroundColorNotSelected (Css.hex "#000000")
 
 
-        selectBranding : Styles.Config
+        selectBranding : Config
         selectBranding
-                Styles.default
+                default
                     |> setMenuItemStyles menuItemBranding
 
 -}
@@ -458,16 +472,14 @@ setMenuItemStyles menuItemConfig (Config config) =
 
 {-| Get the MenuItemConfig
 
-    import Select.Styles as Styles
-
-    baseStyles : Styles.Config
+    baseStyles : Config
     baseStyles =
-        Styles.default
+        default
 
-    baseMenuStyles : Styles.MenuItemConfig
+    baseMenuStyles : MenuItemConfig
     baseMenuStyles =
-        Styles.getMenuItemConfig baseStyles
-            |> Styles.setMenuItemBackgroundColorSelected (Css.hex "#000000")
+        getMenuItemConfig baseStyles
+            |> setMenuItemBackgroundColorSelected (Css.hex "#000000")
 
 -}
 getMenuItemConfig : Config -> MenuItemConfig
@@ -515,18 +527,16 @@ getMenuItemColorHoverNotSelected (MenuItemConfig config) =
 -- GETTERS MENU STYLES
 
 
-{-| Get the MenuConfig
+{-| Get the [MenuConfig](#MenuConfig)
 
-    import Select.Styles as Styles
-
-    baseStyles : Styles.Config
+    baseStyles : Config
     baseStyles =
-        Styles.default
+        default
 
-    baseMenuStyles : Styles.MenuConfig
+    baseMenuStyles : MenuConfig
     baseMenuStyles =
-        Styles.getMenuConfig baseStyles
-            |> Styles.setMenuBorderRadius 4
+        getMenuConfig baseStyles
+            |> setMenuBorderRadius 4
 
 -}
 getMenuConfig : Config -> MenuConfig
@@ -574,18 +584,16 @@ getMenuBoxShadowVOffset (MenuConfig config) =
 -- GETTERS CONTROL STYLES
 
 
-{-| Get the ControlConfig
+{-| Get the [ControlConfig](#ControlConfig)
 
-    import Select.Styles as Styles
-
-    baseStyles : Styles.Config
+    baseStyles : Config
     baseStyles =
-        Styles.default
+        default
 
-    baseControlStyles : Styles.ControlConfig
+    baseControlStyles : ControlConfig
     baseControlStyles =
-        Styles.getControlConfig baseStyles
-            |> Styles.setControlBorderColor (Css.hex "ffffff")
+        getControlConfig baseStyles
+            |> setControlBorderColor (Css.hex "ffffff")
 
 -}
 getControlConfig : Config -> ControlConfig
@@ -683,7 +691,11 @@ getControlDisabledOpacity (ControlConfig config) =
     config.disabledOpacity
 
 
-{-| -}
+{-| A fun dark theme
+
+![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
+
+-}
 dracula : Config
 dracula =
     default

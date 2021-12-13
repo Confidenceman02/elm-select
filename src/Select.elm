@@ -468,17 +468,25 @@ color branding.
 
         import Select.Styles as Styles
 
-        branding : Styles.Config
-        branding =
-            Styles.controlDefault
+        baseStyles : Styles.Config
+        baseStyles =
+            Styles.default
+
+        controlBranding : Styles.ControlConfig
+        controlBranding =
+            Styles.getControlConfig baseStyles
                 |> Styles.setControlBorderColor (Css.hex "#FFFFFF")
                 |> Styles.setControlBorderColorFocus (Css.hex "#0168B3")
-                |> Styles.setControlStyles Styles.default
+
+        selectBranding : Styles.Config
+        selectBranding =
+          baseStyles
+              |> Styles.setControlStyles controlBranding
 
         yourView model =
             Html.map SelectMsg <|
                 view
-                    (single Nothing |> setStyles branding)
+                    (single Nothing |> setStyles selectBranding)
                     (selectIdentifier "1234")
 
 -}
