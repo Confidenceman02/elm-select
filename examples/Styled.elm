@@ -4,18 +4,27 @@ import Browser
 import Css
 import Html.Styled as Styled exposing (Html, div)
 import Html.Styled.Attributes as StyledAttribs
+import Process
 import Select exposing (MenuItem, initState, selectIdentifier, update)
 import Select.Styles as Styles
+import Task
 
 
 type Msg
     = SelectMsg (Select.Msg String)
+    | FetchedItems
+
+
+type Items
+    = Loading
+    | Loaded (List (MenuItem String))
 
 
 type alias Model =
     { selectState : Select.State
-    , items : List (MenuItem String)
+    , items : Items
     , selectedItem : Maybe String
+    , selectedItems : List (Select.MenuItem String)
     }
 
 
@@ -23,12 +32,10 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elm", label = "Elm" }
-            , { item = "Is", label = "Is" }
-            , { item = "Really", label = "Really" }
-            , { item = "Great", label = "Great" }
-            ]
+            Loaded
+                []
       , selectedItem = Nothing
+      , selectedItems = []
       }
     , Cmd.none
     )
@@ -52,15 +59,40 @@ update msg model =
                 ( maybeAction, selectState, cmds ) =
                     Select.update sm model.selectState
 
-                updatedSelectedItem =
+                ( updatedModel, actionCmds ) =
                     case maybeAction of
                         Just (Select.Select i) ->
-                            Just i |> Debug.log "Selected"
+                            ( { model
+                                | selectState = selectState
+                                , selectedItem = Just i
+                                , selectedItems = model.selectedItems ++ [ { label = i, item = i } ]
+                              }
+                            , Cmd.none
+                            )
+
+                        Just (Select.InputChange i) ->
+                            ( { model | items = Loading, selectState = selectState }
+                            , Task.perform (\_ -> FetchedItems)
+                                (Process.sleep 1000)
+                            )
 
                         _ ->
-                            model.selectedItem
+                            ( { model | selectState = selectState }, Cmd.none )
             in
-            ( { model | selectState = selectState, selectedItem = updatedSelectedItem }, Cmd.map SelectMsg cmds )
+            ( updatedModel, Cmd.batch [ Cmd.map SelectMsg cmds, actionCmds ] )
+
+        FetchedItems ->
+            ( { model
+                | items =
+                    Loaded
+                        [ { item = "Elm", label = "Elm" }
+                        , { item = "Really", label = "Really" }
+                        , { item = "Inspires", label = "Inspires" }
+                        , { item = "Learning", label = "Learning" }
+                        ]
+              }
+            , Cmd.none
+            )
 
 
 view : Model -> Html Msg
@@ -74,43 +106,61 @@ view m =
                 _ ->
                     Nothing
 
-        baseBranding : Styles.Config
-        baseBranding =
-            Styles.default
-                |> Styles.setControlStyles controlBranding
-                |> Styles.setMenuStyles menuBranding
+        withLoading config =
+            case m.items of
+                Loading ->
+                    Select.loading True config
 
-        controlBranding : Styles.ControlConfig
-        controlBranding =
-            Styles.getControlConfig Styles.default
-                |> Styles.setControlBorderColor (Css.hex "#FF0018")
-                |> Styles.setControlBorderColorHover (Css.hex "#FF0018")
-                |> Styles.setControlBorderColorFocus (Css.hex "#FF0018")
-                |> Styles.setControlBackgroundColorHover (Css.rgba 255 255 65 0.2)
-                |> Styles.setControlSeparatorColor (Css.rgba 0 128 24 1)
-                |> Styles.setControlDropdownIndicatorColor (Css.rgba 0 128 24 1)
+                Loaded items ->
+                    Select.loading False config
 
-        menuBranding : Styles.MenuConfig
-        menuBranding =
-            Styles.getMenuConfig Styles.default
-                |> Styles.setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
+        withItems config =
+            case m.items of
+                Loaded i ->
+                    Select.menuItems i config
+
+                Loading ->
+                    Select.menuItems [] config
     in
     div
         [ StyledAttribs.css
-            [ Css.marginTop (Css.px 20)
-            , Css.width (Css.pct 50)
-            , Css.marginLeft Css.auto
-            , Css.marginRight Css.auto
+            [ Css.position Css.absolute
+            , Css.left (Css.px 0)
+            , Css.right (Css.px 0)
+            , Css.top (Css.px 0)
+            , Css.bottom (Css.px 0)
+            , Css.backgroundColor (Css.hex "#0D1117")
             ]
         ]
-        [ Styled.map SelectMsg <|
-            Select.view
-                (Select.single selectedItem
-                    |> Select.state m.selectState
-                    |> Select.menuItems m.items
-                    |> Select.placeholder "Placeholder"
-                    |> Select.searchable False
-                    |> Select.setStyles baseBranding
-                )
-                (selectIdentifier "SingleSelectExample")
+        [ div
+            [ StyledAttribs.css
+                [ Css.marginTop (Css.px 20)
+                , Css.width (Css.pct 50)
+                , Css.marginLeft Css.auto
+                , Css.marginRight Css.auto
+                ]
+            ]
+            [ Styled.map SelectMsg <|
+                Select.view
+                    (Select.single selectedItem
+                        |> Select.state m.selectState
+                        |> Select.placeholder "Placeholder"
+                        |> Select.searchable True
+                        |> Select.setStyles Styles.dracula
+                        |> Select.clearable True
+                        |> withLoading
+                        -- |> Select.menuItems allItems
+                        |> withItems
+                    )
+                    (selectIdentifier "SingleSelectExample")
+            ]
         ]
+
+
+allItems : List (Select.MenuItem String)
+allItems =
+    [ { item = "Elm", label = "Elm" }
+    , { item = "Really", label = "Really" }
+    , { item = "Inspires", label = "Inspires" }
+    , { item = "Learning", label = "Learning" }
+    ]

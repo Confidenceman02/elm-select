@@ -200,6 +200,7 @@ type alias ViewMenuItemData item =
     , menuNavigation : MenuNavigation
     , initialMousedown : InitialMousedown
     , variant : Variant item
+    , menuItemStyles : Styles.MenuItemConfig
     }
 
 
@@ -212,6 +213,7 @@ type alias ViewMenuData item =
     , menuNavigation : MenuNavigation
     , loading : Bool
     , menuStyles : Styles.MenuConfig
+    , menuItemStyles : Styles.MenuItemConfig
     }
 
 
@@ -241,7 +243,7 @@ type alias ViewDummyInputData item =
 
 
 type alias ViewNativeData item =
-    { styles : Styles.Config
+    { controlStyles : Styles.ControlConfig
     , variant : NativeVariant item
     , menuItems : List (MenuItem item)
     , selectId : SelectId
@@ -466,17 +468,25 @@ color branding.
 
         import Select.Styles as Styles
 
-        branding : Styles.Config
-        branding =
-            Styles.controlDefault
+        baseStyles : Styles.Config
+        baseStyles =
+            Styles.default
+
+        controlBranding : Styles.ControlConfig
+        controlBranding =
+            Styles.getControlConfig baseStyles
                 |> Styles.setControlBorderColor (Css.hex "#FFFFFF")
                 |> Styles.setControlBorderColorFocus (Css.hex "#0168B3")
-                |> Styles.setControlStyles Styles.default
+
+        selectBranding : Styles.Config
+        selectBranding =
+          baseStyles
+              |> Styles.setControlStyles controlBranding
 
         yourView model =
             Html.map SelectMsg <|
                 view
-                    (single Nothing |> setStyles branding)
+                    (single Nothing |> setStyles selectBranding)
                     (selectIdentifier "1234")
 
 -}
@@ -1184,12 +1194,15 @@ view (Config config) selectId =
         selectWrapper =
             viewWrapper config
                 selectId
+
+        controlStyles =
+            Styles.getControlConfig config.styles
     in
     selectWrapper
         (case config.variant of
             Native variant ->
                 [ viewNative
-                    (ViewNativeData config.styles variant config.menuItems selectId config.labelledBy config.ariaDescribedBy)
+                    (ViewNativeData controlStyles variant config.menuItems selectId config.labelledBy config.ariaDescribedBy)
                 , span
                     [ StyledAttribs.css
                         [ Css.position Css.absolute
@@ -1200,7 +1213,7 @@ view (Config config) selectId =
                         , Css.pointerEvents Css.none
                         ]
                     ]
-                    [ dropdownIndicator config.styles False ]
+                    [ dropdownIndicator controlStyles False ]
                 ]
 
             _ ->
@@ -1208,7 +1221,7 @@ view (Config config) selectId =
                   let
                     controlFocusedStyles =
                         if state_.controlUiFocused then
-                            [ controlBorderFocused config.styles ]
+                            [ controlBorderFocused controlStyles ]
 
                         else
                             []
@@ -1217,7 +1230,8 @@ view (Config config) selectId =
                     -- control
                     (StyledAttribs.css
                         ([ Css.alignItems Css.center
-                         , Css.backgroundColor (Styles.getControlBackgroundColor config.styles)
+                         , Css.backgroundColor (Styles.getControlBackgroundColor controlStyles)
+                         , Css.color (Styles.getControlColor controlStyles)
                          , Css.cursor Css.default
                          , Css.displayFlex
                          , Css.flexWrap Css.wrap
@@ -1225,14 +1239,14 @@ view (Config config) selectId =
                          , Css.minHeight (Css.px controlHeight)
                          , Css.position Css.relative
                          , Css.boxSizing Css.borderBox
-                         , controlBorder config.styles
+                         , controlBorder controlStyles
                          , Css.borderRadius (Css.px controlRadius)
                          , Css.outline Css.zero
                          , if config.disabled then
-                            controlDisabled config.styles
+                            controlDisabled controlStyles
 
                            else
-                            controlHover config.styles
+                            controlHover controlStyles
                          ]
                             ++ controlFocusedStyles
                         )
@@ -1287,7 +1301,7 @@ view (Config config) selectId =
                                     text ""
 
                                 Single (Just v) ->
-                                    viewSelectedPlaceholder v
+                                    viewSelectedPlaceholder (Styles.getControlConfig config.styles) v
 
                                 Single Nothing ->
                                     viewPlaceholder config
@@ -1380,17 +1394,17 @@ view (Config config) selectId =
                         , div [ StyledAttribs.css indicatorContainerStyles ]
                             [ span
                                 [ StyledAttribs.css
-                                    [ Css.color (Styles.getControlLoadingIndicatorColor config.styles)
+                                    [ Css.color (Styles.getControlLoadingIndicatorColor controlStyles)
                                     , Css.height (Css.px 20)
                                     ]
                                 ]
                                 [ resolveLoadingSpinner ]
                             ]
-                        , indicatorSeparator config.styles
+                        , indicatorSeparator controlStyles
                         , -- indicatorContainer
                           div
                             [ StyledAttribs.css indicatorContainerStyles ]
-                            [ dropdownIndicator config.styles config.disabled
+                            [ dropdownIndicator controlStyles config.disabled
                             ]
                         ]
                     , Internal.viewIf state_.menuOpen
@@ -1404,6 +1418,7 @@ view (Config config) selectId =
                                 state_.menuNavigation
                                 config.isLoading
                                 (Styles.getMenuConfig config.styles)
+                                (Styles.getMenuItemConfig config.styles)
                             )
                         )
                     ]
@@ -1459,16 +1474,16 @@ viewNative viewNativeData =
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
                     , Css.borderRadius (Css.px controlRadius)
-                    , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.styles)
-                    , controlBorder viewNativeData.styles
+                    , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.controlStyles)
+                    , controlBorder viewNativeData.controlStyles
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
-                    , Css.color (Css.hex "#000000")
+                    , Css.color (Styles.getControlColor viewNativeData.controlStyles)
                     , Css.fontSize (Css.px 16)
                     , Css.focus
-                        [ controlBorderFocused viewNativeData.styles, Css.outline Css.none ]
-                    , controlHover viewNativeData.styles
+                        [ controlBorderFocused viewNativeData.controlStyles, Css.outline Css.none ]
+                    , controlHover viewNativeData.controlStyles
                     ]
                  ]
                     ++ withLabelledBy
@@ -1569,10 +1584,8 @@ viewMenu viewMenuData =
     case viewMenuData.viewableMenuItems of
         [] ->
             if viewMenuData.loading then
-                div [ StyledAttribs.css menuStyles ]
-                    [ div
-                        [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
-                        [ text "Loading..." ]
+                div [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
+                    [ text "Loading..."
                     ]
 
             else
@@ -1595,7 +1608,14 @@ viewMenu viewMenuData =
                     ++ resolveAttributes
                 )
                 (List.indexedMap
-                    (buildMenuItem viewMenuData.selectId viewMenuData.variant viewMenuData.initialMousedown viewMenuData.activeTargetIndex viewMenuData.menuNavigation)
+                    (buildMenuItem
+                        viewMenuData.menuItemStyles
+                        viewMenuData.selectId
+                        viewMenuData.variant
+                        viewMenuData.initialMousedown
+                        viewMenuData.activeTargetIndex
+                        viewMenuData.menuNavigation
+                    )
                     viewMenuData.viewableMenuItems
                 )
 
@@ -1638,21 +1658,25 @@ viewMenuItem viewMenuItemData =
 
                 withTargetStyles =
                     if data.menuItemIsTarget && not data.itemSelected then
-                        [ Css.color (Css.hex "#0168B3"), Css.backgroundColor (Css.hex "#E6F0F7") ]
+                        [ Css.color (Styles.getMenuItemColorHoverNotSelected viewMenuItemData.menuItemStyles)
+                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected viewMenuItemData.menuItemStyles)
+                        ]
 
                     else
                         []
 
                 withIsClickedStyles =
                     if data.isClickFocused then
-                        [ Css.backgroundColor (Css.hex "#E6F0F7") ]
+                        [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked viewMenuItemData.menuItemStyles) ]
 
                     else
                         []
 
                 withIsSelectedStyles =
                     if data.itemSelected then
-                        [ Css.backgroundColor (Css.hex "#E6F0F7"), Css.hover [ Css.color (Css.hex "#0168B3") ] ]
+                        [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected viewMenuItemData.menuItemStyles)
+                        , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected viewMenuItemData.menuItemStyles) ]
+                        ]
 
                     else
                         []
@@ -1675,8 +1699,7 @@ viewMenuItem viewMenuItemData =
                  , on "mouseover" <| Decode.succeed (HoverFocused data.index)
                  , id (menuItemId data.selectId data.index)
                  , StyledAttribs.css
-                    ([ Css.backgroundColor Css.transparent
-                     , Css.color Css.inherit
+                    ([ Css.color Css.inherit
                      , Css.cursor Css.default
                      , Css.display Css.block
                      , Css.fontSize Css.inherit
@@ -1684,11 +1707,9 @@ viewMenuItem viewMenuItemData =
                      , Css.property "user-select" "none"
                      , Css.boxSizing Css.borderBox
                      , Css.borderRadius (Css.px 4)
-
-                     -- kaizen uses a calc here
                      , Css.padding2 (Css.px 8) (Css.px 8)
                      , Css.outline Css.none
-                     , Css.color (Css.hex "#000000")
+                     , Css.color (Styles.getMenuItemColor viewMenuItemData.menuItemStyles)
                      ]
                         ++ withTargetStyles
                         ++ withIsClickedStyles
@@ -1709,28 +1730,33 @@ viewMenuItem viewMenuItemData =
 
 viewPlaceholder : Configuration item -> Html (Msg item)
 viewPlaceholder config =
+    let
+        controlStyles =
+            Styles.getControlConfig config.styles
+    in
     div
         [ -- baseplaceholder
           StyledAttribs.css
-            (placeholderStyles config.styles)
+            (placeholderStyles controlStyles)
         ]
         [ text config.placeholder ]
 
 
-viewSelectedPlaceholder : MenuItem item -> Html (Msg item)
-viewSelectedPlaceholder item =
+viewSelectedPlaceholder : Styles.ControlConfig -> MenuItem item -> Html (Msg item)
+viewSelectedPlaceholder controlStyles item =
     let
         addedStyles =
             [ Css.maxWidth (Css.calc (Css.pct 100) Css.minus (Css.px 8))
             , Css.textOverflow Css.ellipsis
             , Css.whiteSpace Css.noWrap
             , Css.overflow Css.hidden
+            , Css.color (Styles.getControlSelectedColor controlStyles)
+            , Css.fontWeight (Css.int 400)
             ]
     in
     div
         [ StyledAttribs.css
             (basePlaceholder
-                ++ bold
                 ++ addedStyles
             )
         , attribute "data-test-id" "selectedItem"
@@ -2086,16 +2112,36 @@ buildMenuItems config state_ =
             []
 
 
-buildMenuItem : SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
-buildMenuItem selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
+buildMenuItem : Styles.MenuItemConfig -> SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
+buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
     case variant of
         Single maybeSelectedItem ->
             viewMenuItem <|
-                ViewMenuItemData idx (isSelected item maybeSelectedItem) (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
+                ViewMenuItemData
+                    idx
+                    (isSelected item maybeSelectedItem)
+                    (isMenuItemClickFocused initialMousedown idx)
+                    (isTarget activeTargetIndex idx)
+                    selectId
+                    item
+                    menuNavigation
+                    initialMousedown
+                    variant
+                    menuItemStyles
 
         _ ->
             viewMenuItem <|
-                ViewMenuItemData idx False (isMenuItemClickFocused initialMousedown idx) (isTarget activeTargetIndex idx) selectId item menuNavigation initialMousedown variant
+                ViewMenuItemData
+                    idx
+                    False
+                    (isMenuItemClickFocused initialMousedown idx)
+                    (isTarget activeTargetIndex idx)
+                    selectId
+                    item
+                    menuNavigation
+                    initialMousedown
+                    variant
+                    menuItemStyles
 
 
 filterMenuItem : Maybe String -> MenuItem item -> Bool
@@ -2203,7 +2249,7 @@ basePlaceholder =
     ]
 
 
-placeholderStyles : Styles.Config -> List Css.Style
+placeholderStyles : Styles.ControlConfig -> List Css.Style
 placeholderStyles styles =
     Css.opacity (Css.num (Styles.getControlPlaceholderOpacity styles)) :: basePlaceholder
 
@@ -2226,6 +2272,9 @@ clearIndicator config id =
 
             else
                 [ Css.height (Css.px 16), Css.cursor Css.pointer ]
+
+        controlStyles =
+            Styles.getControlConfig config.styles
     in
     button
         [ custom "mousedown" <|
@@ -2241,9 +2290,9 @@ clearIndicator config id =
         ]
         [ span
             [ StyledAttribs.css
-                [ Css.color <| Styles.getControlClearIndicatorColor config.styles
+                [ Css.color <| Styles.getControlClearIndicatorColor controlStyles
                 , Css.displayFlex
-                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover config.styles) ]
+                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover controlStyles) ]
                 ]
             ]
             [ ClearIcon.view
@@ -2251,12 +2300,12 @@ clearIndicator config id =
         ]
 
 
-indicatorSeparator : Styles.Config -> Html msg
-indicatorSeparator styles =
+indicatorSeparator : Styles.ControlConfig -> Html msg
+indicatorSeparator controlStyles =
     span
         [ StyledAttribs.css
             [ Css.alignSelf Css.stretch
-            , Css.backgroundColor (Styles.getControlSeparatorColor styles)
+            , Css.backgroundColor (Styles.getControlSeparatorColor controlStyles)
             , Css.marginBottom (Css.px 8)
             , Css.marginTop (Css.px 8)
             , Css.width (Css.px 1)
@@ -2266,8 +2315,8 @@ indicatorSeparator styles =
         []
 
 
-dropdownIndicator : Styles.Config -> Bool -> Html msg
-dropdownIndicator styles disabledInput =
+dropdownIndicator : Styles.ControlConfig -> Bool -> Html msg
+dropdownIndicator controlStyles disabledInput =
     let
         resolveIconButtonStyles =
             if disabledInput then
@@ -2277,8 +2326,8 @@ dropdownIndicator styles disabledInput =
             else
                 [ Css.height (Css.px 20)
                 , Css.cursor Css.pointer
-                , Css.color (Styles.getControlDropdownIndicatorColor styles)
-                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover styles) ]
+                , Css.color (Styles.getControlDropdownIndicatorColor controlStyles)
+                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover controlStyles) ]
                 ]
     in
     span
@@ -2311,13 +2360,6 @@ menuMarginTop =
     8
 
 
-bold : List Css.Style
-bold =
-    [ Css.color (Css.hex "#35374A")
-    , Css.fontWeight (Css.int 400)
-    ]
-
-
 listBoxPaddingBottom : Float
 listBoxPaddingBottom =
     6
@@ -2343,24 +2385,24 @@ controlHeight =
     48
 
 
-controlBorder : Styles.Config -> Css.Style
-controlBorder styles =
-    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor styles)
+controlBorder : Styles.ControlConfig -> Css.Style
+controlBorder controlStyles =
+    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor controlStyles)
 
 
-controlBorderFocused : Styles.Config -> Css.Style
+controlBorderFocused : Styles.ControlConfig -> Css.Style
 controlBorderFocused styles =
     Css.borderColor (Styles.getControlBorderColorFocus styles)
 
 
-controlDisabled : Styles.Config -> Css.Style
-controlDisabled styles =
-    Css.opacity (Css.num (Styles.getControlDisabledOpacity styles))
+controlDisabled : Styles.ControlConfig -> Css.Style
+controlDisabled controlStyles =
+    Css.opacity (Css.num (Styles.getControlDisabledOpacity controlStyles))
 
 
-controlHover : Styles.Config -> Css.Style
-controlHover styles =
+controlHover : Styles.ControlConfig -> Css.Style
+controlHover controlStyles =
     Css.hover
-        [ Css.backgroundColor (Styles.getControlBackgroundColorHover styles)
-        , Css.borderColor (Styles.getControlBorderColorHover styles)
+        [ Css.backgroundColor (Styles.getControlBackgroundColorHover controlStyles)
+        , Css.borderColor (Styles.getControlBorderColorHover controlStyles)
         ]

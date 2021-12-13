@@ -1,9 +1,9 @@
 {
     "type": "package",
     "name": "Confidenceman02/elm-select",
-    "summary": "A Handsome configurable select inspired by Culture Amp's Kaizen select.",
+    "summary": "A Handsome flexible select!",
     "license": "BSD-3-Clause",
-    "version": "2.0.2",
+    "version": "3.0.0",
     "exposed-modules": [
         "Select",
         "Select.Styles"

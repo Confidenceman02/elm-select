@@ -13,11 +13,13 @@ Select things in style!
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/NativeSingle.png)
 
+**Themeable**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
+
 ## Accessibility
 - Keyboard accessible
 - Screen reader accessible
-
-NOTE: The multi select variant has accessibility features missing that will be added in future versions. You can read what those are in the [Still to come](#still-to-come) section.
 
 ## Styled with elm-css
 In the case your program is not using [elm-css]() already, an extra step will be required to make everything work. 
@@ -210,7 +212,7 @@ __Opting in to Javascript optimization__
 *Your project will need a `package.json` file to use the @confidenceman02/elm-select npm package. You can use the 
 [example code](https://github.com/Confidenceman02/elm-select/tree/main/examples-optimized) as a reference to set up your project.*
 
-Set the [jsOptimize]() flag in your programs init function.
+Set the [jsOptimize](/packages/Confidenceman02/elm-select/2.0.2/Select#jsOptimize) flag wherever you are using [initState](/packages/Confidenceman02/elm-select/2.0.2/Select#initState).
 
 By default the flag is `False`.
 
@@ -268,22 +270,3 @@ Elm.Main.init({
   flags: // your flags
 })
 ```
-
-
-# Still to come
-__Accessibility__
-- Multi select tags to be keyboard navigable and dismissible.
-- Selected multi select items announced by screen reader.
-  
-__Customisable view elements__
-
-**Why?:** Elm-select view elements are not very customisable. there is not much flexibility to allow consumers to "brand" the Select.
-
-**How?:**
-- Expand the Select configuration to allow for custom styling. 
-- Allow consumers to entirely replace Select view elements with their own custom views.
-
-__Native variant consistency__  
-- [Loading](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#disabled) config support
-- [LabelledBy](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#labelledBy) config support
-- [Disabled](package.elm-lang.org/packages/Confidenceman02/elm-select/latest/Select#disabled) config support

@@ -68,7 +68,7 @@ view =
 
 svgCommonStyles : List (Svg.Styled.Attribute msg)
 svgCommonStyles =
-    [ width "29", height "5", viewBox "0 0 32 8", fill "currentColor" ]
+    [ fill "currentColor", width "29", height "5", viewBox "0 0 32 8" ]
 
 
 
