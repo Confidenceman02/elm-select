@@ -133,7 +133,8 @@ It's not a solid fix but it fails much less.
 
 ### Added
 
-- Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
+- Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
+
 [3.0.2]: https://github.com/Confidenceman02/elm-select/compare/3.0.1...3.0.2
 [3.0.1]: https://github.com/Confidenceman02/elm-select/compare/3.0.0...3.0.1
 [3.0.0]: https://github.com/Confidenceman02/elm-select/compare/2.0.2...3.0.0
