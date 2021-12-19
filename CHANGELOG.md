@@ -1,6 +1,9 @@
 ## [3.0.0] - 2021-12-13
 
 ## Added
+- CHANGELOG.md file
+
+## Added
 - Configurable styles for menu item variant.
 - Create dracula dark theme styles.
 
