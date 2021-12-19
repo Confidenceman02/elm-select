@@ -1,0 +1,142 @@
+## [3.0.0] - 2021-12-13
+
+## Added
+- CHANGELOG.md file
+
+## Added
+- Configurable styles for menu item variant.
+- Create dracula dark theme styles.
+
+## Fixed 
+- Loading message styles.
+
+## [2.0.2] - 2021-12-07
+
+## Added
+- Updated dependencies.
+
+## [2.0.1] - 2021-12-07
+
+## Fixed
+- Broken/missing dependency `matken11235/html-styled-extra`.
+
+## [2.0.0] - 2021-12-01
+
+## Added
+- Configurable styles for menu.
+
+## Breaking changes
+- Default style configs now must be extracted from a base config.
+Previously you could use a default config for the control, menu or menu items.
+```
+seectBranding =
+    Styles.controlDefault
+        |> Styles.setControlBorderColor (Css.hex "#C93B55")
+        |> Styles.setControlStyles Styles.default
+```
+Now these configs can only be extracted from a default `Config`.
+
+```
+selectBranding =
+    Styles.default
+        |> Styles.setControlStyles controlBranding
+
+controlBranding
+    Styles.getControlConfig Styles.default
+        |> Styles.setControlBorderColor (Css.hex "#C93B55")
+```
+
+## [1.5.1] - 2021-11-30
+
+## Fixed
+- Example error in README.md documentation.
+
+## [1.5.0] - 2021-11-24
+
+## Added
+- Modifier for ariaDescribedBy for all variants.
+
+## [1.4.0] - 2021-11-23
+
+## Added 
+- Configurable background color for control styles.
+
+## [1.3.0] - 2021-11-22
+
+## Added 
+- Styles configuration for select variants to determine basic styles.
+- Example for setting custom styles.
+
+## Changed
+- Internal modules to live in the `Select` directory.
+
+## Fixed
+- Flaky CI test. Bumped the wait time incase the palywritght runtime was too eager.
+It's not a solid fix but it fails much less.
+- ClearIcon.elm color issues by adding a fill attribute and setting to currentColor.
+- DotLoadingIcon.elm color issues by adding a fill attribute and setting to currentColor.
+- DropDownIcon.elm color issues by adding a fill attribute and setting to currentColor.
+
+## [1.2.0] - 2021-11-19
+
+## Added 
+
+- Expose searcheable modifier to make menu items searchable.
+- Add tests for non searchable variant.
+
+## [1.1.0] - 2021-11-14
+
+## Added
+
+- Native select variant.
+- Native select docs to `README.md`.
+
+## [1.0.3] - 2021-08-08
+
+## Added 
+
+- Confidenceman02/elm-select:1.0.2 to examples.
+- README.md for examples.
+- README.md for exmaples-optimized.
+- Pics to README.md documentation.
+- optimized examples to their own directory `examples-optimized`.
+
+## Changed
+
+- example mmodule names.
+
+## Fixed
+
+- Truncation example `Truncation.elm` which was using the wrong init function name.
+
+## [1.0.2] - 2021-07-19
+
+### Added
+
+- ts declaration files to bundled package.
+- Added tsc to build script.
+
+## [1.0.1] - 2021-07-19
+
+### Added
+
+- Confidenceman02/elm-select npm package for javascript optimized example.
+
+## [1.0.0] - 2021-07-19
+
+### Added
+
+- Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
+[3.0.0]: https://github.com/Confidenceman02/elm-select/compare/2.0.2...3.0.0
+[2.0.2]: https://github.com/Confidenceman02/elm-select/compare/2.0.1...2.0.2
+[2.0.1]: https://github.com/Confidenceman02/elm-select/compare/2.0.0...2.0.1
+[2.0.0]: https://github.com/Confidenceman02/elm-select/compare/1.5.0...2.0.0
+[1.5.0]: https://github.com/Confidenceman02/elm-select/compare/1.4.0...1.5.0
+[1.4.0]: https://github.com/Confidenceman02/elm-select/compare/1.3.0...1.4.0
+[1.3.0]: https://github.com/Confidenceman02/elm-select/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/Confidenceman02/elm-select/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/Confidenceman02/elm-select/compare/1.0.3...1.1.0
+[1.0.3]: https://github.com/Confidenceman02/elm-select/compare/1.0.2...1.0.3
+[1.0.2]: https://github.com/Confidenceman02/elm-select/compare/1.0.1...1.0.2
+[1.0.1]: https://github.com/Confidenceman02/elm-select/compare/1.0.0...1.0.1
+[1.0.0]: https://github.com/Confidenceman02/elm-select/releases/1.0.0
