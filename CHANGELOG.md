@@ -1,3 +1,9 @@
+## [3.1.0] - 2021-12-23
+
+## Added 
+- loadingMessage modifier for setting loading message when there are no
+matching items.
+
 ## [3.0.2] - 2021-12-19
 
 ## Fixed 
@@ -135,6 +141,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[3.1.0]: https://github.com/Confidenceman02/elm-select/compare/3.0.2...3.1.0
 [3.0.2]: https://github.com/Confidenceman02/elm-select/compare/3.0.1...3.0.2
 [3.0.1]: https://github.com/Confidenceman02/elm-select/compare/3.0.0...3.0.1
 [3.0.0]: https://github.com/Confidenceman02/elm-select/compare/2.0.2...3.0.0
