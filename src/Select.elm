@@ -3,7 +3,7 @@ module Select exposing
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
-    , disabled, labelledBy, ariaDescribedBy, loading
+    , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
     )
 
@@ -32,7 +32,7 @@ module Select exposing
 
 # Common
 
-@docs disabled, labelledBy, ariaDescribedBy, loading
+@docs disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
 
 
 # Advanced
@@ -212,6 +212,7 @@ type alias ViewMenuData item =
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
     , loading : Bool
+    , loadingMessage : String
     , menuStyles : Styles.MenuConfig
     , menuItemStyles : Styles.MenuItemConfig
     }
@@ -259,6 +260,7 @@ type alias MenuListBoundaries =
 type alias Configuration item =
     { variant : Variant item
     , isLoading : Bool
+    , loadingMessage : String
     , state : State
     , menuItems : List (MenuItem item)
     , searchable : Bool
@@ -379,6 +381,7 @@ defaults : Configuration item
 defaults =
     { variant = Single Nothing
     , isLoading = False
+    , loadingMessage = "Loading..."
     , state = initState
     , placeholder = "Select..."
     , menuItems = []
@@ -611,6 +614,20 @@ This would be useful if you are loading menu options asynchronously, like from a
 loading : Bool -> Config item -> Config item
 loading predicate (Config config) =
     Config { config | isLoading = predicate }
+
+
+{-| Displays when there are no matched menu items and [loading](#loading) is True.
+
+        yourView model =
+            Html.map SelectMsg <|
+                view
+                    (single Nothing |> loadingMessage "Fetching items...")
+                    (selectIdentifier "SingleSelectExample")
+
+-}
+loadingMessage : String -> Config item -> Config item
+loadingMessage m (Config config) =
+    Config { config | loadingMessage = m }
 
 
 {-| The element ID of the label for the select.
@@ -1417,6 +1434,7 @@ view (Config config) selectId =
                                 state_.activeTargetIndex
                                 state_.menuNavigation
                                 config.isLoading
+                                config.loadingMessage
                                 (Styles.getMenuConfig config.styles)
                                 (Styles.getMenuItemConfig config.styles)
                             )
@@ -1585,7 +1603,7 @@ viewMenu viewMenuData =
         [] ->
             if viewMenuData.loading then
                 div [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
-                    [ text "Loading..."
+                    [ text viewMenuData.loadingMessage
                     ]
 
             else
