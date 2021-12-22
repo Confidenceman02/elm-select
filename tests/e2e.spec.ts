@@ -164,6 +164,19 @@ describe("NativeSingle", () => {
   });
 });
 
+describe("Async", () => {
+  it("renders a loading message when no items match input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/MultiAsync.elm`);
+    await page.type("[data-test-id=selectInput]", "122333");
+
+    const loadingTextVisible = await page.isVisible("text=Loading...");
+
+    expect(loadingTextVisible).toBeTruthy;
+  });
+});
+
 describe("Keyboard ArrowDown", () => {
   it("displays list box for searchable", async () => {
     await browser.newContext();
