@@ -841,13 +841,14 @@ update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
         InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
-          let
-              resolveIndex =
-                if hasCurrentSelection then 
-                  selectedOptionIndex
-                else
-                  selectedOptionIndex - 1
-          in
+            let
+                resolveIndex =
+                    if hasCurrentSelection then
+                        selectedOptionIndex
+
+                    else
+                        selectedOptionIndex - 1
+            in
             case ListExtra.getAt resolveIndex allMenuItems of
                 Nothing ->
                     ( Nothing, State state_, Cmd.none )
@@ -1482,9 +1483,12 @@ viewNative viewNativeData =
                             text ""
 
                         _ ->
-                            option [
-                                StyledAttribs.hidden True, StyledAttribs.selected True, 
-                              StyledAttribs.disabled True] [ text ("(" ++ viewNativeData.placeholder ++ ")") ]
+                            option
+                                [ StyledAttribs.hidden True
+                                , StyledAttribs.selected True
+                                , StyledAttribs.disabled True
+                                ]
+                                [ text ("(" ++ viewNativeData.placeholder ++ ")") ]
 
                 buildList item =
                     option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
@@ -1507,12 +1511,14 @@ viewNative viewNativeData =
 
                         _ ->
                             []
-                hasCurrentSelection = 
-                  case maybeSelectedItem of 
-                    Just _ ->
-                      True
-                    _ ->
-                      False
+
+                hasCurrentSelection =
+                    case maybeSelectedItem of
+                        Just _ ->
+                            True
+
+                        _ ->
+                            False
             in
             select
                 ([ id ("native-single-select-" ++ selectId)
@@ -1538,7 +1544,7 @@ viewNative viewNativeData =
                     ++ withLabelledBy
                     ++ withAriaDescribedBy
                 )
-                (withPlaceholder ::(List.map buildList viewNativeData.menuItems))
+                (withPlaceholder :: List.map buildList viewNativeData.menuItems)
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
