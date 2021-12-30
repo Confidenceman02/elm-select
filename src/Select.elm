@@ -1473,12 +1473,12 @@ viewNative viewNativeData =
                 withPlaceholder =
                     case maybeSelectedItem of
                         Just _ ->
+                            text ""
+
+                        _ ->
                             option [
                                 StyledAttribs.hidden True, StyledAttribs.selected True, 
                               StyledAttribs.disabled True] [ text ("(" ++ viewNativeData.placeholder ++ ")") ]
-
-                        _ ->
-                            text ""
 
                 buildList item =
                     option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
