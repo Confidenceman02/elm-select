@@ -22,8 +22,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "No Selection", label = "No Selection" }
-            , { item = "Elm", label = "Elm" }
+            [ { item = "Elm", label = "Elm" }
             , { item = "Is", label = "Is" }
             , { item = "Really", label = "Really" }
             , { item = "Great", label = "Great" }
@@ -79,6 +78,7 @@ view m =
                 (Select.singleNative (Just selectedItem)
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
+                    |> Select.placeholder "Select something"
                 )
                 (selectIdentifier "SingleSelectExample")
         ]
