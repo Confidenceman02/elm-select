@@ -250,6 +250,7 @@ type alias ViewNativeData item =
     , selectId : SelectId
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
+    , placeholder : String
     }
 
 
@@ -1219,7 +1220,14 @@ view (Config config) selectId =
         (case config.variant of
             Native variant ->
                 [ viewNative
-                    (ViewNativeData controlStyles variant config.menuItems selectId config.labelledBy config.ariaDescribedBy)
+                    (ViewNativeData controlStyles
+                        variant
+                        config.menuItems
+                        selectId
+                        config.labelledBy
+                        config.ariaDescribedBy
+                        config.placeholder
+                    )
                 , span
                     [ StyledAttribs.css
                         [ Css.position Css.absolute
@@ -1461,6 +1469,16 @@ viewNative viewNativeData =
                         _ ->
                             []
 
+                withPlaceholder =
+                    case maybeSelectedItem of
+                        Just _ ->
+                            option [
+                                StyledAttribs.hidden True, StyledAttribs.selected True, 
+                              StyledAttribs.disabled True] [ text ("(" ++ viewNativeData.placeholder ++ ")") ]
+
+                        _ ->
+                            text ""
+
                 buildList item =
                     option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
 
@@ -1507,7 +1525,7 @@ viewNative viewNativeData =
                     ++ withLabelledBy
                     ++ withAriaDescribedBy
                 )
-                (List.map buildList viewNativeData.menuItems)
+                (withPlaceholder ::(List.map buildList viewNativeData.menuItems))
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
