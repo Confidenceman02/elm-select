@@ -114,7 +114,7 @@ describe("SingleSearchable", () => {
 });
 
 describe("NativeSingle", () => {
-  it("Selects item by input", async () => {
+  it("Selects item by input when there is no selection", async () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
@@ -125,7 +125,24 @@ describe("NativeSingle", () => {
       (el: HTMLSelectElement) => el.selectedIndex
     );
 
-    expect(selectedIndex).toBe(1);
+    expect(selectedIndex).toBe(0);
+  });
+
+  it("Selects item by input when there is already a selection", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+
+    await page.selectOption("select#native-single-select-SingleSelectExample", {
+      label: "Great",
+    });
+    await page.type("[data-test-id=nativeSingleSelect]", "e");
+    const selectedIndex: number = await page.$eval(
+      "[data-test-id=nativeSingleSelect]",
+      (el: HTMLSelectElement) => el.selectedIndex
+    );
+
+    expect(selectedIndex).toBe(0);
   });
 
   it("selects item by dropdown select", async () => {
@@ -141,7 +158,7 @@ describe("NativeSingle", () => {
       (el: HTMLSelectElement) => el.selectedIndex
     );
 
-    expect(selectedIndex).toBe(4);
+    expect(selectedIndex).toBe(3);
   });
 
   it("selected item has selected attribute", async () => {

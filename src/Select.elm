@@ -77,7 +77,7 @@ type SelectId
 {-| -}
 type Msg item
     = InputChanged SelectId String
-    | InputChangedNativeSingle (List (MenuItem item)) Int
+    | InputChangedNativeSingle (List (MenuItem item)) Bool Int
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
     | SelectedItemMulti item SelectId
@@ -840,9 +840,15 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
-        InputChangedNativeSingle allMenuItems selectedOptionIndex ->
-          -- We need to account for the placeholder option by subtracting 1
-            case ListExtra.getAt (selectedOptionIndex - 1) allMenuItems of
+        InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
+          let
+              resolveIndex =
+                if hasCurrentSelection then 
+                  selectedOptionIndex
+                else
+                  selectedOptionIndex - 1
+          in
+            case ListExtra.getAt resolveIndex allMenuItems of
                 Nothing ->
                     ( Nothing, State state_, Cmd.none )
 
@@ -1501,12 +1507,18 @@ viewNative viewNativeData =
 
                         _ ->
                             []
+                hasCurrentSelection = 
+                  case maybeSelectedItem of 
+                    Just _ ->
+                      True
+                    _ ->
+                      False
             in
             select
                 ([ id ("native-single-select-" ++ selectId)
                  , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
                  , StyledAttribs.name "SomeSelect"
-                 , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems)
+                 , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
