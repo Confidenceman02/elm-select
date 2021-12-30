@@ -841,7 +841,8 @@ update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
         InputChangedNativeSingle allMenuItems selectedOptionIndex ->
-            case ListExtra.getAt selectedOptionIndex allMenuItems of
+          -- We need to account for the placeholder option by subtracting 1
+            case ListExtra.getAt (selectedOptionIndex - 1) allMenuItems of
                 Nothing ->
                     ( Nothing, State state_, Cmd.none )
 
