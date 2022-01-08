@@ -1761,7 +1761,7 @@ viewMenuItem viewMenuItemData =
                      , Css.width (Css.pct 100)
                      , Css.property "user-select" "none"
                      , Css.boxSizing Css.borderBox
-                     , Css.borderRadius (Css.px 4)
+                     , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius viewMenuItemData.menuItemStyles))
                      , Css.padding2 (Css.px 8) (Css.px 8)
                      , Css.outline Css.none
                      , Css.color (Styles.getMenuItemColor viewMenuItemData.menuItemStyles)

@@ -4,13 +4,13 @@ module Select.Styles exposing
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
-    , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+    , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
     , setMenuItemColorHoverNotSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
-    , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
+    , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected
     , getMenuItemBackgroundColorNotSelected
     , dracula
     )
@@ -51,7 +51,7 @@ Set styles
 
 # Menu item
 
-@docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
+@docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected
 @docs setMenuItemColorHoverNotSelected
 
 
@@ -74,7 +74,7 @@ Get styles
 
 # Menu item
 
-@docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemBackgroundColorClicked, getMenuItemColorHoverNotSelected
+@docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected
 
 @docs getMenuItemBackgroundColorNotSelected
 
@@ -112,6 +112,7 @@ type alias MenuItemConfiguration =
     { backgroundColorClicked : Css.Color
     , backgroundColorSelected : Css.Color
     , backgroundColorNotSelected : Css.Color
+    , borderRadius : Float
     , color : Css.Color
     , colorHoverSelected : Css.Color
     , colorHoverNotSelected : Css.Color
@@ -160,6 +161,7 @@ defaultsMenuItem =
     { backgroundColorClicked = Css.hex "#E6F0F7"
     , backgroundColorSelected = Css.hex "#E6F0F7"
     , backgroundColorNotSelected = Css.hex "#E6F0F7"
+    , borderRadius = 4
     , color = Css.hex "#000000"
     , colorHoverSelected = Css.hex "#0168B3"
     , colorHoverNotSelected = Css.hex "#0168B3"
@@ -252,6 +254,12 @@ setMenuItemBackgroundColorSelected c (MenuItemConfig config) =
 setMenuItemBackgroundColorNotSelected : Css.Color -> MenuItemConfig -> MenuItemConfig
 setMenuItemBackgroundColorNotSelected c (MenuItemConfig config) =
     MenuItemConfig { config | backgroundColorNotSelected = c }
+
+
+{-| -}
+setMenuItemBorderRadius : Float -> MenuItemConfig -> MenuItemConfig
+setMenuItemBorderRadius f (MenuItemConfig config) =
+    MenuItemConfig { config | borderRadius = f }
 
 
 {-| -}
@@ -511,6 +519,12 @@ getMenuItemBackgroundColorSelected (MenuItemConfig config) =
 getMenuItemBackgroundColorNotSelected : MenuItemConfig -> Css.Color
 getMenuItemBackgroundColorNotSelected (MenuItemConfig config) =
     config.backgroundColorNotSelected
+
+
+{-| -}
+getMenuItemBorderRadius : MenuItemConfig -> Float
+getMenuItemBorderRadius (MenuItemConfig config) =
+    config.borderRadius
 
 
 {-| -}
