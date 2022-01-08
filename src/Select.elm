@@ -1273,7 +1273,7 @@ view (Config config) selectId =
                          , Css.position Css.relative
                          , Css.boxSizing Css.borderBox
                          , controlBorder controlStyles
-                         , Css.borderRadius (Css.px controlRadius)
+                         , controlRadius controlStyles
                          , Css.outline Css.zero
                          , if config.disabled then
                             controlDisabled controlStyles
@@ -1528,7 +1528,7 @@ viewNative viewNativeData =
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
-                    , Css.borderRadius (Css.px controlRadius)
+                    , controlRadius viewNativeData.controlStyles
                     , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.controlStyles)
                     , controlBorder viewNativeData.controlStyles
                     , Css.padding2 (Css.px 2) (Css.px 8)
@@ -1761,7 +1761,7 @@ viewMenuItem viewMenuItemData =
                      , Css.width (Css.pct 100)
                      , Css.property "user-select" "none"
                      , Css.boxSizing Css.borderBox
-                     , Css.borderRadius (Css.px 4)
+                     , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius viewMenuItemData.menuItemStyles))
                      , Css.padding2 (Css.px 8) (Css.px 8)
                      , Css.outline Css.none
                      , Css.color (Styles.getMenuItemColor viewMenuItemData.menuItemStyles)
@@ -2430,9 +2430,9 @@ listBoxBorder =
     6
 
 
-controlRadius : Float
-controlRadius =
-    7
+controlRadius : Styles.ControlConfig -> Css.Style
+controlRadius controlStyles =
+    Css.borderRadius <| Css.px (Styles.getControlBorderRadius controlStyles)
 
 
 controlHeight : Float
