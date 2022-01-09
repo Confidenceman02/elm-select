@@ -1,3 +1,13 @@
+## [3.2.1] - 2022-01-09
+
+- Added latest elm-css package
+
+This fixes some weird DOM excetions that were
+happening for SVG nodes.
+
+https://github.com/rtfeldman/elm-css/issues/563
+https://github.com/rtfeldman/elm-css/issues/543
+
 ## [3.2.0] - 2022-01-09
 
 ## Added
@@ -151,6 +161,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[3.2.1]: https://github.com/Confidenceman02/elm-select/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/Confidenceman02/elm-select/compare/3.1.1...3.2.0
 [3.1.1]: https://github.com/Confidenceman02/elm-select/compare/3.1.0...3.1.1
 [3.1.0]: https://github.com/Confidenceman02/elm-select/compare/3.0.2...3.1.0
