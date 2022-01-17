@@ -1,3 +1,13 @@
+## [3.2.2] - 2022-01-18
+
+## Added
+- Type attribute to clear indicator button set to "button".
+
+## Fixed
+- Issue #53
+- Form submitting when interacting with clear button with 'Enter' key
+when select is in form element.
+
 ## [3.2.1] - 2022-01-10
 
 - Added latest elm-css package
@@ -161,6 +171,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[3.2.2]: https://github.com/Confidenceman02/elm-select/compare/3.2.1...3.2.2
 [3.2.1]: https://github.com/Confidenceman02/elm-select/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/Confidenceman02/elm-select/compare/3.1.1...3.2.0
 [3.1.1]: https://github.com/Confidenceman02/elm-select/compare/3.1.0...3.1.1
