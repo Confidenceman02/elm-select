@@ -44,7 +44,7 @@ module Select exposing
 import Browser.Dom as Dom
 import Css
 import Html.Styled exposing (Html, button, div, input, li, option, select, span, text)
-import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
+import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
@@ -2332,7 +2332,9 @@ clearIndicator config id =
             Styles.getControlConfig config.styles
     in
     button
-        [ custom "mousedown" <|
+        [ attribute "data-test-id" "clear"
+        , type_ "button"
+        , custom "mousedown" <|
             Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
                 Decode.succeed SingleSelectClearButtonMouseDowned
         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
