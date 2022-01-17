@@ -34,6 +34,7 @@ describe("examples", () => {
     );
     const longMenuVisible = await page.isVisible("text=LongMenu.elm");
     const singleMenuVisible = await page.isVisible("text=Single.elm");
+    const formVisible = await page.isVisible("text=Form.elm");
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -44,6 +45,27 @@ describe("examples", () => {
     expect(clearableExampleVisible).toBeTruthy();
     expect(longMenuVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
+    expect(formVisible).toBeTruthy();
+  });
+});
+
+describe("Form", () => {
+  it("it doesn't submit the form when clearing a selected item with Enter", async () => {
+    const page = await browser.newPage();
+    let hasSubmitted = false;
+    await page.goto(`${BASE_URI}/Form.elm`);
+    page.on("framenavigated", () => {
+      hasSubmitted = true;
+    });
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("Enter");
+    await page.waitForSelector("[data-test-id=clear]");
+    await page.focus("[data-test-id=clear]");
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+
+    expect(hasSubmitted).toBeFalsy();
   });
 });
 
