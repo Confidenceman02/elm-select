@@ -167,82 +167,85 @@ toNotSelected label =
 
 view : Config msg -> Html msg
 view (Config config) =
-    case config.variant of
-        Single ->
-            let
-                withPlaceholder_ =
-                    case config.placeholder of
-                        Just placeholder ->
-                            option
-                                [ StyledAttribs.hidden True
-                                , StyledAttribs.selected True
-                                , StyledAttribs.disabled True
-                                ]
-                                [ text ("(" ++ placeholder ++ ")") ]
-
-                        _ ->
-                            text ""
-
-                buildList item =
-                    case item of
-                        Selected label ->
-                            option [ StyledAttribs.value label, StyledAttribs.attribute "selected" "" ] [ text label ]
-
-                        NotSelected label ->
-                            option [ StyledAttribs.value label ] [ text label ]
-
-                withLabelledBy =
-                    case config.ariaLabelledBy of
-                        Just s ->
-                            [ Aria.ariaLabelledby s ]
-
-                        _ ->
-                            []
-
-                withAriaDescribedBy =
-                    case config.ariaDescribedBy of
-                        Just s ->
-                            [ Aria.ariaDescribedby s ]
-
-                        _ ->
-                            []
-
-                withOnInput =
-                    case config.onInput of
-                        Just msg ->
-                            [ Events.onInputAtInt [ "target", "selectedIndex" ] msg ]
-
-                        _ ->
-                            []
-            in
-            select
-                ([ id (idPrefix ++ config.id)
-                 , attribute "data-test-id" "nativeSingleSelect"
-                 , name config.name
-                 , css
-                    [ Css.width (Css.pct 100)
-                    , Css.height (Css.px 48)
-                    , Css.borderRadius <| Css.px (getControlBorderRadius config.controlStyles)
-                    , Css.backgroundColor (getControlBackgroundColor config.controlStyles)
-                    , Css.border3 (Css.px 2) Css.solid (getControlBorderColor config.controlStyles)
-                    , Css.padding2 (Css.px 2) (Css.px 8)
-                    , Css.property "appearance" "none"
-                    , Css.property "-webkit-appearance" "none"
-                    , Css.color (getControlColor config.controlStyles)
-                    , Css.fontSize (Css.px 16)
-                    , Css.focus
-                        [ Css.borderColor (getControlBorderColorFocus config.controlStyles), Css.outline Css.none ]
-                    , Css.hover
-                        [ Css.backgroundColor (getControlBackgroundColorHover config.controlStyles)
-                        , Css.borderColor (getControlBorderColorHover config.controlStyles)
+    let
+        withPlaceholder_ =
+            case config.placeholder of
+                Just placeholder ->
+                    option
+                        [ StyledAttribs.hidden True
+                        , StyledAttribs.selected True
+                        , StyledAttribs.disabled True
                         ]
-                    ]
-                 ]
-                    ++ withLabelledBy
-                    ++ withAriaDescribedBy
-                    ++ withOnInput
-                )
-                (withPlaceholder_ :: List.map buildList config.options)
+                        [ text ("(" ++ placeholder ++ ")") ]
 
-        Multi ->
-            text ""
+                _ ->
+                    text ""
+
+        buildList item =
+            case item of
+                Selected label ->
+                    option [ StyledAttribs.value label, StyledAttribs.attribute "selected" "" ] [ text label ]
+
+                NotSelected label ->
+                    option [ StyledAttribs.value label ] [ text label ]
+
+        withLabelledBy =
+            case config.ariaLabelledBy of
+                Just s ->
+                    [ Aria.ariaLabelledby s ]
+
+                _ ->
+                    []
+
+        withAriaDescribedBy =
+            case config.ariaDescribedBy of
+                Just s ->
+                    [ Aria.ariaDescribedby s ]
+
+                _ ->
+                    []
+
+        withOnInput =
+            case config.onInput of
+                Just msg ->
+                    [ Events.onInputAtInt [ "target", "selectedIndex" ] msg ]
+
+                _ ->
+                    []
+
+        resolveIdPrefix =
+            case config.variant of
+                Single ->
+                    singleIdPrefix
+
+                Multi ->
+                    multiIdPrefix
+    in
+    select
+        ([ id (resolveIdPrefix ++ config.id)
+         , attribute "data-test-id" "nativeSingleSelect"
+         , name config.name
+         , css
+            [ Css.width (Css.pct 100)
+            , Css.height (Css.px 48)
+            , Css.borderRadius <| Css.px (getControlBorderRadius config.controlStyles)
+            , Css.backgroundColor (getControlBackgroundColor config.controlStyles)
+            , Css.border3 (Css.px 2) Css.solid (getControlBorderColor config.controlStyles)
+            , Css.padding2 (Css.px 2) (Css.px 8)
+            , Css.property "appearance" "none"
+            , Css.property "-webkit-appearance" "none"
+            , Css.color (getControlColor config.controlStyles)
+            , Css.fontSize (Css.px 16)
+            , Css.focus
+                [ Css.borderColor (getControlBorderColorFocus config.controlStyles), Css.outline Css.none ]
+            , Css.hover
+                [ Css.backgroundColor (getControlBackgroundColorHover config.controlStyles)
+                , Css.borderColor (getControlBorderColorHover config.controlStyles)
+                ]
+            ]
+         ]
+            ++ withLabelledBy
+            ++ withAriaDescribedBy
+            ++ withOnInput
+        )
+        (withPlaceholder_ :: List.map buildList config.options)
