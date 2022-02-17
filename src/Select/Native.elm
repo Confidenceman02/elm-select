@@ -38,9 +38,14 @@ import Select.Styles
 -- CONSTANTS
 
 
-idPrefix : String
-idPrefix =
+singleIdPrefix : String
+singleIdPrefix =
     "native-single-select-"
+
+
+multiIdPrefix : String
+multiIdPrefix =
+    "native-multi-select-"
 
 
 type Config msg
@@ -77,7 +82,7 @@ type Option
 defaults : Configuration msg
 defaults =
     { variant = Single
-    , id = idPrefix
+    , id = singleIdPrefix
     , controlStyles = getControlConfig default
     , ariaLabelledBy = Nothing
     , ariaDescribedBy = Nothing
@@ -95,7 +100,7 @@ single =
 
 multi : Config msg
 multi =
-    Config { defaults | variant = Multi }
+    Config { defaults | variant = Multi, id = multiIdPrefix }
 
 
 
