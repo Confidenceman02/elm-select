@@ -2,6 +2,7 @@ module Select.Native exposing
     ( ariaDescribedBy
     , ariaLabelledBy
     , controlStyles
+    , multi
     , onInput
     , options
     , single
@@ -90,6 +91,11 @@ defaults =
 single : Config msg
 single =
     Config { defaults | variant = Single }
+
+
+multi : Config msg
+multi =
+    Config { defaults | variant = Multi }
 
 
 
