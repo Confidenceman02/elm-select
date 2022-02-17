@@ -2365,7 +2365,7 @@ dropdownIndicator controlStyles disabledInput =
                 , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover controlStyles) ]
                 ]
     in
-    span
+    div
         [ StyledAttribs.css resolveIconButtonStyles ]
         [ DropdownIcon.view ]
 
