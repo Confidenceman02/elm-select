@@ -16,7 +16,7 @@ module Select.Native exposing
 
 import Css
 import Html.Styled exposing (Html, option, select, text)
-import Html.Styled.Attributes as StyledAttribs exposing (attribute, css, id, name)
+import Html.Styled.Attributes as StyledAttribs exposing (attribute, css, id, multiple, name)
 import Html.Styled.Attributes.Aria as Aria
 import Select.Events as Events
 import Select.Styles
@@ -213,6 +213,14 @@ view (Config config) =
                 _ ->
                     []
 
+        withMultiple =
+            case config.variant of
+                Multi ->
+                    [ multiple True ]
+
+                _ ->
+                    []
+
         resolveIdPrefix =
             case config.variant of
                 Single ->
@@ -247,5 +255,6 @@ view (Config config) =
             ++ withLabelledBy
             ++ withAriaDescribedBy
             ++ withOnInput
+            ++ withMultiple
         )
         (withPlaceholder_ :: List.map buildList config.options)
