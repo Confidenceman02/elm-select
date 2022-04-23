@@ -1,3 +1,27 @@
+## [4.0.0] - 2022-04-23
+
+## Added
+- MenuItem opaque types
+- Builder function for MenuItem
+
+## Breaking changes
+The MenuItem type is now an opaque type that can be built with the `basicMenuItem` function.
+The `basicMenuItem` function will take the previous `MenuItem` structure and wrap it.
+
+previous
+```
+menuItem : MenuItem String
+menuItem =
+    { item: "SomeItem", label: "Some item" }
+```
+
+current
+```
+menuItem : MenuItem String
+menuItem =
+    basicMenuItem { item: "SomeItem", label: "Some item" }
+```
+
 ## [3.2.2] - 2022-01-18
 
 ## Added
@@ -171,6 +195,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[4.0.0]: https://github.com/Confidenceman02/elm-select/compare/3.2.2...4.0.0
 [3.2.2]: https://github.com/Confidenceman02/elm-select/compare/3.2.1...3.2.2
 [3.2.1]: https://github.com/Confidenceman02/elm-select/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/Confidenceman02/elm-select/compare/3.1.1...3.2.0
