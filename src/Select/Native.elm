@@ -1,13 +1,28 @@
-module Native exposing (..)
+module Select.Native exposing
+    ( ariaDescribedBy
+    , ariaLabelledBy
+    , controlStyles
+    , multi
+    , onInput
+    , options
+    , single
+    , toNotSelected
+    , toSelected
+    , view
+    , withId
+    , withName
+    , withPlaceholder
+    )
 
 import Css
 import Html.Styled exposing (Html, option, select, text)
-import Html.Styled.Attributes exposing (attribute, css, disabled, hidden, id, name, selected, value)
+import Html.Styled.Attributes as StyledAttribs exposing (attribute, css, id, name)
 import Html.Styled.Attributes.Aria as Aria
 import Select.Events as Events
 import Select.Styles
     exposing
         ( ControlConfig
+        , default
         , getControlBackgroundColor
         , getControlBackgroundColorHover
         , getControlBorderColor
@@ -15,6 +30,7 @@ import Select.Styles
         , getControlBorderColorHover
         , getControlBorderRadius
         , getControlColor
+        , getControlConfig
         )
 
 
@@ -22,9 +38,14 @@ import Select.Styles
 -- CONSTANTS
 
 
-idPrefix : String
-idPrefix =
+singleIdPrefix : String
+singleIdPrefix =
     "native-single-select-"
+
+
+multiIdPrefix : String
+multiIdPrefix =
+    "native-multi-select-"
 
 
 type Config msg
@@ -34,13 +55,13 @@ type Config msg
 type alias Configuration msg =
     { variant : Variant
     , id : String
-    , height : Float
     , controlStyles : ControlConfig
     , ariaLabelledBy : Maybe String
     , ariaDescribedBy : Maybe String
-    , placeholder : String
+    , placeholder : Maybe String
     , options : List Option
-    , onInput : Int -> msg
+    , onInput : Maybe (Int -> msg)
+    , name : String
     }
 
 
@@ -55,12 +76,119 @@ type Option
 
 
 
+-- CONFIG
+
+
+defaults : Configuration msg
+defaults =
+    { variant = Single
+    , id = singleIdPrefix
+    , controlStyles = getControlConfig default
+    , ariaLabelledBy = Nothing
+    , ariaDescribedBy = Nothing
+    , placeholder = Nothing
+    , options = []
+    , onInput = Nothing
+    , name = "singleSelect"
+    }
+
+
+single : Config msg
+single =
+    Config { defaults | variant = Single }
+
+
+multi : Config msg
+multi =
+    Config { defaults | variant = Multi, id = multiIdPrefix }
+
+
+
 -- MODIFIERS
+
+
+withId : String -> Config msg -> Config msg
+withId id_ (Config config) =
+    Config { config | id = id_ }
+
+
+controlStyles : ControlConfig -> Config msg -> Config msg
+controlStyles styles (Config config) =
+    Config { config | controlStyles = styles }
+
+
+ariaLabelledBy : String -> Config msg -> Config msg
+ariaLabelledBy s (Config config) =
+    Config { config | ariaLabelledBy = Just s }
+
+
+ariaDescribedBy : String -> Config msg -> Config msg
+ariaDescribedBy s (Config config) =
+    Config { config | ariaDescribedBy = Just s }
+
+
+withPlaceholder : String -> Config msg -> Config msg
+withPlaceholder s (Config config) =
+    Config { config | placeholder = Just s }
+
+
+options : List Option -> Config msg -> Config msg
+options opts (Config config) =
+    Config { config | options = opts }
+
+
+onInput : (Int -> msg) -> Config msg -> Config msg
+onInput msg (Config config) =
+    Config { config | onInput = Just msg }
+
+
+withName : String -> Config msg -> Config msg
+withName s (Config config) =
+    Config { config | name = s }
+
+
+
+-- HELPERS
+
+
+toSelected : String -> Option
+toSelected label =
+    Selected label
+
+
+toNotSelected : String -> Option
+toNotSelected label =
+    NotSelected label
+
+
+
+-- VIEW
 
 
 view : Config msg -> Html msg
 view (Config config) =
     let
+        withPlaceholder_ =
+            case config.placeholder of
+                Just placeholder ->
+                    option
+                        [ StyledAttribs.hidden True
+                        , StyledAttribs.selected True
+                        , StyledAttribs.disabled True
+                        ]
+                        [ text ("(" ++ placeholder ++ ")") ]
+
+                _ ->
+                    text ""
+
+        buildList item =
+            case item of
+                Selected label ->
+                    option [ StyledAttribs.value label, StyledAttribs.attribute "selected" "" ] [ text label ]
+
+                NotSelected label ->
+                    option [ StyledAttribs.value label ] [ text label ]
+
         withLabelledBy =
             case config.ariaLabelledBy of
                 Just s ->
@@ -77,34 +205,29 @@ view (Config config) =
                 _ ->
                     []
 
-        withPlaceholder =
-            if List.any isSelected config.options then
-                text ""
+        withOnInput =
+            case config.onInput of
+                Just msg ->
+                    [ Events.onInputAtInt [ "target", "selectedIndex" ] msg ]
 
-            else
-                option
-                    [ hidden True
-                    , selected True
-                    , disabled True
-                    ]
-                    [ text ("(" ++ config.placeholder ++ ")") ]
+                _ ->
+                    []
 
-        buildList opt =
-            case opt of
-                Selected label ->
-                    option [ value label, attribute "selected" "" ] [ text label ]
+        resolveIdPrefix =
+            case config.variant of
+                Single ->
+                    singleIdPrefix
 
-                NotSelected label ->
-                    option [ value label ] [ text label ]
+                Multi ->
+                    multiIdPrefix
     in
     select
-        ([ id (idPrefix ++ config.id)
+        ([ id (resolveIdPrefix ++ config.id)
          , attribute "data-test-id" "nativeSingleSelect"
-         , name "SomeSelect"
-         , Events.onInputAtInt [ "target", "selectedIndex" ] config.onInput
+         , name config.name
          , css
             [ Css.width (Css.pct 100)
-            , Css.height (Css.px config.height)
+            , Css.height (Css.px 48)
             , Css.borderRadius <| Css.px (getControlBorderRadius config.controlStyles)
             , Css.backgroundColor (getControlBackgroundColor config.controlStyles)
             , Css.border3 (Css.px 2) Css.solid (getControlBorderColor config.controlStyles)
@@ -123,15 +246,6 @@ view (Config config) =
          ]
             ++ withLabelledBy
             ++ withAriaDescribedBy
+            ++ withOnInput
         )
-        (withPlaceholder :: List.map buildList config.options)
-
-
-isSelected : Option -> Bool
-isSelected opt =
-    case opt of
-        Selected _ ->
-            True
-
-        _ ->
-            False
+        (withPlaceholder_ :: List.map buildList config.options)

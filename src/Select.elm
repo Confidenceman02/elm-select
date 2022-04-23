@@ -43,8 +43,8 @@ module Select exposing
 
 import Browser.Dom as Dom
 import Css
-import Html.Styled exposing (Html, button, div, input, li, option, select, span, text)
-import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, value)
+import Html.Styled exposing (Html, button, div, input, li, span, text)
+import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
@@ -56,6 +56,7 @@ import Select.DotLoadingIcon as DotLoadingIcon
 import Select.DropdownIcon as DropdownIcon
 import Select.Events as Events
 import Select.Internal as Internal
+import Select.Native as Native
 import Select.SelectInput as SelectInput
 import Select.Styles as Styles
 import Select.Tag as Tag
@@ -1465,52 +1466,44 @@ viewNative viewNativeData =
     case viewNativeData.variant of
         SingleNative maybeSelectedItem ->
             let
-                withSelectedOption item =
+                buildList item =
                     case maybeSelectedItem of
                         Just selectedItem ->
                             if selectedItem == item then
-                                [ StyledAttribs.attribute "selected" "" ]
+                                Native.toSelected item.label
 
                             else
-                                []
+                                Native.toNotSelected item.label
 
                         _ ->
-                            []
+                            Native.toNotSelected item.label
 
-                withPlaceholder =
+                withPlaceholder config =
                     case maybeSelectedItem of
                         Just _ ->
-                            text ""
+                            config
 
                         _ ->
-                            option
-                                [ StyledAttribs.hidden True
-                                , StyledAttribs.selected True
-                                , StyledAttribs.disabled True
-                                ]
-                                [ text ("(" ++ viewNativeData.placeholder ++ ")") ]
-
-                buildList item =
-                    option (StyledAttribs.value item.label :: withSelectedOption item) [ text item.label ]
+                            Native.withPlaceholder viewNativeData.placeholder config
 
                 (SelectId selectId) =
                     viewNativeData.selectId
 
-                withLabelledBy =
+                withAriaLabelledBy config =
                     case viewNativeData.labelledBy of
                         Just s ->
-                            [ Aria.ariaLabelledby s ]
+                            Native.ariaLabelledBy s config
 
                         _ ->
-                            []
+                            config
 
-                withAriaDescribedBy =
+                withAriaDescribedBy config =
                     case viewNativeData.ariaDescribedBy of
                         Just s ->
-                            [ Aria.ariaDescribedby s ]
+                            Native.ariaDescribedBy s config
 
                         _ ->
-                            []
+                            config
 
                 hasCurrentSelection =
                     case maybeSelectedItem of
@@ -1520,31 +1513,16 @@ viewNative viewNativeData =
                         _ ->
                             False
             in
-            select
-                ([ id ("native-single-select-" ++ selectId)
-                 , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
-                 , StyledAttribs.name "SomeSelect"
-                 , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)
-                 , StyledAttribs.css
-                    [ Css.width (Css.pct 100)
-                    , Css.height (Css.px controlHeight)
-                    , controlRadius viewNativeData.controlStyles
-                    , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.controlStyles)
-                    , controlBorder viewNativeData.controlStyles
-                    , Css.padding2 (Css.px 2) (Css.px 8)
-                    , Css.property "appearance" "none"
-                    , Css.property "-webkit-appearance" "none"
-                    , Css.color (Styles.getControlColor viewNativeData.controlStyles)
-                    , Css.fontSize (Css.px 16)
-                    , Css.focus
-                        [ controlBorderFocused viewNativeData.controlStyles, Css.outline Css.none ]
-                    , controlHover viewNativeData.controlStyles
-                    ]
-                 ]
-                    ++ withLabelledBy
-                    ++ withAriaDescribedBy
+            Native.view
+                (Native.single
+                    |> Native.options (List.map buildList viewNativeData.menuItems)
+                    |> Native.withId selectId
+                    |> Native.controlStyles viewNativeData.controlStyles
+                    |> Native.onInput (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)
+                    |> withPlaceholder
+                    |> withAriaLabelledBy
+                    |> withAriaDescribedBy
                 )
-                (withPlaceholder :: List.map buildList viewNativeData.menuItems)
 
 
 viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
@@ -2332,7 +2310,9 @@ clearIndicator config id =
             Styles.getControlConfig config.styles
     in
     button
-        [ custom "mousedown" <|
+        [ attribute "data-test-id" "clear"
+        , type_ "button"
+        , custom "mousedown" <|
             Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
                 Decode.succeed SingleSelectClearButtonMouseDowned
         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
@@ -2385,7 +2365,7 @@ dropdownIndicator controlStyles disabledInput =
                 , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover controlStyles) ]
                 ]
     in
-    span
+    div
         [ StyledAttribs.css resolveIconButtonStyles ]
         [ DropdownIcon.view ]
 
