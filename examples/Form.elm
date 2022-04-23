@@ -22,10 +22,10 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elm", label = "Elm" }
-            , { item = "Is", label = "Is" }
-            , { item = "Really", label = "Really" }
-            , { item = "Great", label = "Great" }
+            [ Select.basicMenuItem { item = "Elm", label = "Elm" }
+            , Select.basicMenuItem { item = "Is", label = "Is" }
+            , Select.basicMenuItem { item = "Really", label = "Really" }
+            , Select.basicMenuItem { item = "Great", label = "Great" }
             ]
       , selectedItem = Nothing
       }
@@ -71,7 +71,7 @@ view m =
         selectedItem =
             case m.selectedItem of
                 Just i ->
-                    Just { item = i, label = i }
+                    Just (Select.basicMenuItem { item = i, label = i })
 
                 _ ->
                     Nothing

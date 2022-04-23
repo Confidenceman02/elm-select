@@ -22,10 +22,10 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elm", label = "Elm" }
-            , { item = "Is", label = "Is" }
-            , { item = "Really", label = "Really" }
-            , { item = "Great", label = "Great" }
+            [ Select.basicMenuItem { item = "Elm", label = "Elm" }
+            , Select.basicMenuItem { item = "Is", label = "Is" }
+            , Select.basicMenuItem { item = "Really", label = "Really" }
+            , Select.basicMenuItem { item = "Great", label = "Great" }
             ]
       , selectedItem = Nothing
       }
@@ -66,12 +66,12 @@ view : Model -> Html Msg
 view m =
     let
         selectedItem =
-          case m.selectedItem of 
-            Just it ->
-              Just { item = it, label = it }
-            _ ->
-              Nothing
+            case m.selectedItem of
+                Just it ->
+                    Just (Select.basicMenuItem { item = it, label = it })
 
+                _ ->
+                    Nothing
     in
     div
         [ StyledAttribs.css
@@ -80,7 +80,7 @@ view m =
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.singleNative (selectedItem)
+                (Select.singleNative selectedItem
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Select something"

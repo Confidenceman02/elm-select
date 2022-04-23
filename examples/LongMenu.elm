@@ -22,17 +22,17 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elm", label = "Elm" }
-            , { item = "Is", label = "Is" }
-            , { item = "Really", label = "Really" }
-            , { item = "Great", label = "Great" }
-            , { item = "And", label = "And" }
-            , { item = "Fun", label = "Fun" }
-            , { item = "To", label = "To" }
-            , { item = "Use", label = "Use" }
-            , { item = "All", label = "All" }
-            , { item = "The", label = "The" }
-            , { item = "Time", label = "Time" }
+            [ Select.basicMenuItem { item = "Elm", label = "Elm" }
+            , Select.basicMenuItem { item = "Is", label = "Is" }
+            , Select.basicMenuItem { item = "Really", label = "Really" }
+            , Select.basicMenuItem { item = "Great", label = "Great" }
+            , Select.basicMenuItem { item = "And", label = "And" }
+            , Select.basicMenuItem { item = "Fun", label = "Fun" }
+            , Select.basicMenuItem { item = "To", label = "To" }
+            , Select.basicMenuItem { item = "Use", label = "Use" }
+            , Select.basicMenuItem { item = "All", label = "All" }
+            , Select.basicMenuItem { item = "The", label = "The" }
+            , Select.basicMenuItem { item = "Time", label = "Time" }
             ]
       , selectedItem = Nothing
       }
@@ -75,7 +75,7 @@ view m =
         selectedItem =
             case m.selectedItem of
                 Just i ->
-                    Just { item = i, label = i }
+                    Just (Select.basicMenuItem { item = i, label = i })
 
                 _ ->
                     Nothing
