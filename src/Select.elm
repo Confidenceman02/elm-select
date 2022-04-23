@@ -494,8 +494,8 @@ multiTagColor c (MultiSelectConfig config) =
 
 -}
 basicMenuItem : BasicMenuItem item -> MenuItem item
-basicMenuItem defItem =
-    Basic defItem
+basicMenuItem bscItem =
+    Basic bscItem
 
 
 
@@ -1721,101 +1721,6 @@ viewMenu viewMenuData =
                     )
                     viewMenuData.viewableMenuItems
                 )
-
-
-
--- viewMenuItem : ViewMenuItemData item -> ( String, Html (Msg item) )
--- viewMenuItem viewMenuItemData =
---     ( String.fromInt viewMenuItemData.index
---     , lazy
---         (\data ->
---             let
---                 (Basic item) =
---                     data.menuItem
---                 resolveMouseLeave =
---                     if data.isClickFocused then
---                         [ on "mouseleave" <| Decode.succeed ClearFocusedItem ]
---                     else
---                         []
---                 resolveMouseUpMsg =
---                     case viewMenuItemData.variant of
---                         Multi _ _ ->
---                             SelectedItemMulti item viewMenuItemData.selectId
---                         _ ->
---                             SelectedItem item
---                 resolveMouseUp =
---                     case data.initialMousedown of
---                         MenuItemMousedown _ ->
---                             [ on "mouseup" <| Decode.succeed resolveMouseUpMsg ]
---                         _ ->
---                             []
---                 resolveDataTestId =
---                     if data.menuItemIsTarget then
---                         [ attribute "data-test-id" ("listBoxItemTargetFocus" ++ String.fromInt data.index) ]
---                     else
---                         []
---                 withTargetStyles =
---                     if data.menuItemIsTarget && not data.itemSelected then
---                         [ Css.color (Styles.getMenuItemColorHoverNotSelected viewMenuItemData.menuItemStyles)
---                         , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected viewMenuItemData.menuItemStyles)
---                         ]
---                     else
---                         []
---                 withIsClickedStyles =
---                     if data.isClickFocused then
---                         [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked viewMenuItemData.menuItemStyles) ]
---                     else
---                         []
---                 withIsSelectedStyles =
---                     if data.itemSelected then
---                         [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected viewMenuItemData.menuItemStyles)
---                         , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected viewMenuItemData.menuItemStyles) ]
---                         ]
---                     else
---                         []
---                 resolveSelectedAriaAttribs =
---                     if data.itemSelected then
---                         [ ariaSelected "true" ]
---                     else
---                         [ ariaSelected "false" ]
---                 resolvePosinsetAriaAttrib =
---                     [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
---             in
---             -- option
---             li
---                 ([ role "option"
---                  , tabindex -1
---                  , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
---                  , on "mouseover" <| Decode.succeed (HoverFocused data.index)
---                  , id (menuItemId data.selectId data.index)
---                  , StyledAttribs.css
---                     ([ Css.color Css.inherit
---                      , Css.cursor Css.default
---                      , Css.display Css.block
---                      , Css.fontSize Css.inherit
---                      , Css.width (Css.pct 100)
---                      , Css.property "user-select" "none"
---                      , Css.boxSizing Css.borderBox
---                      , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius viewMenuItemData.menuItemStyles))
---                      , Css.padding2 (Css.px 8) (Css.px 8)
---                      , Css.outline Css.none
---                      , Css.color (Styles.getMenuItemColor viewMenuItemData.menuItemStyles)
---                      ]
---                         ++ withTargetStyles
---                         ++ withIsClickedStyles
---                         ++ withIsSelectedStyles
---                     )
---                  ]
---                     ++ resolveMouseLeave
---                     ++ resolveMouseUp
---                     ++ resolveDataTestId
---                     ++ resolveSelectedAriaAttribs
---                     ++ resolvePosinsetAriaAttrib
---                 )
---                 [ text item.label ]
---         )
---         viewMenuItemData
---     )
 
 
 viewBasicMenuItem : ViewBasicMenuItemData item -> ( String, Html (Msg item) )

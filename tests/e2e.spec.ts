@@ -141,6 +141,7 @@ describe("NativeSingle", () => {
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
     await page.type("[data-test-id=nativeSingleSelect]", "e");
+    await page.waitForTimeout(100);
 
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
