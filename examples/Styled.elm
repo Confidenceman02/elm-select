@@ -65,7 +65,7 @@ update msg model =
                             ( { model
                                 | selectState = selectState
                                 , selectedItem = Just i
-                                , selectedItems = model.selectedItems ++ [ { label = i, item = i } ]
+                                , selectedItems = model.selectedItems ++ [ Select.basicMenuItem { label = i, item = i } ]
                               }
                             , Cmd.none
                             )
@@ -85,10 +85,10 @@ update msg model =
             ( { model
                 | items =
                     Loaded
-                        [ { item = "Elm", label = "Elm" }
-                        , { item = "Really", label = "Really" }
-                        , { item = "Inspires", label = "Inspires" }
-                        , { item = "Learning", label = "Learning" }
+                        [ Select.basicMenuItem { item = "Elm", label = "Elm" }
+                        , Select.basicMenuItem { item = "Really", label = "Really" }
+                        , Select.basicMenuItem { item = "Inspires", label = "Inspires" }
+                        , Select.basicMenuItem { item = "Learning", label = "Learning" }
                         ]
               }
             , Cmd.none
@@ -101,7 +101,7 @@ view m =
         selectedItem =
             case m.selectedItem of
                 Just i ->
-                    Just { item = i, label = i }
+                    Just (Select.basicMenuItem { item = i, label = i })
 
                 _ ->
                     Nothing
@@ -159,8 +159,8 @@ view m =
 
 allItems : List (Select.MenuItem String)
 allItems =
-    [ { item = "Elm", label = "Elm" }
-    , { item = "Really", label = "Really" }
-    , { item = "Inspires", label = "Inspires" }
-    , { item = "Learning", label = "Learning" }
+    [ Select.basicMenuItem { item = "Elm", label = "Elm" }
+    , Select.basicMenuItem { item = "Really", label = "Really" }
+    , Select.basicMenuItem { item = "Inspires", label = "Inspires" }
+    , Select.basicMenuItem { item = "Learning", label = "Learning" }
     ]

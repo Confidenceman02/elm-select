@@ -22,10 +22,10 @@ init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState
       , items =
-            [ { item = "Elmmmmmmm", label = "Elmmmmmmm" }
-            , { item = "Isssssss", label = "Isssssss" }
-            , { item = "Reallyyyyyyy", label = "Reallyyyyyyy" }
-            , { item = "Greattttttt", label = "Greattttttt" }
+            [ Select.basicMenuItem { item = "Elmmmmmmm", label = "Elmmmmmmm" }
+            , Select.basicMenuItem { item = "Isssssss", label = "Isssssss" }
+            , Select.basicMenuItem { item = "Reallyyyyyyy", label = "Reallyyyyyyy" }
+            , Select.basicMenuItem { item = "Greattttttt", label = "Greattttttt" }
             ]
       , selectedItems = []
       }
@@ -69,7 +69,7 @@ view : Model -> Html Msg
 view m =
     let
         selectedItems =
-            List.map (\i -> { item = i, label = i }) m.selectedItems
+            List.map (\i -> Select.basicMenuItem { item = i, label = i }) m.selectedItems
     in
     div
         [ StyledAttribs.css

@@ -52,9 +52,12 @@ init : Model
 init = 
     {  selectState = Select.initState
     ,  items = 
-           [ { item = Australia, label = "Australia" }
-           , { item = Japan, label = "Japan" }
-           , { item = Taiwan, label = "Taiwan" }
+           [ basicMenuItem 
+                { item = Australia, label = "Australia" }
+           , basicMenuItem
+                { item = Japan, label = "Japan" }
+           , basicMenuItem
+                { item = Taiwan, label = "Taiwan" }
            ]
     ,  selectedCountry = Nothing
     }
@@ -132,9 +135,15 @@ The select [view](/packages/Confidenceman02/elm-select/latest/Select#view) funct
 selectedCountryToMenuItem : Country -> Select.MenuItem Country
 selectedCountryToMenuItem country =
     case country of 
-        Australia -> { item = Australia, label = "Australia" }
-        Japan -> { item = Japan, label = "Japan" }
-        Taiwan -> { item = Taiwan, label = "Taiwan" }
+        Australia -> 
+            basicMenuitem { item = Australia, label = "Australia" }
+
+        Japan -> 
+            basicMenuitem { item = Japan, label = "Japan" }
+
+        Taiwan -> 
+            basicMenuitem { item = Taiwan, label = "Taiwan" }
+
         -- other countries
         
         
@@ -222,9 +231,12 @@ init : Model
 init = 
     {  selectState = Select.initState |> Select.jsOptimize True
     ,  items = 
-           [ { item = Australia, label = "Australia" }
-           , { item = Japan, label = "Japan" }
-           , { item = Taiwan, label = "Taiwan" }
+           [ basicMenuitem 
+                { item = Australia, label = "Australia" }
+           , basicMenuItem
+                { item = Japan, label = "Japan" }
+           , basicMenuitem
+                { item = Taiwan, label = "Taiwan" }
            ]
     ,  selectedCountry = Nothing
     }
