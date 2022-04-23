@@ -1723,10 +1723,9 @@ viewMenu viewMenuData =
                 )
 
 
-viewBasicMenuItem : ViewBasicMenuItemData item -> ( String, Html (Msg item) )
+viewBasicMenuItem : ViewBasicMenuItemData item -> Html (Msg item)
 viewBasicMenuItem data =
-    ( String.fromInt data.index
-    , let
+    let
         resolveMouseLeave =
             if data.isClickFocused then
                 [ on "mouseleave" <| Decode.succeed ClearFocusedItem ]
@@ -1791,9 +1790,9 @@ viewBasicMenuItem data =
 
         resolvePosinsetAriaAttrib =
             [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
-      in
-      -- option
-      li
+    in
+    -- option
+    li
         ([ role "option"
          , tabindex -1
          , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
@@ -1824,7 +1823,6 @@ viewBasicMenuItem data =
             ++ resolvePosinsetAriaAttrib
         )
         [ text data.menuItem.label ]
-    )
 
 
 viewPlaceholder : Configuration item -> Html msg
@@ -2217,7 +2215,8 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
         Basic bi ->
             case variant of
                 Single maybeSelectedItem ->
-                    viewBasicMenuItem <|
+                    ( bi.label
+                    , lazy viewBasicMenuItem <|
                         ViewBasicMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
@@ -2229,9 +2228,11 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                             initialMousedown
                             variant
                             menuItemStyles
+                    )
 
                 _ ->
-                    viewBasicMenuItem <|
+                    ( bi.label
+                    , lazy viewBasicMenuItem <|
                         ViewBasicMenuItemData
                             idx
                             False
@@ -2243,6 +2244,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                             initialMousedown
                             variant
                             menuItemStyles
+                    )
 
 
 filterMenuItem : Maybe String -> MenuItem item -> Bool
