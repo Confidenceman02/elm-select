@@ -5,7 +5,17 @@ import Html.Styled exposing (Html, option, select, text)
 import Html.Styled.Attributes exposing (attribute, css, disabled, hidden, id, name, selected, value)
 import Html.Styled.Attributes.Aria as Aria
 import Select.Events as Events
-import Select.Styles exposing (ControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlColor)
+import Select.Styles
+    exposing
+        ( ControlConfig
+        , getControlBackgroundColor
+        , getControlBackgroundColorHover
+        , getControlBorderColor
+        , getControlBorderColorFocus
+        , getControlBorderColorHover
+        , getControlBorderRadius
+        , getControlColor
+        )
 
 
 
@@ -42,6 +52,10 @@ type Variant
 type Option
     = Selected String
     | NotSelected String
+
+
+
+-- MODIFIERS
 
 
 view : Config msg -> Html msg
