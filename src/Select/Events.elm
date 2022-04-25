@@ -122,6 +122,11 @@ onInputAtInt path msg =
     on "input" <| mapAtInt path msg
 
 
+onChangeAtInt : List String -> (Int -> msg) -> Attribute msg
+onChangeAtInt path msg =
+    on "change" <| mapAtInt path msg
+
+
 isCode : Key -> msg -> Int -> Decode.Decoder msg
 isCode key msg code =
     if decoder code == key then
