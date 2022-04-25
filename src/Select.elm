@@ -3,6 +3,7 @@ module Select exposing
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
+    , multiNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
     )
@@ -28,6 +29,11 @@ module Select exposing
 # Native Single select
 
 @docs singleNative
+
+
+# Native Multi select
+
+@docs multiNative
 
 
 # Common
@@ -79,6 +85,7 @@ type SelectId
 type Msg item
     = InputChanged SelectId String
     | InputChangedNativeSingle (List (MenuItem item)) Bool Int
+    | InputChangedNativeMulti (List (MenuItem item)) (List Int)
     | InputReceivedFocused (Maybe SelectId)
     | SelectedItem item
     | SelectedItemMulti item SelectId
@@ -733,6 +740,7 @@ type Variant item
 
 type NativeVariant item
     = SingleNative (Maybe (MenuItem item))
+    | MultiNative (List (MenuItem item))
 
 
 {-| Select a single item.
@@ -809,6 +817,39 @@ multi multiSelectTagConfig selectedItems =
     Config { defaults | variant = Multi multiSelectTagConfig selectedItems }
 
 
+{-| Select a multiple items with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
+
+Useful for when you want to give a native select experience such as on touch
+devices.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ { item = Australia, label = "Australia" }
+          , { item = Taiwan, label = "Taiwan"
+          -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                  (singleNative Nothing |> menuItems countries)
+                  (selectIdentifier "1234")
+
+**Note**
+TODO Write better docs
+
+  - The only [Action](#Action) event that will be fired from the native single select is
+    the `Select` [Action](#Action). The other actions are not currently supported.
+
+  - Some [Config](#Config) values will not currently take effect when using the single native variant
+    i.e. [loading](#loading), [placeholder](#placeholder), [clearable](#clearable), [labelledBy](#labelledBy), [disabled](#disabled)
+
+-}
+multiNative : List (MenuItem item) -> Config item
+multiNative selectedItems =
+    Config { defaults | variant = Native (MultiNative selectedItems) }
+
+
 {-| The ID for the rendered Select input
 
 NOTE: It is important that the ID's of all selects that exist on
@@ -848,6 +889,7 @@ update msg (State state_) =
                         selectedOptionIndex
 
                     else
+                        -- This accounts for the placeholder when no selection is present
                         selectedOptionIndex - 1
             in
             case ListExtra.getAt resolveIndex allMenuItems of
@@ -856,6 +898,9 @@ update msg (State state_) =
 
                 Just mi ->
                     ( Just <| Select mi.item, State state_, Cmd.none )
+
+        InputChangedNativeMulti allMenuItems selectedOptionIndexes ->
+            ( Nothing, State state_, Cmd.none )
 
         EnterSelect item ->
             let
@@ -1463,6 +1508,26 @@ view (Config config) selectId =
 
 viewNative : ViewNativeData item -> Html (Msg item)
 viewNative viewNativeData =
+    let
+        (SelectId selectId) =
+            viewNativeData.selectId
+
+        withAriaLabelledBy config =
+            case viewNativeData.labelledBy of
+                Just s ->
+                    Native.ariaLabelledBy s config
+
+                _ ->
+                    config
+
+        withAriaDescribedBy config =
+            case viewNativeData.ariaDescribedBy of
+                Just s ->
+                    Native.ariaDescribedBy s config
+
+                _ ->
+                    config
+    in
     case viewNativeData.variant of
         SingleNative maybeSelectedItem ->
             let
@@ -1486,25 +1551,6 @@ viewNative viewNativeData =
                         _ ->
                             Native.withPlaceholder viewNativeData.placeholder config
 
-                (SelectId selectId) =
-                    viewNativeData.selectId
-
-                withAriaLabelledBy config =
-                    case viewNativeData.labelledBy of
-                        Just s ->
-                            Native.ariaLabelledBy s config
-
-                        _ ->
-                            config
-
-                withAriaDescribedBy config =
-                    case viewNativeData.ariaDescribedBy of
-                        Just s ->
-                            Native.ariaDescribedBy s config
-
-                        _ ->
-                            config
-
                 hasCurrentSelection =
                     case maybeSelectedItem of
                         Just _ ->
@@ -1520,6 +1566,26 @@ viewNative viewNativeData =
                     |> Native.controlStyles viewNativeData.controlStyles
                     |> Native.onInput (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)
                     |> withPlaceholder
+                    |> withAriaLabelledBy
+                    |> withAriaDescribedBy
+                )
+
+        MultiNative selectedItems ->
+            let
+                buildList item =
+                    case ListExtra.find (\i -> i == item) selectedItems of
+                        Just i ->
+                            Native.toSelected item.label
+
+                        _ ->
+                            Native.toNotSelected item.label
+            in
+            Native.view
+                (Native.multi
+                    |> Native.options (List.map buildList viewNativeData.menuItems)
+                    |> Native.withId selectId
+                    |> Native.controlStyles viewNativeData.controlStyles
+                    -- |> Native.onInput (InputChangedNativeMulti viewNativeData.menuItems)
                     |> withAriaLabelledBy
                     |> withAriaDescribedBy
                 )
