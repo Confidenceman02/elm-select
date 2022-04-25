@@ -30,8 +30,11 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: cd examples-optimized && yarn install
 
-      - name: Run elm e2e tests
-        run: yarn ci:elm:e2e
+      - name: Run elm tests
+        run: make elm-tests
+
+      - name: Run e2e tests
+        run: make ci-e2e-test
 
       - name: elm-analyse
         run: yarn elm-analyse
