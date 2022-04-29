@@ -160,6 +160,7 @@ describe("NativeSingle", () => {
       label: "Great",
     });
     await page.type("[data-test-id=nativeSingleSelect]", "e");
+    await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
       (el: HTMLSelectElement) => el.selectedIndex
@@ -176,6 +177,7 @@ describe("NativeSingle", () => {
       label: "Great",
     });
 
+    await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
       (el: HTMLSelectElement) => el.selectedIndex
