@@ -2217,22 +2217,26 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 buildMenuItems : Configuration item -> SelectState -> List (MenuItem item)
 buildMenuItems config state_ =
+    let
+        filteredMenuItems =
+            case ( config.searchable, state_.inputValue ) of
+                ( True, Just value ) ->
+                    if String.isEmpty value then
+                        config.menuItems
+
+                    else
+                        List.filter (filterMenuItem value) config.menuItems
+
+                _ ->
+                    config.menuItems
+    in
     case config.variant of
         Single _ ->
-            if config.searchable then
-                List.filter (filterMenuItem state_.inputValue) config.menuItems
-
-            else
-                config.menuItems
+            filteredMenuItems
 
         Multi _ maybeSelectedMenuItems ->
-            if config.searchable then
-                List.filter (filterMenuItem state_.inputValue) config.menuItems
-                    |> filterMultiSelectedItems maybeSelectedMenuItems
-
-            else
-                config.menuItems
-                    |> filterMultiSelectedItems maybeSelectedMenuItems
+            filteredMenuItems
+                |> filterMultiSelectedItems maybeSelectedMenuItems
 
         _ ->
             []
