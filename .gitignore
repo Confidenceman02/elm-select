@@ -2,3 +2,7 @@
 **/dist
 elm-stuff
 node_modules
+
+
+# Makefile pseudo target
+/*.INSTALLED
