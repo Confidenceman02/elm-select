@@ -27,7 +27,7 @@ ci-e2e-test:
 	yarn start-server-and-test  'make elm-examples' '8000|1234' 'make ts-tests'
 
 .PHONY: elm-live
-elm-live: 
+elm-live: install
 	yarn elm-live --no-server
 
 .PHONY: elm-analyse
