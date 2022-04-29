@@ -2242,7 +2242,16 @@ buildMenuItems config state_ =
             []
 
 
-buildMenuItem : Styles.MenuItemConfig -> SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
+buildMenuItem :
+    Styles.MenuItemConfig
+    -> SelectId
+    -> Variant item
+    -> InitialMousedown
+    -> Int
+    -> MenuNavigation
+    -> Int
+    -> MenuItem item
+    -> ( String, Html (Msg item) )
 buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
     case item of
         Basic bi ->
@@ -2283,21 +2292,9 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
             ( ci.label, Styled.map never ci.view )
 
 
-
--- TODO don't call this function if query is ""
-
-
-filterMenuItem : Maybe String -> MenuItem item -> Bool
-filterMenuItem maybeQuery item =
-    case maybeQuery of
-        Nothing ->
-            True
-
-        Just "" ->
-            True
-
-        Just query ->
-            String.contains (String.toLower query) <| String.toLower (getMenuItemLabel item)
+filterMenuItem : String -> MenuItem item -> Bool
+filterMenuItem query item =
+    String.contains (String.toLower query) <| String.toLower (getMenuItemLabel item)
 
 
 filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
