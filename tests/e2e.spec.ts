@@ -49,6 +49,29 @@ describe("examples", () => {
   });
 });
 
+describe("Multi", () => {
+  it("removes menu items from list when selected", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Multi.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    const initialItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+    await page.keyboard.press("Enter");
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const currentItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+
+    expect(currentItemCount).toEqual(initialItemCount - 1);
+  });
+});
+
 describe("Form", () => {
   it("it doesn't submit the form when clearing a selected item with Enter", async () => {
     const page = await browser.newPage();
@@ -132,6 +155,21 @@ describe("SingleSearchable", () => {
     );
 
     expect(updatedInputValue).toBe("");
+  });
+
+  it("filters list on user input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.type("[data-test-id=selectInput]", "el");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    const listItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+
+    expect(listItemCount).toEqual(1);
   });
 });
 
@@ -466,7 +504,7 @@ describe("JsOptimized", () => {
     );
 
     await page.type("[data-test-id=selectInput]", "JAIME");
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(300);
     const currentInputWidth = await page.$eval(
       "[data-test-id=selectInput]",
       (el: HTMLInputElement) => el.getBoundingClientRect().width
