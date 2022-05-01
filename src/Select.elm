@@ -1758,8 +1758,8 @@ viewMenu viewMenuData =
                 )
 
 
-viewBasicMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
-viewBasicMenuItem data content =
+viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
+viewMenuItem data content =
     let
         resolveMouseLeave =
             if data.isClickFocused then
@@ -2223,7 +2223,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
             case variant of
                 Single maybeSelectedItem ->
                     ( getMenuItemLabel item
-                    , lazy2 viewBasicMenuItem
+                    , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
@@ -2241,7 +2241,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
 
                 _ ->
                     ( getMenuItemLabel item
-                    , lazy2 viewBasicMenuItem
+                    , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             False
@@ -2261,7 +2261,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
             case variant of
                 Single maybeSelectedItem ->
                     ( getMenuItemLabel item
-                    , lazy2 viewBasicMenuItem
+                    , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
@@ -2279,7 +2279,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
 
                 _ ->
                     ( getMenuItemLabel item
-                    , lazy2 viewBasicMenuItem
+                    , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             False
