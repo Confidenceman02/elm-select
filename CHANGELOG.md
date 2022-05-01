@@ -1,3 +1,12 @@
+## [4.1.0] - 2022-04-01
+
+## Added
+- customMenuItem builder
+- All CI scripts added to Makefile
+- Custom menu item example
+- tests for CustomMenuItems.elm
+
+
 ## [4.0.0] - 2022-04-23
 
 ## Added
@@ -195,6 +204,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[4.1.0]: https://github.com/Confidenceman02/elm-select/compare/4.0.0...4.1.0
 [4.0.0]: https://github.com/Confidenceman02/elm-select/compare/3.2.2...4.0.0
 [3.2.2]: https://github.com/Confidenceman02/elm-select/compare/3.2.1...3.2.2
 [3.2.1]: https://github.com/Confidenceman02/elm-select/compare/3.2.0...3.2.1
