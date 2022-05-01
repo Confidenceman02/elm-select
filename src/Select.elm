@@ -2150,7 +2150,7 @@ isSelected : MenuItem item -> Maybe (MenuItem item) -> Bool
 isSelected menuItem maybeSelectedItem =
     case maybeSelectedItem of
         Just item ->
-            item == menuItem
+            getMenuItemItem item == getMenuItemItem menuItem
 
         Nothing ->
             False
