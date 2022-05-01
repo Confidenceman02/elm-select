@@ -5,6 +5,7 @@ module Select exposing
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
+    , customMenuItem
     )
 
 {-| Select items from a menu list.
@@ -48,7 +49,7 @@ import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
-import Html.Styled.Lazy exposing (lazy)
+import Html.Styled.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.ClearIcon as ClearIcon
@@ -196,7 +197,7 @@ type alias ViewBasicMenuItemData item =
     , isClickFocused : Bool
     , menuItemIsTarget : Bool
     , selectId : SelectId
-    , menuItem : BasicMenuItem item
+    , menuItem : MenuItem item
     , menuNavigation : MenuNavigation
     , initialMousedown : InitialMousedown
     , variant : Variant item
@@ -524,6 +525,11 @@ multiTagColor c (MultiSelectConfig config) =
 basicMenuItem : BasicMenuItem item -> MenuItem item
 basicMenuItem bscItem =
     Basic bscItem
+
+
+customMenuItem : CustomMenuItem item -> MenuItem item
+customMenuItem customItem =
+    Custom customItem
 
 
 
@@ -1752,8 +1758,8 @@ viewMenu viewMenuData =
                 )
 
 
-viewBasicMenuItem : ViewBasicMenuItemData item -> Html (Msg item)
-viewBasicMenuItem data =
+viewBasicMenuItem : ViewBasicMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
+viewBasicMenuItem data content =
     let
         resolveMouseLeave =
             if data.isClickFocused then
@@ -1765,10 +1771,10 @@ viewBasicMenuItem data =
         resolveMouseUpMsg =
             case data.variant of
                 Multi _ _ ->
-                    SelectedItemMulti data.menuItem.item data.selectId
+                    SelectedItemMulti (getMenuItemItem data.menuItem) data.selectId
 
                 _ ->
-                    SelectedItem data.menuItem.item
+                    SelectedItem (getMenuItemItem data.menuItem)
 
         resolveMouseUp =
             case data.initialMousedown of
@@ -1785,31 +1791,6 @@ viewBasicMenuItem data =
             else
                 []
 
-        withTargetStyles =
-            if data.menuItemIsTarget && not data.itemSelected then
-                [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
-                , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
-                ]
-
-            else
-                []
-
-        withIsClickedStyles =
-            if data.isClickFocused then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked data.menuItemStyles) ]
-
-            else
-                []
-
-        withIsSelectedStyles =
-            if data.itemSelected then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected data.menuItemStyles)
-                , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected data.menuItemStyles) ]
-                ]
-
-            else
-                []
-
         resolveSelectedAriaAttribs =
             if data.itemSelected then
                 [ ariaSelected "true" ]
@@ -1820,7 +1801,6 @@ viewBasicMenuItem data =
         resolvePosinsetAriaAttrib =
             [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
     in
-    -- option
     li
         ([ role "option"
          , tabindex -1
@@ -1828,22 +1808,7 @@ viewBasicMenuItem data =
          , on "mouseover" <| Decode.succeed (HoverFocused data.index)
          , id (menuItemId data.selectId data.index)
          , StyledAttribs.css
-            ([ Css.color Css.inherit
-             , Css.cursor Css.default
-             , Css.display Css.block
-             , Css.fontSize Css.inherit
-             , Css.width (Css.pct 100)
-             , Css.property "user-select" "none"
-             , Css.boxSizing Css.borderBox
-             , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius data.menuItemStyles))
-             , Css.padding2 (Css.px 8) (Css.px 8)
-             , Css.outline Css.none
-             , Css.color (Styles.getMenuItemColor data.menuItemStyles)
-             ]
-                ++ withTargetStyles
-                ++ withIsClickedStyles
-                ++ withIsSelectedStyles
-            )
+            (menuItemContainerStyles data)
          ]
             ++ resolveMouseLeave
             ++ resolveMouseUp
@@ -1851,7 +1816,7 @@ viewBasicMenuItem data =
             ++ resolveSelectedAriaAttribs
             ++ resolvePosinsetAriaAttrib
         )
-        [ text data.menuItem.label ]
+        content
 
 
 viewPlaceholder : Configuration item -> Html msg
@@ -2254,42 +2219,81 @@ buildMenuItem :
     -> ( String, Html (Msg item) )
 buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
     case item of
-        Basic bi ->
+        Basic _ ->
             case variant of
                 Single maybeSelectedItem ->
-                    ( bi.label
-                    , lazy viewBasicMenuItem <|
-                        ViewBasicMenuItemData
+                    ( getMenuItemLabel item
+                    , lazy2 viewBasicMenuItem
+                        (ViewBasicMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
                             (isMenuItemClickFocused initialMousedown idx)
                             (isTarget activeTargetIndex idx)
                             selectId
-                            bi
+                            item
                             menuNavigation
                             initialMousedown
                             variant
                             menuItemStyles
+                        )
+                        [ text (getMenuItemLabel item) ]
                     )
 
                 _ ->
-                    ( bi.label
-                    , lazy viewBasicMenuItem <|
-                        ViewBasicMenuItemData
+                    ( getMenuItemLabel item
+                    , lazy2 viewBasicMenuItem
+                        (ViewBasicMenuItemData
                             idx
                             False
                             (isMenuItemClickFocused initialMousedown idx)
                             (isTarget activeTargetIndex idx)
                             selectId
-                            bi
+                            item
                             menuNavigation
                             initialMousedown
                             variant
                             menuItemStyles
+                        )
+                        [ text (getMenuItemLabel item) ]
                     )
 
         Custom ci ->
-            ( ci.label, Styled.map never ci.view )
+            case variant of
+                Single maybeSelectedItem ->
+                    ( getMenuItemLabel item
+                    , lazy2 viewBasicMenuItem
+                        (ViewBasicMenuItemData
+                            idx
+                            (isSelected item maybeSelectedItem)
+                            (isMenuItemClickFocused initialMousedown idx)
+                            (isTarget activeTargetIndex idx)
+                            selectId
+                            item
+                            menuNavigation
+                            initialMousedown
+                            variant
+                            menuItemStyles
+                        )
+                        [ Styled.map never ci.view ]
+                    )
+
+                _ ->
+                    ( getMenuItemLabel item
+                    , lazy2 viewBasicMenuItem
+                        (ViewBasicMenuItemData
+                            idx
+                            False
+                            (isMenuItemClickFocused initialMousedown idx)
+                            (isTarget activeTargetIndex idx)
+                            selectId
+                            item
+                            menuNavigation
+                            initialMousedown
+                            variant
+                            menuItemStyles
+                        )
+                        [ Styled.map never ci.view ]
+                    )
 
 
 filterMenuItem : String -> MenuItem item -> Bool
@@ -2479,6 +2483,50 @@ dropdownIndicator controlStyles disabledInput =
 
 
 -- STYLES
+
+
+menuItemContainerStyles : ViewBasicMenuItemData item -> List Css.Style
+menuItemContainerStyles data =
+    let
+        withTargetStyles =
+            if data.menuItemIsTarget && not data.itemSelected then
+                [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
+                , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
+                ]
+
+            else
+                []
+
+        withIsClickedStyles =
+            if data.isClickFocused then
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked data.menuItemStyles) ]
+
+            else
+                []
+
+        withIsSelectedStyles =
+            if data.itemSelected then
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected data.menuItemStyles)
+                , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected data.menuItemStyles) ]
+                ]
+
+            else
+                []
+    in
+    [ Css.cursor Css.default
+    , Css.display Css.block
+    , Css.fontSize Css.inherit
+    , Css.width (Css.pct 100)
+    , Css.property "user-select" "none"
+    , Css.boxSizing Css.borderBox
+    , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius data.menuItemStyles))
+    , Css.padding2 (Css.px (Styles.getMenuItemBlockPadding data.menuItemStyles)) (Css.px (Styles.getMenuItemInlinePadding data.menuItemStyles))
+    , Css.outline Css.none
+    , Css.color (Styles.getMenuItemColor data.menuItemStyles)
+    ]
+        ++ withTargetStyles
+        ++ withIsClickedStyles
+        ++ withIsSelectedStyles
 
 
 indicatorContainerStyles : List Css.Style
