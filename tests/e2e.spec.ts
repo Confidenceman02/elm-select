@@ -35,6 +35,9 @@ describe("examples", () => {
     const longMenuVisible = await page.isVisible("text=LongMenu.elm");
     const singleMenuVisible = await page.isVisible("text=Single.elm");
     const formVisible = await page.isVisible("text=Form.elm");
+    const customMenuItemsVisible = await page.isVisible(
+      "text=CustomMenuItems.elm"
+    );
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -46,6 +49,24 @@ describe("examples", () => {
     expect(longMenuVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
+    expect(customMenuItemsVisible).toBeTruthy();
+  });
+});
+
+describe("CustomMenuItems", () => {
+  it("filters list on user input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/CustomMenuItems.elm`);
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const listItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+
+    expect(listItemCount).toEqual(1);
   });
 });
 
