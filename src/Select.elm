@@ -1,11 +1,10 @@
 module Select exposing
-    ( State, MenuItem, BasicMenuItem, basicMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    ( State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
-    , customMenuItem
     )
 
 {-| Select items from a menu list.
@@ -13,7 +12,7 @@ module Select exposing
 
 # Set up
 
-@docs State, MenuItem, BasicMenuItem, basicMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -341,6 +340,43 @@ type alias BasicMenuItem item =
     }
 
 
+{-| A menu item that will be represented in the menu list by a view you supply.
+
+The `item` property is the type representation of the menu item that will be used in an Action.
+
+The `label` is the text representation of the item.
+
+The view is a `Html` view that you supply.
+
+    type Tool
+        = Screwdriver
+        | Hammer
+        | Drill
+
+    toolItems : MenuItem Tool
+    toolItems =
+        [ customMenuItem { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+        , customMenuItem { item = Hammer, label = "Hammer", view = text "Hammer" }
+        , customMenuItem { item = Drill, label = "Drill", view = text "Drill" }
+        ]
+
+    yourView model =
+        Html.map SelectMsg <|
+            view
+                (single Nothing
+                    |> menuItems toolItems
+                    |> state model.selectState
+                )
+                (selectIdentifier "SingleSelectExample")
+
+The view you provide will be rendered in a `li` element that is styled according to the value set by [setStyles](#setStyles).
+
+        customMenuItem { item = Hammer, label = "Hammer", view = text "Hammer" }
+        => <li>Hammer</>
+
+Combine this with [customMenuItem](#customMenuItem) to create a [MenuItem](#MenuItem).
+
+-}
 type alias CustomMenuItem item =
     { item : item
     , label : String
@@ -527,6 +563,24 @@ basicMenuItem bscItem =
     Basic bscItem
 
 
+{-| Create a [custom](#CustomMenuItem) type of [MenuItem](#MenuItem).
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+            [ customMenuItem
+                { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+            , customMenuItem
+                { item = Hammer, label = "Hammer", view = text "Hammer" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+            ]
+
+-}
 customMenuItem : CustomMenuItem item -> MenuItem item
 customMenuItem customItem =
     Custom customItem
