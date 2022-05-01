@@ -191,7 +191,7 @@ type MenuListElement
 -- These data structures make using 'lazy' function a breeze
 
 
-type alias ViewBasicMenuItemData item =
+type alias ViewMenuItemData item =
     { index : Int
     , itemSelected : Bool
     , isClickFocused : Bool
@@ -1758,7 +1758,7 @@ viewMenu viewMenuData =
                 )
 
 
-viewBasicMenuItem : ViewBasicMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
+viewBasicMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
 viewBasicMenuItem data content =
     let
         resolveMouseLeave =
@@ -2224,7 +2224,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                 Single maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewBasicMenuItem
-                        (ViewBasicMenuItemData
+                        (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
                             (isMenuItemClickFocused initialMousedown idx)
@@ -2242,7 +2242,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                 _ ->
                     ( getMenuItemLabel item
                     , lazy2 viewBasicMenuItem
-                        (ViewBasicMenuItemData
+                        (ViewMenuItemData
                             idx
                             False
                             (isMenuItemClickFocused initialMousedown idx)
@@ -2262,7 +2262,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                 Single maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewBasicMenuItem
-                        (ViewBasicMenuItemData
+                        (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
                             (isMenuItemClickFocused initialMousedown idx)
@@ -2280,7 +2280,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                 _ ->
                     ( getMenuItemLabel item
                     , lazy2 viewBasicMenuItem
-                        (ViewBasicMenuItemData
+                        (ViewMenuItemData
                             idx
                             False
                             (isMenuItemClickFocused initialMousedown idx)
@@ -2485,7 +2485,7 @@ dropdownIndicator controlStyles disabledInput =
 -- STYLES
 
 
-menuItemContainerStyles : ViewBasicMenuItemData item -> List Css.Style
+menuItemContainerStyles : ViewMenuItemData item -> List Css.Style
 menuItemContainerStyles data =
     let
         withTargetStyles =
