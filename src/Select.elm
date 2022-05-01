@@ -1,5 +1,5 @@
 module Select exposing
-    ( State, MenuItem, BasicMenuItem, basicMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    ( State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi, truncateMultiTag, multiTagColor, initMultiConfig
     , singleNative
@@ -12,7 +12,7 @@ module Select exposing
 
 # Set up
 
-@docs State, MenuItem, BasicMenuItem, basicMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -43,12 +43,12 @@ module Select exposing
 
 import Browser.Dom as Dom
 import Css
-import Html.Styled exposing (Html, button, div, input, li, option, select, span, text)
+import Html.Styled as Styled exposing (Html, button, div, input, li, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
-import Html.Styled.Lazy exposing (lazy)
+import Html.Styled.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.ClearIcon as ClearIcon
@@ -93,8 +93,8 @@ type Msg item
     | InputEscape
     | ClearFocusedItem
     | HoverFocused Int
-    | EnterSelect item
-    | EnterSelectMulti item SelectId
+    | EnterSelect (MenuItem item)
+    | EnterSelectMulti (MenuItem item) SelectId
     | KeyboardDown SelectId Int
     | KeyboardUp SelectId Int
     | OpenMenu
@@ -190,13 +190,13 @@ type MenuListElement
 -- These data structures make using 'lazy' function a breeze
 
 
-type alias ViewBasicMenuItemData item =
+type alias ViewMenuItemData item =
     { index : Int
     , itemSelected : Bool
     , isClickFocused : Bool
     , menuItemIsTarget : Bool
     , selectId : SelectId
-    , menuItem : BasicMenuItem item
+    , menuItem : MenuItem item
     , menuNavigation : MenuNavigation
     , initialMousedown : InitialMousedown
     , variant : Variant item
@@ -301,6 +301,7 @@ type MenuNavigation
 {-| -}
 type MenuItem item
     = Basic (BasicMenuItem item)
+    | Custom (CustomMenuItem item)
 
 
 {-| A menu item that will be represented in the menu list.
@@ -337,6 +338,70 @@ type alias BasicMenuItem item =
     { item : item
     , label : String
     }
+
+
+{-| A menu item that will be represented in the menu list by a view you supply.
+
+The `item` property is the type representation of the menu item that will be used in an Action.
+
+The `label` is the text representation of the item.
+
+The view is a `Html` view that you supply.
+
+    type Tool
+        = Screwdriver
+        | Hammer
+        | Drill
+
+    toolItems : MenuItem Tool
+    toolItems =
+        [ customMenuItem { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+        , customMenuItem { item = Hammer, label = "Hammer", view = text "Hammer" }
+        , customMenuItem { item = Drill, label = "Drill", view = text "Drill" }
+        ]
+
+    yourView model =
+        Html.map SelectMsg <|
+            view
+                (single Nothing
+                    |> menuItems toolItems
+                    |> state model.selectState
+                )
+                (selectIdentifier "SingleSelectExample")
+
+The view you provide will be rendered in a `li` element that is styled according to the value set by [setStyles](#setStyles).
+
+        customMenuItem { item = Hammer, label = "Hammer", view = text "Hammer" }
+        => <li>Hammer</>
+
+Combine this with [customMenuItem](#customMenuItem) to create a [MenuItem](#MenuItem).
+
+-}
+type alias CustomMenuItem item =
+    { item : item
+    , label : String
+    , view : Html Never
+    }
+
+
+getMenuItemLabel : MenuItem item -> String
+getMenuItemLabel item =
+    case item of
+        Basic config ->
+            config.label
+
+        Custom config ->
+            config.label
+
+
+getMenuItemItem : MenuItem item -> item
+getMenuItemItem item =
+    case item of
+        Basic config ->
+            config.item
+
+        Custom config ->
+            config.item
 
 
 
@@ -496,6 +561,29 @@ multiTagColor c (MultiSelectConfig config) =
 basicMenuItem : BasicMenuItem item -> MenuItem item
 basicMenuItem bscItem =
     Basic bscItem
+
+
+{-| Create a [custom](#CustomMenuItem) type of [MenuItem](#MenuItem).
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+            [ customMenuItem
+                { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+            , customMenuItem
+                { item = Hammer, label = "Hammer", view = text "Hammer" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+            ]
+
+-}
+customMenuItem : CustomMenuItem item -> MenuItem item
+customMenuItem customItem =
+    Custom customItem
 
 
 
@@ -895,21 +983,22 @@ update msg (State state_) =
                         selectedOptionIndex
 
                     else
+                        -- Account for the placeholder item
                         selectedOptionIndex - 1
             in
             case ListExtra.getAt resolveIndex allMenuItems of
                 Nothing ->
                     ( Nothing, State state_, Cmd.none )
 
-                Just (Basic mi) ->
-                    ( Just <| Select mi.item, State state_, Cmd.none )
+                Just mi ->
+                    ( Just <| Select (getMenuItemItem mi), State state_, Cmd.none )
 
-        EnterSelect item ->
+        EnterSelect menuItem ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
-            ( Just (Select item)
+            ( Just (Select (getMenuItemItem menuItem))
             , State
                 { stateWithClosedMenu
                     | initialMousedown = NothingMousedown
@@ -918,7 +1007,7 @@ update msg (State state_) =
             , cmdWithClosedMenu
             )
 
-        EnterSelectMulti item (SelectId id) ->
+        EnterSelectMulti menuItem (SelectId id) ->
             let
                 inputId =
                     SelectInput.inputId id
@@ -926,7 +1015,7 @@ update msg (State state_) =
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
-            ( Just (Select item)
+            ( Just (Select (getMenuItemItem menuItem))
             , State
                 { stateWithClosedMenu
                     | initialMousedown = NothingMousedown
@@ -1538,8 +1627,8 @@ viewNative viewNativeData =
                                 ]
                                 [ text ("(" ++ viewNativeData.placeholder ++ ")") ]
 
-                buildList ((Basic item) as menuItem) =
-                    option (StyledAttribs.value item.label :: withSelectedOption menuItem) [ text item.label ]
+                buildList menuItem =
+                    option (StyledAttribs.value (getMenuItemLabel menuItem) :: withSelectedOption menuItem) [ text (getMenuItemLabel menuItem) ]
 
                 (SelectId selectId) =
                     viewNativeData.selectId
@@ -1723,8 +1812,8 @@ viewMenu viewMenuData =
                 )
 
 
-viewBasicMenuItem : ViewBasicMenuItemData item -> Html (Msg item)
-viewBasicMenuItem data =
+viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
+viewMenuItem data content =
     let
         resolveMouseLeave =
             if data.isClickFocused then
@@ -1736,10 +1825,10 @@ viewBasicMenuItem data =
         resolveMouseUpMsg =
             case data.variant of
                 Multi _ _ ->
-                    SelectedItemMulti data.menuItem.item data.selectId
+                    SelectedItemMulti (getMenuItemItem data.menuItem) data.selectId
 
                 _ ->
-                    SelectedItem data.menuItem.item
+                    SelectedItem (getMenuItemItem data.menuItem)
 
         resolveMouseUp =
             case data.initialMousedown of
@@ -1756,31 +1845,6 @@ viewBasicMenuItem data =
             else
                 []
 
-        withTargetStyles =
-            if data.menuItemIsTarget && not data.itemSelected then
-                [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
-                , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
-                ]
-
-            else
-                []
-
-        withIsClickedStyles =
-            if data.isClickFocused then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked data.menuItemStyles) ]
-
-            else
-                []
-
-        withIsSelectedStyles =
-            if data.itemSelected then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected data.menuItemStyles)
-                , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected data.menuItemStyles) ]
-                ]
-
-            else
-                []
-
         resolveSelectedAriaAttribs =
             if data.itemSelected then
                 [ ariaSelected "true" ]
@@ -1791,7 +1855,6 @@ viewBasicMenuItem data =
         resolvePosinsetAriaAttrib =
             [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
     in
-    -- option
     li
         ([ role "option"
          , tabindex -1
@@ -1799,22 +1862,7 @@ viewBasicMenuItem data =
          , on "mouseover" <| Decode.succeed (HoverFocused data.index)
          , id (menuItemId data.selectId data.index)
          , StyledAttribs.css
-            ([ Css.color Css.inherit
-             , Css.cursor Css.default
-             , Css.display Css.block
-             , Css.fontSize Css.inherit
-             , Css.width (Css.pct 100)
-             , Css.property "user-select" "none"
-             , Css.boxSizing Css.borderBox
-             , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius data.menuItemStyles))
-             , Css.padding2 (Css.px 8) (Css.px 8)
-             , Css.outline Css.none
-             , Css.color (Styles.getMenuItemColor data.menuItemStyles)
-             ]
-                ++ withTargetStyles
-                ++ withIsClickedStyles
-                ++ withIsSelectedStyles
-            )
+            (menuItemContainerStyles data)
          ]
             ++ resolveMouseLeave
             ++ resolveMouseUp
@@ -1822,7 +1870,7 @@ viewBasicMenuItem data =
             ++ resolveSelectedAriaAttribs
             ++ resolvePosinsetAriaAttrib
         )
-        [ text data.menuItem.label ]
+        content
 
 
 viewPlaceholder : Configuration item -> Html msg
@@ -1840,7 +1888,7 @@ viewPlaceholder config =
 
 
 viewSelectedPlaceholder : Styles.ControlConfig -> MenuItem item -> Html msg
-viewSelectedPlaceholder controlStyles (Basic item) =
+viewSelectedPlaceholder controlStyles item =
     let
         addedStyles =
             [ Css.maxWidth (Css.calc (Css.pct 100) Css.minus (Css.px 8))
@@ -1858,7 +1906,7 @@ viewSelectedPlaceholder controlStyles (Basic item) =
             )
         , attribute "data-test-id" "selectedItem"
         ]
-        [ text item.label ]
+        [ text (getMenuItemLabel item) ]
 
 
 viewSelectInput : ViewSelectInputData item -> Html (Msg item)
@@ -1870,16 +1918,16 @@ viewSelectInput viewSelectInputData =
         resolveEnterMsg mi =
             case viewSelectInputData.variant of
                 Multi _ _ ->
-                    EnterSelectMulti mi.item (SelectId selectId)
+                    EnterSelectMulti mi (SelectId selectId)
 
                 _ ->
-                    EnterSelect mi.item
+                    EnterSelect mi
 
         enterKeydownDecoder =
             -- there will always be a target item if the menu is
             -- open and not empty
             case viewSelectInputData.maybeActiveTarget of
-                Just (Basic mi) ->
+                Just mi ->
                     [ Events.isEnter (resolveEnterMsg mi) ]
 
                 Nothing ->
@@ -1971,8 +2019,8 @@ viewDummyInput viewDummyInputData =
             -- there will always be a target item if the menu is
             -- open and not empty
             case viewDummyInputData.maybeTargetItem of
-                Just (Basic menuitem) ->
-                    [ Events.isEnter (EnterSelect menuitem.item) ]
+                Just menuItem ->
+                    [ Events.isEnter (EnterSelect menuItem) ]
 
                 Nothing ->
                     []
@@ -2039,7 +2087,7 @@ viewDummyInput viewDummyInputData =
 
 
 viewMultiValue : SelectId -> MultiSelectConfiguration -> InitialMousedown -> Int -> MenuItem item -> Html (Msg item)
-viewMultiValue selectId config mousedownedItem index (Basic menuItem) =
+viewMultiValue selectId config mousedownedItem index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
@@ -2077,7 +2125,7 @@ viewMultiValue selectId config mousedownedItem index (Basic menuItem) =
     in
     Tag.view
         (resolveVariant
-            |> Tag.onDismiss (DeselectedMultiItem menuItem.item selectId)
+            |> Tag.onDismiss (DeselectedMultiItem (getMenuItemItem menuItem) selectId)
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
@@ -2085,7 +2133,7 @@ viewMultiValue selectId config mousedownedItem index (Basic menuItem) =
             |> resolveTruncationWidth
             |> resolveMouseleave
         )
-        menuItem.label
+        (getMenuItemLabel menuItem)
 
 
 dummyInputId : SelectId -> String
@@ -2121,7 +2169,7 @@ isSelected : MenuItem item -> Maybe (MenuItem item) -> Bool
 isSelected menuItem maybeSelectedItem =
     case maybeSelectedItem of
         Just item ->
-            item == menuItem
+            getMenuItemItem item == getMenuItemItem menuItem
 
         Nothing ->
             False
@@ -2188,76 +2236,123 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 buildMenuItems : Configuration item -> SelectState -> List (MenuItem item)
 buildMenuItems config state_ =
+    let
+        filteredMenuItems =
+            case ( config.searchable, state_.inputValue ) of
+                ( True, Just value ) ->
+                    if String.isEmpty value then
+                        config.menuItems
+
+                    else
+                        List.filter (filterMenuItem value) config.menuItems
+
+                _ ->
+                    config.menuItems
+    in
     case config.variant of
         Single _ ->
-            if config.searchable then
-                List.filter (filterMenuItem state_.inputValue) config.menuItems
-
-            else
-                config.menuItems
+            filteredMenuItems
 
         Multi _ maybeSelectedMenuItems ->
-            if config.searchable then
-                List.filter (filterMenuItem state_.inputValue) config.menuItems
-                    |> filterMultiSelectedItems maybeSelectedMenuItems
-
-            else
-                config.menuItems
-                    |> filterMultiSelectedItems maybeSelectedMenuItems
+            filteredMenuItems
+                |> filterMultiSelectedItems maybeSelectedMenuItems
 
         _ ->
             []
 
 
-buildMenuItem : Styles.MenuItemConfig -> SelectId -> Variant item -> InitialMousedown -> Int -> MenuNavigation -> Int -> MenuItem item -> ( String, Html (Msg item) )
+buildMenuItem :
+    Styles.MenuItemConfig
+    -> SelectId
+    -> Variant item
+    -> InitialMousedown
+    -> Int
+    -> MenuNavigation
+    -> Int
+    -> MenuItem item
+    -> ( String, Html (Msg item) )
 buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
     case item of
-        Basic bi ->
+        Basic _ ->
             case variant of
                 Single maybeSelectedItem ->
-                    ( bi.label
-                    , lazy viewBasicMenuItem <|
-                        ViewBasicMenuItemData
+                    ( getMenuItemLabel item
+                    , lazy2 viewMenuItem
+                        (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
                             (isMenuItemClickFocused initialMousedown idx)
                             (isTarget activeTargetIndex idx)
                             selectId
-                            bi
+                            item
                             menuNavigation
                             initialMousedown
                             variant
                             menuItemStyles
+                        )
+                        [ text (getMenuItemLabel item) ]
                     )
 
                 _ ->
-                    ( bi.label
-                    , lazy viewBasicMenuItem <|
-                        ViewBasicMenuItemData
+                    ( getMenuItemLabel item
+                    , lazy2 viewMenuItem
+                        (ViewMenuItemData
                             idx
                             False
                             (isMenuItemClickFocused initialMousedown idx)
                             (isTarget activeTargetIndex idx)
                             selectId
-                            bi
+                            item
                             menuNavigation
                             initialMousedown
                             variant
                             menuItemStyles
+                        )
+                        [ text (getMenuItemLabel item) ]
+                    )
+
+        Custom ci ->
+            case variant of
+                Single maybeSelectedItem ->
+                    ( getMenuItemLabel item
+                    , lazy2 viewMenuItem
+                        (ViewMenuItemData
+                            idx
+                            (isSelected item maybeSelectedItem)
+                            (isMenuItemClickFocused initialMousedown idx)
+                            (isTarget activeTargetIndex idx)
+                            selectId
+                            item
+                            menuNavigation
+                            initialMousedown
+                            variant
+                            menuItemStyles
+                        )
+                        [ Styled.map never ci.view ]
+                    )
+
+                _ ->
+                    ( getMenuItemLabel item
+                    , lazy2 viewMenuItem
+                        (ViewMenuItemData
+                            idx
+                            False
+                            (isMenuItemClickFocused initialMousedown idx)
+                            (isTarget activeTargetIndex idx)
+                            selectId
+                            item
+                            menuNavigation
+                            initialMousedown
+                            variant
+                            menuItemStyles
+                        )
+                        [ Styled.map never ci.view ]
                     )
 
 
-filterMenuItem : Maybe String -> MenuItem item -> Bool
-filterMenuItem maybeQuery (Basic item) =
-    case maybeQuery of
-        Nothing ->
-            True
-
-        Just "" ->
-            True
-
-        Just query ->
-            String.contains (String.toLower query) <| String.toLower item.label
+filterMenuItem : String -> MenuItem item -> Bool
+filterMenuItem query item =
+    String.contains (String.toLower query) <| String.toLower (getMenuItemLabel item)
 
 
 filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
@@ -2442,6 +2537,50 @@ dropdownIndicator controlStyles disabledInput =
 
 
 -- STYLES
+
+
+menuItemContainerStyles : ViewMenuItemData item -> List Css.Style
+menuItemContainerStyles data =
+    let
+        withTargetStyles =
+            if data.menuItemIsTarget && not data.itemSelected then
+                [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
+                , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
+                ]
+
+            else
+                []
+
+        withIsClickedStyles =
+            if data.isClickFocused then
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked data.menuItemStyles) ]
+
+            else
+                []
+
+        withIsSelectedStyles =
+            if data.itemSelected then
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected data.menuItemStyles)
+                , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected data.menuItemStyles) ]
+                ]
+
+            else
+                []
+    in
+    [ Css.cursor Css.default
+    , Css.display Css.block
+    , Css.fontSize Css.inherit
+    , Css.width (Css.pct 100)
+    , Css.property "user-select" "none"
+    , Css.boxSizing Css.borderBox
+    , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius data.menuItemStyles))
+    , Css.padding2 (Css.px (Styles.getMenuItemBlockPadding data.menuItemStyles)) (Css.px (Styles.getMenuItemInlinePadding data.menuItemStyles))
+    , Css.outline Css.none
+    , Css.color (Styles.getMenuItemColor data.menuItemStyles)
+    ]
+        ++ withTargetStyles
+        ++ withIsClickedStyles
+        ++ withIsSelectedStyles
 
 
 indicatorContainerStyles : List Css.Style

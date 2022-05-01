@@ -24,11 +24,7 @@ jobs:
       - name: Install JS dependencies
         # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn install
-
-      - name: Install JS dependencies on examples
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: cd examples-optimized && yarn install
+        run: make install
 
       - name: Run elm tests
         run: make elm-tests
@@ -37,5 +33,4 @@ jobs:
         run: make ci-e2e-test
 
       - name: elm-analyse
-        run: yarn elm-analyse
-
+        run: make elm-analyse

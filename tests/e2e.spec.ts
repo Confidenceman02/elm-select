@@ -35,6 +35,9 @@ describe("examples", () => {
     const longMenuVisible = await page.isVisible("text=LongMenu.elm");
     const singleMenuVisible = await page.isVisible("text=Single.elm");
     const formVisible = await page.isVisible("text=Form.elm");
+    const customMenuItemsVisible = await page.isVisible(
+      "text=CustomMenuItems.elm"
+    );
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -46,6 +49,47 @@ describe("examples", () => {
     expect(longMenuVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
+    expect(customMenuItemsVisible).toBeTruthy();
+  });
+});
+
+describe("CustomMenuItems", () => {
+  it("filters list on user input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/CustomMenuItems.elm`);
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const listItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+
+    expect(listItemCount).toEqual(1);
+  });
+});
+
+describe("Multi", () => {
+  it("removes menu items from list when selected", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Multi.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    const initialItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+    await page.keyboard.press("Enter");
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const currentItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+
+    expect(currentItemCount).toEqual(initialItemCount - 1);
   });
 });
 
@@ -133,6 +177,21 @@ describe("SingleSearchable", () => {
 
     expect(updatedInputValue).toBe("");
   });
+
+  it("filters list on user input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleSearchable.elm`);
+    await page.type("[data-test-id=selectInput]", "el");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    const listItemCount = await page.$$eval(
+      "li",
+      (listItems) => listItems.length
+    );
+
+    expect(listItemCount).toEqual(1);
+  });
 });
 
 describe("NativeSingle", () => {
@@ -160,6 +219,7 @@ describe("NativeSingle", () => {
       label: "Great",
     });
     await page.type("[data-test-id=nativeSingleSelect]", "e");
+    await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
       (el: HTMLSelectElement) => el.selectedIndex
@@ -176,6 +236,7 @@ describe("NativeSingle", () => {
       label: "Great",
     });
 
+    await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
       (el: HTMLSelectElement) => el.selectedIndex
@@ -464,7 +525,7 @@ describe("JsOptimized", () => {
     );
 
     await page.type("[data-test-id=selectInput]", "JAIME");
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(300);
     const currentInputWidth = await page.$eval(
       "[data-test-id=selectInput]",
       (el: HTMLInputElement) => el.getBoundingClientRect().width

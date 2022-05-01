@@ -17,6 +17,10 @@ Select things in style!
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
 
+**Custom views**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/CustomMenuItems.png)
+
 ## Accessibility
 - Keyboard accessible
 - Screen reader accessible
