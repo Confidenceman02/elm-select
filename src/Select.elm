@@ -1757,7 +1757,7 @@ viewMenu viewMenuData =
                 (Css.px <| Styles.getMenuBoxShadowBlur viewMenuData.menuStyles)
                 (Styles.getMenuBoxShadowColor viewMenuData.menuStyles)
             , Css.marginTop (Css.px menuMarginTop)
-            , Css.zIndex (Css.int 1)
+            , Css.zIndex (Css.int 2)
             ]
 
         menuListStyles =
