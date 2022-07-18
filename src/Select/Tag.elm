@@ -106,7 +106,6 @@ view (Config config) value =
             , Css.padding2 (Css.px 0) (Css.px 9.6)
             , Css.boxSizing Css.borderBox
             , Css.backgroundColor config.backgroundColor
-            , Css.hover [ Css.borderColor (Css.hex "#C4C5D4") ]
             , Css.height (Css.px 30)
             ]
         , attribute "data-test-id" config.dataTestId
@@ -139,7 +138,7 @@ viewTextContent config value =
     in
     span
         -- truncate
-        [ StyledAttribs.css (Css.marginTop (Css.px -1) :: resolveTruncation)
+        [ StyledAttribs.css resolveTruncation
         ]
         [ text value ]
 
