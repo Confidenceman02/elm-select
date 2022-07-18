@@ -1,3 +1,13 @@
+## [4.1.2] - 2022-07-18
+
+## Fixed
+- Doubled up arrow events on dummy input.
+- Focus ring on multi select tag.
+- Center alignment of multi select tag value and close button.
+
+## Added
+- Latest elm-css version
+
 ## [4.1.1] - 2022-06-05
 
 ## Fixed
@@ -208,6 +218,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[4.1.2]: https://github.com/Confidenceman02/elm-select/compare/4.1.1...4.1.2
 [4.1.1]: https://github.com/Confidenceman02/elm-select/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/Confidenceman02/elm-select/compare/4.0.0...4.1.0
 [4.0.0]: https://github.com/Confidenceman02/elm-select/compare/3.2.2...4.0.0
