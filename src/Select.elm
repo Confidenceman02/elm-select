@@ -2072,8 +2072,6 @@ viewDummyInput viewDummyInputData =
                 (Decode.oneOf
                     ([ Events.isSpace (ToggleMenuAtKey <| SelectId viewDummyInputData.id)
                      , Events.isEscape CloseMenu
-                     , Events.isDownArrow (KeyboardDown (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
-                     , Events.isUpArrow (KeyboardUp (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
                      ]
                         ++ whenEnterEvent
                         ++ whenArrowEvents
