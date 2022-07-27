@@ -81,7 +81,7 @@ view m =
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.multi Select.initMultiConfig selectedItems
+                (Select.multi selectedItems
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
