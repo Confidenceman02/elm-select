@@ -1,3 +1,47 @@
+## [5.0.0] - 2022-07-28
+
+## Added
+- Multi variant tag styles to Styles module
+
+## Breaking changes
+`initMultiConfig` no longer required when using the `multi` builder. 
+
+previous
+```
+multi initMultiConfig selectedItems
+```
+current
+```
+multi selectedItems
+```
+
+Setting the multi tag color and truncation properties can be done via the `Styles` setters.
+
+previous
+```
+multi
+  (initMultiConfig
+      |> truncateMultiTag 40
+      |> multiTagColor (Css.hex "#E1E2EA")
+  )
+  []
+```
+
+current
+```
+let
+  controlStyles =
+      getControlConfig default
+          |> setControlMultiTagTruncationWidth 40
+          |> setControlMultiTagBackgroundColor (Css.hex "ddff33")
+
+  customStyles =
+      setControlStyles controlStyles default
+in
+multi []
+    |> setStyles customStyles
+```
+
 ## [4.1.2] - 2022-07-18
 
 ## Fixed
@@ -218,6 +262,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[5.0.0]: https://github.com/Confidenceman02/elm-select/compare/4.1.2...5.0.0
 [4.1.2]: https://github.com/Confidenceman02/elm-select/compare/4.1.1...4.1.2
 [4.1.1]: https://github.com/Confidenceman02/elm-select/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/Confidenceman02/elm-select/compare/4.0.0...4.1.0
