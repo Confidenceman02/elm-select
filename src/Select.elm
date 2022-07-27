@@ -22,7 +22,7 @@ module Select exposing
 
 # Multi select
 
-@docs multi, initMultiConfig
+@docs multi
 
 
 # Native Single select
@@ -854,11 +854,8 @@ Selected items will render as tags and be visually removed from the menu list.
     yourView model =
         Html.map SelectMsg <|
             view
-                (multi
-                    (initMultiConfig
-                        |> menuItems model.countries
-                    )
-                    model.selectedCountries
+                (multi model.selectedCountries
+                    |> menuItems model.countries
                 )
                 (selectIdentifier "1234")
 
