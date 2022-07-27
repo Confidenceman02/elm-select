@@ -5,6 +5,7 @@ import Css
 import Html.Styled as Styled exposing (Html, div)
 import Html.Styled.Attributes as StyledAttribs
 import Select exposing (MenuItem, initState, selectIdentifier, update)
+import Select.Styles as Styles
 
 
 type Msg
@@ -62,7 +63,12 @@ update msg model =
                         _ ->
                             model.selectedItems
             in
-            ( { model | selectState = selectState, selectedItems = updatedSelectedItems }, Cmd.map SelectMsg cmds )
+            ( { model
+                | selectState = selectState
+                , selectedItems = updatedSelectedItems
+              }
+            , Cmd.map SelectMsg cmds
+            )
 
 
 view : Model -> Html Msg
@@ -70,6 +76,14 @@ view m =
     let
         selectedItems =
             List.map (\i -> Select.basicMenuItem { item = i, label = i }) m.selectedItems
+
+        controlStyles =
+            Styles.getControlConfig Styles.default
+                |> Styles.setControlMultiTagTruncationWidth 40
+                |> Styles.setControlMultiTagBackgroundColor (Css.hex "ddff33")
+
+        customStyles =
+            Styles.setControlStyles controlStyles Styles.default
     in
     div
         [ StyledAttribs.css
@@ -82,13 +96,11 @@ view m =
         [ Styled.map SelectMsg <|
             Select.view
                 (Select.multi
-                    (Select.initMultiConfig
-                        |> Select.truncateMultiTag 40
-                    )
                     selectedItems
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
+                    |> Select.setStyles customStyles
                 )
                 (selectIdentifier "SingleSelectExample")
         ]
