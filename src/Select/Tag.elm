@@ -1,4 +1,15 @@
-module Select.Tag exposing (backgroundColor, dataTestId, default, onDismiss, onMousedown, onMouseleave, rightMargin, truncateWidth, view)
+module Select.Tag exposing
+    ( backgroundColor
+    , borderRadius
+    , dataTestId
+    , default
+    , onDismiss
+    , onMousedown
+    , onMouseleave
+    , rightMargin
+    , truncateWidth
+    , view
+    )
 
 import Css
 import Html.Styled exposing (Html, div, span, text)
@@ -20,6 +31,7 @@ type alias Configuration msg =
     , rightMargin : Bool
     , backgroundColor : Css.Color
     , dataTestId : String
+    , borderRadius : Float
     }
 
 
@@ -36,6 +48,7 @@ defaults =
     , rightMargin = False
     , backgroundColor = Css.hex "#E1E2EA"
     , dataTestId = "multiSelectTag"
+    , borderRadius = 16
     }
 
 
@@ -78,6 +91,11 @@ backgroundColor c (Config config) =
     Config { config | backgroundColor = c }
 
 
+borderRadius : Float -> Config msg -> Config msg
+borderRadius rad (Config config) =
+    Config { config | borderRadius = rad }
+
+
 dataTestId : String -> Config msg -> Config msg
 dataTestId testId (Config config) =
     Config { config | dataTestId = testId }
@@ -102,7 +120,7 @@ view (Config config) value =
             , Css.color (Css.hex "#35374A")
             , Css.display Css.inlineBlock
             , Css.border3 (Css.px 2) Css.solid Css.transparent
-            , Css.borderRadius (Css.px 16)
+            , Css.borderRadius (Css.px config.borderRadius)
             , Css.padding2 (Css.px 0) (Css.px 9.6)
             , Css.boxSizing Css.borderBox
             , Css.backgroundColor config.backgroundColor

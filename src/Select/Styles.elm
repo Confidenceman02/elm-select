@@ -2,13 +2,13 @@ module Select.Styles exposing
     ( Config, ControlConfig, MenuConfig, MenuItemConfig, default
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-    , setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
+    , setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected, setMenuItemInlinePadding
     , setMenuItemColorHoverNotSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-    , getControlLoadingIndicatorColor, getControlMultiTagBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
+    , getControlLoadingIndicatorColor, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColorNotSelected
@@ -41,7 +41,7 @@ Set styles
 
 @docs setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
 @docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-@docs setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
+@docs setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
 # Menu
@@ -64,7 +64,7 @@ Get styles
 
 @docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-@docs getControlLoadingIndicatorColor, getControlMultiTagBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
+@docs getControlLoadingIndicatorColor, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
 
 
 # Menu
@@ -146,6 +146,7 @@ type alias ControlConfiguration =
     , dropdownIndicatorColorHover : Css.Color
     , loadingIndicatorColor : Css.Color
     , multiTagBackgroundColor : Css.Color
+    , multiTagBorderRadius : Float
     , multiTagTruncationWidth : Maybe Float
     , placeholderOpacity : Float
     , selectedColor : Css.Color
@@ -201,6 +202,7 @@ defaultsControl =
     , dropdownIndicatorColorHover = Css.rgb 51 51 51
     , loadingIndicatorColor = Css.rgb 102 102 102
     , multiTagBackgroundColor = Css.hex "#E1E2EA"
+    , multiTagBorderRadius = 16
     , multiTagTruncationWidth = Nothing
     , placeholderOpacity = 0.5
     , selectedColor = Css.hex "#35374A"
@@ -426,6 +428,12 @@ setControlLoadingIndicatorColor c (ControlConfig config) =
 setControlMultiTagBackgroundColor : Css.Color -> ControlConfig -> ControlConfig
 setControlMultiTagBackgroundColor c (ControlConfig config) =
     ControlConfig { config | multiTagBackgroundColor = c }
+
+
+{-| -}
+setControlMultiTagBorderRadius : Float -> ControlConfig -> ControlConfig
+setControlMultiTagBorderRadius rad (ControlConfig config) =
+    ControlConfig { config | multiTagBorderRadius = rad }
 
 
 {-| -}
@@ -719,6 +727,12 @@ getControlColor (ControlConfig config) =
 getControlMultiTagBackgroundColor : ControlConfig -> Css.Color
 getControlMultiTagBackgroundColor (ControlConfig config) =
     config.multiTagBackgroundColor
+
+
+{-| -}
+getControlMultiTagBorderRadius : ControlConfig -> Float
+getControlMultiTagBorderRadius (ControlConfig config) =
+    config.multiTagBorderRadius
 
 
 {-| -}
