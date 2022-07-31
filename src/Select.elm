@@ -2041,6 +2041,7 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
             |> Tag.backgroundColor (Styles.getControlMultiTagBackgroundColor controlStyles)
+            |> Tag.borderRadius (Styles.getControlMultiTagBorderRadius controlStyles)
             |> resolveTruncationWidth
             |> resolveMouseleave
         )
