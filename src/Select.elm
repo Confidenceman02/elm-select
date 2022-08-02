@@ -1,5 +1,5 @@
 module Select exposing
-    ( State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    ( State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi
     , singleNative
@@ -12,7 +12,7 @@ module Select exposing
 
 # Set up
 
-@docs State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -290,8 +290,8 @@ type MenuNavigation
 
 {-| -}
 type MenuItem item
-    = Basic (BasicMenuItem item)
-    | Custom (CustomMenuItem item)
+    = Basic (Internal.BaseMenuItem (BasicMenuItem item))
+    | Custom (Internal.BaseMenuItem (CustomMenuItem item))
 
 
 {-| A menu item that will be represented in the menu list.
@@ -484,7 +484,11 @@ defaults =
 -}
 basicMenuItem : BasicMenuItem item -> MenuItem item
 basicMenuItem bscItem =
-    Basic bscItem
+    Basic
+        { item = bscItem.item
+        , label = bscItem.label
+        , filterable = True
+        }
 
 
 {-| Create a [custom](#CustomMenuItem) type of [MenuItem](#MenuItem).
@@ -506,8 +510,48 @@ basicMenuItem bscItem =
 
 -}
 customMenuItem : CustomMenuItem item -> MenuItem item
-customMenuItem customItem =
-    Custom customItem
+customMenuItem i =
+    Custom
+        { item = i.item
+        , label = i.label
+        , view = i.view
+        , filterable = True
+        }
+
+
+{-| Choose whether a menu item is filterable.
+
+Useful for when you always want to have a selectable option in the menu.
+
+Menu items are filterable by default.
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+            [ customMenuItem
+                { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+            , customMenuItem
+                { item = Hammer, label = "Hammer", view = text "Hammer" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+                |> filterableMenuItem False
+            ]
+
+NOTE: This only takes effect when [searchable](#searchable) is `True`.
+
+-}
+filterableMenuItem : Bool -> MenuItem item -> MenuItem item
+filterableMenuItem pred mi =
+    case mi of
+        Basic obj ->
+            Basic { obj | filterable = pred }
+
+        Custom obj ->
+            Custom { obj | filterable = pred }
 
 
 
@@ -1358,7 +1402,7 @@ view (Config config) selectId =
                             else
                                 []
 
-                        buildMulti =
+                        buildVariantInput =
                             case config.variant of
                                 Multi multiSelectedValues ->
                                     let
@@ -1453,7 +1497,7 @@ view (Config config) selectId =
                                 ++ withDisabledStyles
                             )
                         ]
-                        [ buildMulti
+                        [ buildVariantInput
                         , buildPlaceholder
                         ]
                     , let
@@ -2077,6 +2121,16 @@ getSelectId (SelectId id_) =
 -- CHECKERS
 
 
+isMenuItemFilterable : MenuItem item -> Bool
+isMenuItemFilterable mi =
+    case mi of
+        Basic obj ->
+            obj.filterable
+
+        Custom obj ->
+            obj.filterable
+
+
 isSelected : MenuItem item -> Maybe (MenuItem item) -> Bool
 isSelected menuItem maybeSelectedItem =
     case maybeSelectedItem of
@@ -2264,7 +2318,8 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
 
 filterMenuItem : String -> MenuItem item -> Bool
 filterMenuItem query item =
-    String.contains (String.toLower query) <| String.toLower (getMenuItemLabel item)
+    String.contains (String.toLower query) (String.toLower (getMenuItemLabel item))
+        || not (isMenuItemFilterable item)
 
 
 filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
@@ -2273,7 +2328,12 @@ filterMultiSelectedItems selectedItems currentMenuItems =
         currentMenuItems
 
     else
-        List.filter (\i -> not (List.member i selectedItems)) currentMenuItems
+        List.filter
+            (\i ->
+                not
+                    (List.any (\si -> getMenuItemItem i == getMenuItemItem si) selectedItems)
+            )
+            currentMenuItems
 
 
 menuItemOrientationInViewport : MenuListElement -> MenuItemElement -> MenuItemVisibility

@@ -28,6 +28,7 @@ describe("examples", () => {
       "text=MultiAsync.elm"
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
+    const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
     const disabledExampleVisible = await page.isVisible("text=Disabled.elm");
     const clearableExampleVisible = await page.isVisible(
       "text=SingleClearable.elm"
@@ -44,6 +45,7 @@ describe("examples", () => {
     expect(nativeSingle).toBeTruthy();
     expect(truncationExampleVisible).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
+    expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
     expect(disabledExampleVisible).toBeTruthy();
     expect(clearableExampleVisible).toBeTruthy();
@@ -92,6 +94,49 @@ describe("Multi", () => {
     );
 
     expect(currentItemCount).toEqual(initialItemCount - 1);
+  });
+
+  it("does not filter menu items that are not filterable", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/MultiFilterable.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    await page.type("[data-test-id=selectInput]", "sdsdsdsdsdsd");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const rows = page.locator("ul li");
+    const texts = await rows.evaluateAll((list) =>
+      list.map((element) => element.textContent)
+    );
+
+    const matches = texts.map((it) => {
+      return new RegExp("Non Filterable").test(it as string);
+    });
+
+    expect(matches.includes(true)).toBeTruthy();
+  });
+
+  it("removes non filterable items when they have been selected", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/MultiFilterable.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    await page.type("[data-test-id=selectInput]", "sdsdsdsdsdsd");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("Enter");
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const rows = page.locator("ul li");
+    const texts = await rows.evaluateAll((list) =>
+      list.map((element) => element.textContent)
+    );
+
+    const matches = texts.map((it) => {
+      return new RegExp("Non Filterable").test(it as string);
+    });
+
+    expect(matches.includes(true)).toBeFalsy();
   });
 });
 

@@ -33,3 +33,7 @@ elm-live: install
 .PHONY: elm-analyse
 elm-analyse: install
 	yarn elm-analyse
+
+.PHONY: preview-docs
+preview-docs: install
+	yarn elm-doc-preview
