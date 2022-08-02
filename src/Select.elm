@@ -523,6 +523,8 @@ customMenuItem i =
 
 Useful for when you always want to have a selectable option in the menu.
 
+Menu items are filterable by default.
+
         type Tool
             = Screwdriver
             | Hammer
@@ -539,7 +541,7 @@ Useful for when you always want to have a selectable option in the menu.
                 |> filterableMenuItem False
             ]
 
-NOTE: This takes effect when [searchable](#searchable) is `True`.
+NOTE: This only takes effect when [searchable](#searchable) is `True`.
 
 -}
 filterableMenuItem : Bool -> MenuItem item -> MenuItem item
