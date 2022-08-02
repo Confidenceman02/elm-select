@@ -1400,7 +1400,7 @@ view (Config config) selectId =
                             else
                                 []
 
-                        buildMulti =
+                        buildVariantInput =
                             case config.variant of
                                 Multi multiSelectedValues ->
                                     let
@@ -1495,7 +1495,7 @@ view (Config config) selectId =
                                 ++ withDisabledStyles
                             )
                         ]
-                        [ buildMulti
+                        [ buildVariantInput
                         , buildPlaceholder
                         ]
                     , let
@@ -2316,7 +2316,8 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
 
 filterMenuItem : String -> MenuItem item -> Bool
 filterMenuItem query item =
-    String.contains (String.toLower query) <| String.toLower (getMenuItemLabel item)
+    String.contains (String.toLower query) (String.toLower (getMenuItemLabel item))
+        || not (isMenuItemFilterable item)
 
 
 filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
@@ -2325,7 +2326,12 @@ filterMultiSelectedItems selectedItems currentMenuItems =
         currentMenuItems
 
     else
-        List.filter (\i -> not (List.member i selectedItems)) currentMenuItems
+        List.filter
+            (\i ->
+                not
+                    (List.any (\si -> getMenuItemItem i == getMenuItemItem si) selectedItems)
+            )
+            currentMenuItems
 
 
 menuItemOrientationInViewport : MenuListElement -> MenuItemElement -> MenuItemVisibility
