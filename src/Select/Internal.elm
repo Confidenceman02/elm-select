@@ -1,4 +1,4 @@
-module Select.Internal exposing (Direction(..), calculateNextActiveTarget, shouldQueryNextTargetElement, viewIf)
+module Select.Internal exposing (BaseMenuItem, Direction(..), calculateNextActiveTarget, shouldQueryNextTargetElement, viewIf)
 
 import Html.Styled as Styled
 
@@ -51,3 +51,7 @@ viewIf condition html =
 
     else
         nothing
+
+
+type alias BaseMenuItem comparable =
+    { comparable | filterable : Bool }
