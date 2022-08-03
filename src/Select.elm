@@ -1532,6 +1532,8 @@ view (Config config) selectId =
                                 [ StyledAttribs.css
                                     [ Css.color (Styles.getControlLoadingIndicatorColor controlStyles)
                                     , Css.height (Css.px 20)
+                                    , Css.displayFlex
+                                    , Css.alignItems Css.center
                                     ]
                                 ]
                                 [ resolveLoadingSpinner ]
