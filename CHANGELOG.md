@@ -1,3 +1,8 @@
+## [5.3.0] - 2022-08-03
+
+## Added
+- Exposing `Config` type
+
 ## [5.2.1] - 2022-08-03
 
 ## Added
@@ -277,6 +282,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[5.3.0]: https://github.com/Confidenceman02/elm-select/compare/5.2.1...5.3.0
 [5.2.1]: https://github.com/Confidenceman02/elm-select/compare/5.2.0...5.2.1
 [5.2.0]: https://github.com/Confidenceman02/elm-select/compare/5.1.0...5.2.0
 [5.1.0]: https://github.com/Confidenceman02/elm-select/compare/5.0.0...5.1.0
