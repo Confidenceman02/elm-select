@@ -1532,6 +1532,8 @@ view (Config config) selectId =
                                 [ StyledAttribs.css
                                     [ Css.color (Styles.getControlLoadingIndicatorColor controlStyles)
                                     , Css.height (Css.px 20)
+                                    , Css.displayFlex
+                                    , Css.alignItems Css.center
                                     ]
                                 ]
                                 [ resolveLoadingSpinner ]
@@ -2504,7 +2506,7 @@ dropdownIndicator controlStyles disabledInput =
                 ]
     in
     span
-        [ StyledAttribs.css resolveIconButtonStyles ]
+        [ StyledAttribs.css [ Css.displayFlex, Css.batch resolveIconButtonStyles ] ]
         [ DropdownIcon.view ]
 
 

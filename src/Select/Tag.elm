@@ -214,6 +214,7 @@ viewClear config =
                 [ Css.height (Css.px 16)
                 , Css.width (Css.px 16)
                 , Css.zIndex (Css.int 1)
+                , Css.displayFlex
                 ]
             ]
             [ ClearIcon.view ]
