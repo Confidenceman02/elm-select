@@ -2504,7 +2504,7 @@ dropdownIndicator controlStyles disabledInput =
                 ]
     in
     span
-        [ StyledAttribs.css resolveIconButtonStyles ]
+        [ StyledAttribs.css [ Css.displayFlex, Css.batch resolveIconButtonStyles ] ]
         [ DropdownIcon.view ]
 
 
