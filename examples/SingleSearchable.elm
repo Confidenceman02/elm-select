@@ -54,7 +54,10 @@ update msg model =
                 updatedSelectedItem =
                     case maybeAction of
                         Just (Select.Select i) ->
-                            Just i |> Debug.log "Selected"
+                            Just i
+
+                        Just (Select.InputChange _) ->
+                            model.selectedItem
 
                         _ ->
                             model.selectedItem
