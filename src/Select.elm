@@ -1124,10 +1124,21 @@ update msg (State state_) =
 
         InputEscape ->
             let
+                resolveAction =
+                    case state_.inputValue of
+                        Just "" ->
+                            Nothing
+
+                        Just _ ->
+                            Just (InputChange "")
+
+                        _ ->
+                            Nothing
+
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
-            ( Nothing, State { stateWithClosedMenu | inputValue = Nothing }, cmdWithClosedMenu )
+            ( resolveAction, State { stateWithClosedMenu | inputValue = Nothing }, cmdWithClosedMenu )
 
         ClearFocusedItem ->
             ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
