@@ -1076,16 +1076,27 @@ update msg (State state_) =
 
         OnInputBlurred _ ->
             let
+                resolveAction =
+                    case state_.inputValue of
+                        Just "" ->
+                            Nothing
+
+                        Just _ ->
+                            Just (InputChange "")
+
+                        _ ->
+                            Nothing
+
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
 
-                ( updatedState, updatedCmds ) =
+                ( updatedState, updatedCmds, action ) =
                     case state_.initialMousedown of
                         ContainerMousedown ->
-                            ( { state_ | inputValue = Nothing }, Cmd.none )
+                            ( { state_ | inputValue = Nothing }, Cmd.none, resolveAction )
 
                         MultiItemMousedown _ ->
-                            ( state_, Cmd.none )
+                            ( state_, Cmd.none, Nothing )
 
                         _ ->
                             ( { stateWithClosedMenu
@@ -1094,9 +1105,10 @@ update msg (State state_) =
                                 , inputValue = Nothing
                               }
                             , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
+                            , resolveAction
                             )
             in
-            ( Nothing
+            ( action
             , State updatedState
             , updatedCmds
             )
