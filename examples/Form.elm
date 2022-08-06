@@ -4,11 +4,14 @@ import Browser
 import Css
 import Html.Styled as Styled exposing (Html, div, form)
 import Html.Styled.Attributes as StyledAttribs
+import Html.Styled.Events as Events
 import Select exposing (MenuItem, initState, selectIdentifier, update)
+import Select.Events as SelectEvents
 
 
 type Msg
     = SelectMsg (Select.Msg String)
+    | EnterSelect
 
 
 type alias Model =
@@ -64,6 +67,9 @@ update msg model =
             in
             ( { model | selectState = selectState, selectedItem = updatedSelectedItem }, Cmd.map SelectMsg cmds )
 
+        EnterSelect ->
+            ( model, Cmd.none ) |> Debug.log "Enter"
+
 
 view : Model -> Html Msg
 view m =
@@ -75,8 +81,11 @@ view m =
 
                 _ ->
                     Nothing
+
+        enterDecoder =
+            Events.on "keydown" (SelectEvents.isEnter EnterSelect)
     in
-    form [ StyledAttribs.method "POST", StyledAttribs.action "/something" ]
+    form [ enterDecoder, StyledAttribs.method "POST", StyledAttribs.action "/something" ]
         [ div
             [ StyledAttribs.css
                 [ Css.marginTop (Css.px 20)
