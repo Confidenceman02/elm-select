@@ -13,6 +13,10 @@ Select things in style!
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/NativeSingle.png)
 
+**Menu select**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/SingleMenu.png)
+
 **Themeable**
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
@@ -54,7 +58,8 @@ type alias Model =
 
 init : Model
 init = 
-    {  selectState = Select.initState
+    {  selectState =
+            Select.initState (Select.selectIdentifier "CountrySelector")
     ,  items = 
            [ basicMenuItem 
                 { item = Australia, label = "Australia" }
@@ -125,6 +130,12 @@ update msg model =
                        
                         Just (InputChange value) -> 
                             -- handle InputChange
+
+                        Just (MenuInputCleared) ->
+                            -- handle menu input cleared
+
+                        Just (FocusSet) ->
+                            -- handle focus set
                         
                         Nothing ->
                             model
@@ -159,7 +170,6 @@ renderSelect model =
             |> Select.menuItems model.items
             |> Select.placeholder "Select your country"
         )
-        (selectIdentifier "CountrySelector")
 ```
 It is required to map the `Select.Msg` that the `Select.view` outputs to a `Msg` type that our `view` is compatible with.
 

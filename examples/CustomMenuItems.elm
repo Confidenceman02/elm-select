@@ -135,7 +135,7 @@ symbolToLabel el =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState
+    ( { selectState = initState (selectIdentifier "SingleSelectExample")
       , items =
             [ Element { symbol = H, am = symbolToAtomicMass H }
             , Element { symbol = Be, am = symbolToAtomicMass Be }
@@ -219,7 +219,6 @@ view m =
                     |> Select.menuItems menuItems
                     |> Select.placeholder "Placeholder"
                 )
-                (selectIdentifier "SingleSelectExample")
         ]
 
 
