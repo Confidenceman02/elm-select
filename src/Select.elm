@@ -1376,23 +1376,23 @@ view (Config config) selectId =
                 ]
 
             _ ->
-                viewControl (ViewControlData config selectId config.state controlStyles enterSelectTargetItem totalMenuItems)
-                    ++ [ Internal.viewIf state_.menuOpen
-                            (lazy viewMenu
-                                (ViewMenuData
-                                    config.variant
-                                    selectId
-                                    viewableMenuItems
-                                    state_.initialMousedown
-                                    state_.activeTargetIndex
-                                    state_.menuNavigation
-                                    config.isLoading
-                                    config.loadingMessage
-                                    (Styles.getMenuConfig config.styles)
-                                    (Styles.getMenuItemConfig config.styles)
-                                )
-                            )
-                       ]
+                [ lazy viewControl (ViewControlData config selectId config.state controlStyles enterSelectTargetItem totalMenuItems)
+                , Internal.viewIf state_.menuOpen
+                    (lazy viewMenu
+                        (ViewMenuData
+                            config.variant
+                            selectId
+                            viewableMenuItems
+                            state_.initialMousedown
+                            state_.activeTargetIndex
+                            state_.menuNavigation
+                            config.isLoading
+                            config.loadingMessage
+                            (Styles.getMenuConfig config.styles)
+                            (Styles.getMenuItemConfig config.styles)
+                        )
+                    )
+                ]
         )
 
 
@@ -1406,7 +1406,7 @@ type alias ViewControlData item =
     }
 
 
-viewControl : ViewControlData item -> List (Html (Msg item))
+viewControl : ViewControlData item -> Html (Msg item)
 viewControl data =
     let
         (State state_) =
@@ -1526,7 +1526,7 @@ viewControl data =
             else
                 False
     in
-    [ div
+    div
         -- control
         (StyledAttribs.css
             ([ Css.alignItems Css.center
@@ -1601,7 +1601,6 @@ viewControl data =
                 ]
             ]
         ]
-    ]
 
 
 viewNative : ViewNativeData item -> Html (Msg item)
