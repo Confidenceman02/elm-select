@@ -29,12 +29,6 @@ describe("examples", () => {
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
-    const disabledExampleVisible = await page.isVisible("text=Disabled.elm");
-    const clearableExampleVisible = await page.isVisible(
-      "text=SingleClearable.elm"
-    );
-    const longMenuVisible = await page.isVisible("text=LongMenu.elm");
-    const moreThanOneVisible = await page.isVisible("text=MoreThanOne.elm");
     const singleMenuVisible = await page.isVisible("text=Single.elm");
     const formVisible = await page.isVisible("text=Form.elm");
     const customMenuItemsVisible = await page.isVisible(
@@ -47,10 +41,6 @@ describe("examples", () => {
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
-    expect(disabledExampleVisible).toBeTruthy();
-    expect(clearableExampleVisible).toBeTruthy();
-    expect(longMenuVisible).toBeTruthy();
-    expect(moreThanOneVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
@@ -312,7 +302,7 @@ describe("NativeSingle", () => {
   });
 });
 
-describe("Async", () => {
+describe("MultiAsync", () => {
   it("renders a loading message when no items match input", async () => {
     await browser.newContext();
     const page = await browser.newPage();
