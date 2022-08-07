@@ -100,33 +100,10 @@ describe("Multi", () => {
     );
 
     const matches = texts.map((it) => {
-      return new RegExp("Non Filterable").test(it as string);
+      return new RegExp("New value").test(it as string);
     });
 
     expect(matches.includes(true)).toBeTruthy();
-  });
-
-  it("removes non filterable items when they have been selected", async () => {
-    const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/MultiFilterable.elm`);
-    await page.click("[data-test-id=selectContainer]");
-    await page.waitForSelector("[data-test-id=listBox]");
-
-    await page.type("[data-test-id=selectInput]", "sdsdsdsdsdsd");
-    await page.waitForSelector("[data-test-id=listBox]");
-    await page.keyboard.press("Enter");
-    await page.click("[data-test-id=selectContainer]");
-    await page.waitForSelector("[data-test-id=listBox]");
-    const rows = page.locator("ul li");
-    const texts = await rows.evaluateAll((list) =>
-      list.map((element) => element.textContent)
-    );
-
-    const matches = texts.map((it) => {
-      return new RegExp("Non Filterable").test(it as string);
-    });
-
-    expect(matches.includes(true)).toBeFalsy();
   });
 });
 
