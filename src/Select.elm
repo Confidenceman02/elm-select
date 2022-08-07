@@ -76,7 +76,7 @@ type SelectId
 type Msg item
     = InputChanged SelectId String
     | InputChangedNativeSingle (List (MenuItem item)) Bool Int
-    | InputReceivedFocused (Maybe SelectId)
+    | InputReceivedFocused
     | SelectedItem item
     | SelectedItemMulti item SelectId
     | DeselectedMultiItem item SelectId
@@ -1005,13 +1005,8 @@ update msg (State state_) =
             in
             ( Just (InputChange inputValue), State { stateWithOpenMenu | inputValue = Just inputValue }, cmdWithOpenMenu )
 
-        InputReceivedFocused maybeSelectId ->
-            case maybeSelectId of
-                Just _ ->
-                    ( Nothing, State { state_ | controlUiFocused = True }, Cmd.none )
-
-                Nothing ->
-                    ( Nothing, State { state_ | controlUiFocused = True }, Cmd.none )
+        InputReceivedFocused ->
+            ( Nothing, State { state_ | controlUiFocused = True }, Cmd.none )
 
         SelectedItem item ->
             let
@@ -2003,7 +1998,7 @@ viewSelectInput viewSelectInputData =
         (SelectInput.default
             |> SelectInput.onInput (InputChanged <| SelectId selectId)
             |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId selectId))
-            |> SelectInput.onFocusMsg (InputReceivedFocused (Just <| SelectId selectId))
+            |> SelectInput.onFocusMsg InputReceivedFocused
             |> SelectInput.currentValue resolveInputValue
             |> SelectInput.onMousedown InputMousedowned
             |> resolveInputWidth
@@ -2074,7 +2069,7 @@ viewDummyInput viewDummyInputData =
          , tabindex 0
          , attribute "data-test-id" "dummyInputSelect"
          , id ("dummy-input-" ++ viewDummyInputData.id)
-         , onFocus (InputReceivedFocused Nothing)
+         , onFocus InputReceivedFocused
          , onBlur (OnInputBlurred Nothing)
          , preventDefaultOn "keydown" <|
             Decode.map
