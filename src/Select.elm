@@ -447,7 +447,7 @@ initState =
 
 defaults : Configuration item
 defaults =
-    { variant = Single Nothing
+    { variant = CustomVariant (Single Nothing)
     , isLoading = False
     , loadingMessage = "Loading..."
     , state = initState
@@ -827,9 +827,13 @@ jsOptimize pred (State state_) =
 
 
 type Variant item
+    = CustomVariant (CustomVariant item)
+    | Native (NativeVariant item)
+
+
+type CustomVariant item
     = Single (Maybe (MenuItem item))
     | Multi (List (MenuItem item))
-    | Native (NativeVariant item)
 
 
 type NativeVariant item
@@ -856,7 +860,7 @@ type NativeVariant item
 -}
 single : Maybe (MenuItem item) -> Config item
 single maybeSelectedItem =
-    Config { defaults | variant = Single maybeSelectedItem }
+    Config { defaults | variant = CustomVariant (Single maybeSelectedItem) }
 
 
 {-| Select a single item with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
@@ -908,7 +912,7 @@ Selected items will render as tags and be visually removed from the menu list.
 -}
 multi : List (MenuItem item) -> Config item
 multi selectedItems =
-    Config { defaults | variant = Multi selectedItems }
+    Config { defaults | variant = CustomVariant (Multi selectedItems) }
 
 
 {-| The ID for the rendered Select input
@@ -1429,7 +1433,7 @@ viewControl data =
 
         buildVariantInput =
             case data.config.variant of
-                Multi multiSelectedValues ->
+                CustomVariant (Multi multiSelectedValues) ->
                     let
                         resolveMultiValueStyles =
                             if 0 < List.length multiSelectedValues then
@@ -1445,7 +1449,7 @@ viewControl data =
                             ++ [ buildInput ]
                         )
 
-                Single _ ->
+                CustomVariant (Single _) ->
                     buildInput
 
                 _ ->
@@ -1453,17 +1457,17 @@ viewControl data =
 
         resolvePlaceholder =
             case data.config.variant of
-                Multi [] ->
+                CustomVariant (Multi []) ->
                     viewPlaceholder data.config
 
                 -- Multi selected values render differently
-                Multi _ ->
+                CustomVariant (Multi _) ->
                     text ""
 
-                Single (Just v) ->
+                CustomVariant (Single (Just v)) ->
                     viewSelectedPlaceholder (Styles.getControlConfig data.config.styles) v
 
-                Single Nothing ->
+                CustomVariant (Single Nothing) ->
                     viewPlaceholder data.config
 
                 _ ->
@@ -1518,7 +1522,7 @@ viewControl data =
         clearButtonVisible =
             if data.config.clearable && not data.config.disabled then
                 case data.config.variant of
-                    Single (Just _) ->
+                    CustomVariant (Single (Just _)) ->
                         True
 
                     _ ->
@@ -1791,7 +1795,6 @@ viewMenu viewMenuData =
                 text ""
 
         _ ->
-            -- listbox
             Keyed.node "ul"
                 ([ StyledAttribs.css menuListStyles
                  , id (menuListId viewMenuData.selectId)
@@ -1831,7 +1834,7 @@ viewMenuItem data content =
 
         resolveMouseUpMsg =
             case data.variant of
-                Multi _ ->
+                CustomVariant (Multi _) ->
                     SelectedItemMulti (getMenuItemItem data.menuItem) data.selectId
 
                 _ ->
@@ -1924,7 +1927,7 @@ viewSelectInput viewSelectInputData =
 
         resolveEnterMsg mi =
             case viewSelectInputData.variant of
-                Multi _ ->
+                CustomVariant (Multi _) ->
                     EnterSelectMulti mi (SelectId selectId)
 
                 _ ->
@@ -2258,10 +2261,10 @@ buildMenuItems config state_ =
                     config.menuItems
     in
     case config.variant of
-        Single _ ->
+        CustomVariant (Single _) ->
             filteredMenuItems
 
-        Multi maybeSelectedMenuItems ->
+        CustomVariant (Multi maybeSelectedMenuItems) ->
             filteredMenuItems
                 |> filterMultiSelectedItems maybeSelectedMenuItems
 
@@ -2283,7 +2286,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
     case item of
         Basic _ ->
             case variant of
-                Single maybeSelectedItem ->
+                CustomVariant (Single maybeSelectedItem) ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
@@ -2321,7 +2324,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
 
         Custom ci ->
             case variant of
-                Single maybeSelectedItem ->
+                CustomVariant (Single maybeSelectedItem) ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
