@@ -6,6 +6,7 @@ import Html.Styled as Styled exposing (Html, div, text)
 import Html.Styled.Attributes as StyledAttribs
 import List.Extra as LE
 import Select exposing (MenuItem, initState, selectIdentifier, update)
+import Select.Styles as Styles
 
 
 type Msg
@@ -183,6 +184,13 @@ view m =
 
                 ItemBuilder val ->
                     Select.basicMenuItem { item = item, label = val }
+
+        controlStyles =
+            Styles.getControlConfig Styles.default
+                |> Styles.setControlMultiTagBorderRadius 5
+
+        customStyles =
+            Styles.setControlStyles controlStyles Styles.default
     in
     div
         [ StyledAttribs.css
@@ -198,6 +206,7 @@ view m =
                     |> Select.state m.selectState
                     |> Select.menuItems (List.map itemToMenuItem m.items)
                     |> Select.placeholder "Placeholder"
+                    |> Select.setStyles customStyles
                 )
                 (selectIdentifier "SingleSelectExample")
         ]
