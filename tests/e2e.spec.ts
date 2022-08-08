@@ -21,20 +21,11 @@ describe("examples", () => {
       "text=SingleSearchable.elm"
     );
     const nativeSingle = await page.isVisible("text=NativeSingle.elm");
-    const truncationExampleVisible = await page.isVisible(
-      "text=MultiTruncation.elm"
-    );
     const multiAsyncExampleVisible = await page.isVisible(
       "text=MultiAsync.elm"
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
-    const disabledExampleVisible = await page.isVisible("text=Disabled.elm");
-    const clearableExampleVisible = await page.isVisible(
-      "text=SingleClearable.elm"
-    );
-    const longMenuVisible = await page.isVisible("text=LongMenu.elm");
-    const moreThanOneVisible = await page.isVisible("text=MoreThanOne.elm");
     const singleMenuVisible = await page.isVisible("text=Single.elm");
     const formVisible = await page.isVisible("text=Form.elm");
     const customMenuItemsVisible = await page.isVisible(
@@ -43,14 +34,9 @@ describe("examples", () => {
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
-    expect(truncationExampleVisible).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
-    expect(disabledExampleVisible).toBeTruthy();
-    expect(clearableExampleVisible).toBeTruthy();
-    expect(longMenuVisible).toBeTruthy();
-    expect(moreThanOneVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
@@ -110,7 +96,7 @@ describe("Multi", () => {
     );
 
     const matches = texts.map((it) => {
-      return new RegExp("Non Filterable").test(it as string);
+      return new RegExp("New value").test(it as string);
     });
 
     expect(matches.includes(true)).toBeTruthy();
