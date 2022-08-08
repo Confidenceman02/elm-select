@@ -76,7 +76,7 @@ type SelectId
 type Msg item
     = InputChanged SelectId String
     | InputChangedNativeSingle (List (MenuItem item)) Bool Int
-    | InputReceivedFocused
+    | InputReceivedFocused (HeadlessState item)
     | SelectedItem item
     | SelectedItemMulti item SelectId
     | DeselectedMultiItem item SelectId
@@ -152,8 +152,12 @@ type Action item
 
 
 {-| -}
-type State
-    = State SelectState
+type State item
+    = State (SelectState item)
+
+
+type HeadlessState item
+    = HeadlessState (SelectHeadlessState item)
 
 
 
@@ -228,6 +232,7 @@ type alias ViewSelectInputData item =
     , ariaDescribedBy : Maybe String
     , jsOptmized : Bool
     , controlUiFocused : Bool
+    , headlessState : HeadlessState item
     }
 
 
@@ -238,6 +243,7 @@ type alias ViewDummyInputData item =
     , menuOpen : Bool
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
+    , headlessState : HeadlessState item
     }
 
 
@@ -260,7 +266,7 @@ type alias Configuration item =
     { variant : Variant item
     , isLoading : Bool
     , loadingMessage : String
-    , state : State
+    , state : State item
     , menuItems : List (MenuItem item)
     , searchable : Bool
     , placeholder : String
@@ -272,7 +278,7 @@ type alias Configuration item =
     }
 
 
-type alias SelectState =
+type alias SelectState item =
     { inputValue : Maybe String
     , menuOpen : Bool
     , initialMousedown : InitialMousedown
@@ -282,6 +288,15 @@ type alias SelectState =
     , menuListScrollTop : Float
     , menuNavigation : MenuNavigation
     , jsOptimize : Bool
+    , headlessState : HeadlessState item
+    }
+
+
+type alias SelectHeadlessState item =
+    { variant : CustomVariant item
+    , menuItems : List (MenuItem item)
+    , searchable : Bool
+    , disabled : Bool
     }
 
 
@@ -428,7 +443,7 @@ getMenuItemItem item =
         }
 
 -}
-initState : State
+initState : State item
 initState =
     State
         { inputValue = Nothing
@@ -442,7 +457,17 @@ initState =
         , menuListScrollTop = 0
         , menuNavigation = Mouse
         , jsOptimize = False
+        , headlessState = HeadlessState defaultsHeadless
         }
+
+
+defaultsHeadless : SelectHeadlessState item
+defaultsHeadless =
+    { variant = Single Nothing
+    , menuItems = []
+    , searchable = False
+    , disabled = False
+    }
 
 
 defaults : Configuration item
@@ -591,7 +616,10 @@ color branding.
 -}
 setStyles : Styles.Config -> Config item -> Config item
 setStyles sc (Config config) =
-    Config { config | styles = sc }
+    Config
+        { config
+            | styles = sc
+        }
 
 
 {-| Renders an input that let's you input text to search for menu items.
@@ -608,7 +636,19 @@ variant.
 -}
 searchable : Bool -> Config item -> Config item
 searchable pred (Config config) =
-    Config { config | searchable = pred }
+    let
+        (State state_) =
+            config.state
+
+        updatedState =
+            { state_
+                | headlessState =
+                    mapHeadlessState
+                        (\st -> { st | searchable = pred })
+                        state_.headlessState
+            }
+    in
+    Config { config | searchable = pred, state = State updatedState }
 
 
 {-| The text that will appear as an input placeholder.
@@ -639,9 +679,26 @@ placeholder plc (Config config) =
                     (selectIdentifier "1234")
 
 -}
-state : State -> Config item -> Config item
+state : State item -> Config item -> Config item
 state state_ (Config config) =
-    Config { config | state = state_ }
+    -- The reason we are doing this dance is becuase the headless
+    -- state is only ever updated from the Config builders. The
+    -- headless state that exists on the incoming State is just a placeholder.
+    let
+        (State currentState) =
+            config.state
+
+        (State newState) =
+            state_
+
+        nextState =
+            State
+                { newState
+                    | headlessState =
+                        currentState.headlessState
+                }
+    in
+    Config { config | state = nextState }
 
 
 {-| The items that will appear in the menu list.
@@ -662,7 +719,19 @@ visually removed from the menu list.
 -}
 menuItems : List (MenuItem item) -> Config item -> Config item
 menuItems items (Config config) =
-    Config { config | menuItems = items }
+    let
+        (State state_) =
+            config.state
+
+        updatedState =
+            { state_
+                | headlessState =
+                    mapHeadlessState
+                        (\st -> { st | menuItems = items })
+                        state_.headlessState
+            }
+    in
+    Config { config | menuItems = items, state = State updatedState }
 
 
 {-| Allows a [single](#single) variant selected menu item to be cleared.
@@ -817,9 +886,21 @@ Alternatively you can import the script wherever you are initialising your progr
     Elm.Main.init({node, flags})
 
 -}
-jsOptimize : Bool -> State -> State
+jsOptimize : Bool -> State item -> State item
 jsOptimize pred (State state_) =
     State { state_ | jsOptimize = pred }
+
+
+reset : State item -> State item
+reset (State state_) =
+    State
+        { state_
+            | menuOpen = False
+            , activeTargetIndex = 0
+            , menuViewportFocusNodes = Nothing
+            , menuListScrollTop = 0
+            , menuNavigation = Mouse
+        }
 
 
 
@@ -936,6 +1017,27 @@ selectIdentifier id_ =
 -- UPDATE
 
 
+type HeadlesMsg
+    = MoveDown
+
+
+headlessUpdate :
+    SelectId
+    -> HeadlesMsg
+    -> List (MenuItem item)
+    -> Bool
+    -> HeadlessState item
+    ->
+        ( Maybe (Action item)
+        , HeadlessState item
+        , Cmd (Msg item)
+        )
+headlessUpdate selectId msg items filterable st =
+    case msg of
+        MoveDown ->
+            ( Nothing, st, Cmd.none )
+
+
 {-| Add a branch in your update to handle the view Msg's.
 
         yourUpdate msg model =
@@ -944,7 +1046,7 @@ selectIdentifier id_ =
                     update selectMsg model.selectState
 
 -}
-update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
+update : Msg item -> State item -> ( Maybe (Action item), State item, Cmd (Msg item) )
 update msg (State state_) =
     case msg of
         InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
@@ -1005,8 +1107,15 @@ update msg (State state_) =
             in
             ( Just (InputChange inputValue), State { stateWithOpenMenu | inputValue = Just inputValue }, cmdWithOpenMenu )
 
-        InputReceivedFocused ->
-            ( Nothing, State { state_ | controlUiFocused = True }, Cmd.none )
+        InputReceivedFocused headlessState ->
+            ( Nothing
+            , State
+                { state_
+                    | controlUiFocused = True
+                    , headlessState = headlessState
+                }
+            , Cmd.none
+            )
 
         SelectedItem item ->
             let
@@ -1287,14 +1396,7 @@ update msg (State state_) =
 
         CloseMenu ->
             ( Nothing
-            , State
-                { state_
-                    | menuOpen = False
-                    , activeTargetIndex = 0
-                    , menuViewportFocusNodes = Nothing
-                    , menuListScrollTop = 0
-                    , menuNavigation = Mouse
-                }
+            , reset (State state_)
             , Cmd.none
             )
 
@@ -1341,7 +1443,13 @@ view (Config config) selectId =
             List.length viewableMenuItems
 
         viewableMenuItems =
-            buildMenuItems config state_
+            buildViewableMenuItems
+                (BuildViewableMenuItemsData
+                    config.searchable
+                    state_.inputValue
+                    config.menuItems
+                    config.variant
+                )
 
         selectWrapper =
             viewWrapper config
@@ -1399,7 +1507,7 @@ view (Config config) selectId =
 type alias ViewControlData item =
     { config : Configuration item
     , selectId : SelectId
-    , state : State
+    , state : State item
     , controlStyles : Styles.ControlConfig
     , enterSelectTargetItem : Maybe (MenuItem item)
     , totalMenuItems : Int
@@ -1491,6 +1599,7 @@ viewControl data =
                             data.config.ariaDescribedBy
                             state_.jsOptimize
                             state_.controlUiFocused
+                            state_.headlessState
                         )
 
                 else
@@ -1502,6 +1611,7 @@ viewControl data =
                             state_.menuOpen
                             data.config.labelledBy
                             data.config.ariaDescribedBy
+                            state_.headlessState
                         )
 
             else
@@ -1998,7 +2108,7 @@ viewSelectInput viewSelectInputData =
         (SelectInput.default
             |> SelectInput.onInput (InputChanged <| SelectId selectId)
             |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId selectId))
-            |> SelectInput.onFocusMsg InputReceivedFocused
+            |> SelectInput.onFocusMsg (InputReceivedFocused viewSelectInputData.headlessState)
             |> SelectInput.currentValue resolveInputValue
             |> SelectInput.onMousedown InputMousedowned
             |> resolveInputWidth
@@ -2069,7 +2179,7 @@ viewDummyInput viewDummyInputData =
          , tabindex 0
          , attribute "data-test-id" "dummyInputSelect"
          , id ("dummy-input-" ++ viewDummyInputData.id)
-         , onFocus InputReceivedFocused
+         , onFocus (InputReceivedFocused viewDummyInputData.headlessState)
          , onBlur (OnInputBlurred Nothing)
          , preventDefaultOn "keydown" <|
             Decode.map
@@ -2237,25 +2347,38 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 
 
--- BUILDERS
+-- UTILS
 
 
-buildMenuItems : Configuration item -> SelectState -> List (MenuItem item)
-buildMenuItems config state_ =
+mapHeadlessState : (SelectHeadlessState item -> SelectHeadlessState item) -> HeadlessState item -> HeadlessState item
+mapHeadlessState f (HeadlessState hs) =
+    f hs |> HeadlessState
+
+
+type alias BuildViewableMenuItemsData item =
+    { searchable : Bool
+    , inputValue : Maybe String
+    , menuItems : List (MenuItem item)
+    , variant : Variant item
+    }
+
+
+buildViewableMenuItems : BuildViewableMenuItemsData item -> List (MenuItem item)
+buildViewableMenuItems data =
     let
         filteredMenuItems =
-            case ( config.searchable, state_.inputValue ) of
+            case ( data.searchable, data.inputValue ) of
                 ( True, Just value ) ->
                     if String.isEmpty value then
-                        config.menuItems
+                        data.menuItems
 
                     else
-                        List.filter (filterMenuItem value) config.menuItems
+                        List.filter (filterMenuItem value) data.menuItems
 
                 _ ->
-                    config.menuItems
+                    data.menuItems
     in
-    case config.variant of
+    case data.variant of
         CustomVariant (Single _) ->
             filteredMenuItems
 
