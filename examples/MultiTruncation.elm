@@ -81,6 +81,7 @@ view m =
             Styles.getControlConfig Styles.default
                 |> Styles.setControlMultiTagTruncationWidth 40
                 |> Styles.setControlMultiTagBackgroundColor (Css.hex "ddff33")
+                |> Styles.setControlMultiTagDismissibleBackgroundColor (Css.hex "000000")
                 |> Styles.setControlMultiTagBorderRadius 5
 
         customStyles =

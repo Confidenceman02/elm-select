@@ -1,13 +1,11 @@
 module Select.Tag exposing
-    ( backgroundColor
-    , borderRadius
-    , dataTestId
+    ( dataTestId
     , default
     , onDismiss
     , onMousedown
     , onMouseleave
     , rightMargin
-    , truncateWidth
+    , setControlStyles
     , view
     )
 
@@ -17,6 +15,7 @@ import Html.Styled.Attributes as StyledAttribs exposing (attribute)
 import Html.Styled.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Select.ClearIcon as ClearIcon
+import Select.Styles as Styles
 
 
 type Config msg
@@ -27,11 +26,11 @@ type alias Configuration msg =
     { onDismiss : Maybe msg
     , onMousedown : Maybe msg
     , onMouseleave : Maybe msg
-    , truncationWidth : Maybe Float
     , rightMargin : Bool
     , backgroundColor : Css.Color
     , dataTestId : String
     , borderRadius : Float
+    , controlStyles : Styles.ControlConfig
     }
 
 
@@ -44,11 +43,11 @@ defaults =
     { onDismiss = Nothing
     , onMousedown = Nothing
     , onMouseleave = Nothing
-    , truncationWidth = Nothing
     , rightMargin = False
     , backgroundColor = Css.hex "#E1E2EA"
     , dataTestId = "multiSelectTag"
     , borderRadius = 16
+    , controlStyles = Styles.getControlConfig Styles.default
     }
 
 
@@ -81,19 +80,9 @@ onMouseleave msg (Config config) =
     Config { config | onMouseleave = Just msg }
 
 
-truncateWidth : Float -> Config msg -> Config msg
-truncateWidth width (Config config) =
-    Config { config | truncationWidth = Just width }
-
-
-backgroundColor : Css.Color -> Config msg -> Config msg
-backgroundColor c (Config config) =
-    Config { config | backgroundColor = c }
-
-
-borderRadius : Float -> Config msg -> Config msg
-borderRadius rad (Config config) =
-    Config { config | borderRadius = rad }
+setControlStyles : Styles.ControlConfig -> Config msg -> Config msg
+setControlStyles cfg (Config config) =
+    Config { config | controlStyles = cfg }
 
 
 dataTestId : String -> Config msg -> Config msg
@@ -120,10 +109,10 @@ view (Config config) value =
             , Css.color (Css.hex "#35374A")
             , Css.display Css.inlineBlock
             , Css.border3 (Css.px 2) Css.solid Css.transparent
-            , Css.borderRadius (Css.px config.borderRadius)
+            , Css.borderRadius (Css.px (Styles.getControlMultiTagBorderRadius config.controlStyles))
             , Css.padding2 (Css.px 0) (Css.px 9.6)
             , Css.boxSizing Css.borderBox
-            , Css.backgroundColor config.backgroundColor
+            , Css.backgroundColor (Styles.getControlMultiTagBackgroundColor config.controlStyles)
             , Css.height (Css.px 30)
             ]
         , attribute "data-test-id" config.dataTestId
@@ -143,7 +132,7 @@ viewTextContent : Configuration msg -> String -> Html msg
 viewTextContent config value =
     let
         resolveTruncation =
-            case config.truncationWidth of
+            case Styles.getControlMultiTagTruncationWidth config.controlStyles of
                 Just width ->
                     [ Css.textOverflow Css.ellipsis
                     , Css.overflowX Css.hidden
@@ -190,7 +179,7 @@ viewClear config =
             , Css.padding2 (Css.px 0) (Css.rem 0.375)
             , Css.marginRight (Css.rem -0.6625)
             , Css.marginLeft (Css.rem -0.225)
-            , Css.color (Css.hex "#6B6E94")
+            , Css.color (Styles.getControlMultiTagDismissibleBackgroundColor config.controlStyles)
             , Css.cursor Css.pointer
             , Css.hover [ Css.color (Css.hex "#4B4D68") ]
             ]
