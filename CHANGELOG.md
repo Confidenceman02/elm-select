@@ -1,3 +1,8 @@
+## [5.4.0] - 2022-08-10
+
+## Added
+- Make multi tag dismiss icon background color configurable
+
 ## [5.3.2] - 2022-08-04
 
 ## Added
@@ -292,6 +297,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[5.4.0]: https://github.com/Confidenceman02/elm-select/compare/5.3.2...5.4.0
 [5.3.2]: https://github.com/Confidenceman02/elm-select/compare/5.3.1...5.3.2
 [5.3.1]: https://github.com/Confidenceman02/elm-select/compare/5.3.0...5.3.1
 [5.3.0]: https://github.com/Confidenceman02/elm-select/compare/5.2.1...5.3.0
