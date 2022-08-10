@@ -1044,7 +1044,10 @@ update msg (State state_) =
                 inputId =
                     SelectInput.inputId id
             in
-            ( Just (DeselectMulti deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Task.attempt OnInputFocused (Dom.focus inputId) )
+            ( Just (DeselectMulti deselectedItem)
+            , State { state_ | initialMousedown = NothingMousedown }
+            , Task.attempt OnInputFocused (Dom.focus inputId)
+            )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
         -- Its important to ensure we have a NothingInitClicked so that if the user clicks outside of the
@@ -2093,14 +2096,6 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
             else
                 tagConfig
 
-        resolveTruncationWidth tagConfig =
-            case Styles.getControlMultiTagTruncationWidth controlStyles of
-                Just width ->
-                    Tag.truncateWidth width tagConfig
-
-                Nothing ->
-                    tagConfig
-
         resolveVariant =
             Tag.default
     in
@@ -2110,9 +2105,7 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
-            |> Tag.backgroundColor (Styles.getControlMultiTagBackgroundColor controlStyles)
-            |> Tag.borderRadius (Styles.getControlMultiTagBorderRadius controlStyles)
-            |> resolveTruncationWidth
+            |> Tag.setControlStyles controlStyles
             |> resolveMouseleave
         )
         (getMenuItemLabel menuItem)
