@@ -21,9 +21,6 @@ describe("examples", () => {
       "text=SingleSearchable.elm"
     );
     const nativeSingle = await page.isVisible("text=NativeSingle.elm");
-    const truncationExampleVisible = await page.isVisible(
-      "text=MultiTruncation.elm"
-    );
     const multiAsyncExampleVisible = await page.isVisible(
       "text=MultiAsync.elm"
     );
@@ -37,7 +34,6 @@ describe("examples", () => {
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
-    expect(truncationExampleVisible).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();

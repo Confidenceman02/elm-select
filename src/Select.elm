@@ -2116,14 +2116,6 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
             else
                 tagConfig
 
-        resolveTruncationWidth tagConfig =
-            case Styles.getControlMultiTagTruncationWidth controlStyles of
-                Just width ->
-                    Tag.truncateWidth width tagConfig
-
-                Nothing ->
-                    tagConfig
-
         resolveVariant =
             Tag.default
     in
@@ -2133,9 +2125,7 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
-            |> Tag.backgroundColor (Styles.getControlMultiTagBackgroundColor controlStyles)
-            |> Tag.borderRadius (Styles.getControlMultiTagBorderRadius controlStyles)
-            |> resolveTruncationWidth
+            |> Tag.setControlStyles controlStyles
             |> resolveMouseleave
         )
         (getMenuItemLabel menuItem)

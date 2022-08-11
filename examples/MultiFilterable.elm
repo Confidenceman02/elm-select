@@ -20,7 +20,8 @@ type Item
 
 
 type alias Model =
-    { selectState : Select.State 
+
+    { selectState : Select.State
     , items : List Item
     , selectedItems : List Item
     }
