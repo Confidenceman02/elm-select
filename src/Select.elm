@@ -282,6 +282,7 @@ type alias SelectState =
     , menuListScrollTop : Float
     , menuNavigation : MenuNavigation
     , jsOptimize : Bool
+    , selectId : SelectId
     }
 
 
@@ -415,7 +416,7 @@ getMenuItemItem item =
 
     init : Model
     init =
-        { selectState = initState
+        { selectState = initState (selectIdentifier "country-select")
         , items =
             [ basicMenuItem
                 { item = Australia, label = "Australia" }
@@ -428,8 +429,8 @@ getMenuItemItem item =
         }
 
 -}
-initState : State
-initState =
+initState : SelectId -> State
+initState id_ =
     State
         { inputValue = Nothing
         , menuOpen = False
@@ -442,6 +443,7 @@ initState =
         , menuListScrollTop = 0
         , menuNavigation = Mouse
         , jsOptimize = False
+        , selectId = id_
         }
 
 
@@ -450,7 +452,7 @@ defaults =
     { variant = CustomVariant (Single Nothing)
     , isLoading = False
     , loadingMessage = "Loading..."
-    , state = initState
+    , state = initState (selectIdentifier "elm-select")
     , placeholder = "Select..."
     , menuItems = []
     , searchable = True
@@ -944,7 +946,7 @@ a page remain unique.
 -}
 selectIdentifier : String -> SelectId
 selectIdentifier id_ =
-    SelectId id_
+    SelectId (id_ ++ "__elm-select")
 
 
 
@@ -995,9 +997,6 @@ update msg (State state_) =
 
         EnterSelectMulti menuItem (SelectId id) ->
             let
-                inputId =
-                    SelectInput.inputId id
-
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
@@ -1007,7 +1006,7 @@ update msg (State state_) =
                     | initialMousedown = NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus inputId) ]
+            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus id) ]
             )
 
         HoverFocused i ->
@@ -1045,9 +1044,6 @@ update msg (State state_) =
 
         SelectedItemMulti item (SelectId id) ->
             let
-                inputId =
-                    SelectInput.inputId id
-
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
@@ -1057,15 +1053,14 @@ update msg (State state_) =
                     | initialMousedown = NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus inputId) ]
+            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus id) ]
             )
 
         DeselectedMultiItem deselectedItem (SelectId id) ->
-            let
-                inputId =
-                    SelectInput.inputId id
-            in
-            ( Just (DeselectMulti deselectedItem), State { state_ | initialMousedown = NothingMousedown }, Task.attempt OnInputFocused (Dom.focus inputId) )
+            ( Just (DeselectMulti deselectedItem)
+            , State { state_ | initialMousedown = NothingMousedown }
+            , Task.attempt OnInputFocused (Dom.focus id)
+            )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
         -- Its important to ensure we have a NothingInitClicked so that if the user clicks outside of the
@@ -1166,9 +1161,6 @@ update msg (State state_) =
 
         SearchableSelectContainerClicked (SelectId id) ->
             let
-                inputId =
-                    SelectInput.inputId id
-
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
 
@@ -1214,7 +1206,7 @@ update msg (State state_) =
                             else
                                 ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus inputId) ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus id) ] )
 
         UnsearchableSelectContainerClicked (SelectId id) ->
             let
@@ -1231,7 +1223,7 @@ update msg (State state_) =
                     else
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus (dummyInputId <| SelectId id)) ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus id) ] )
 
         ToggleMenuAtKey _ ->
             let
@@ -1322,27 +1314,24 @@ update msg (State state_) =
             ( Just ClearSingleSelectItem, State state_, Cmd.none )
 
         SingleSelectClearButtonKeyDowned (SelectId id) ->
-            let
-                inputId =
-                    SelectInput.inputId id
-            in
-            ( Just ClearSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus inputId) )
+            ( Just ClearSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus id) )
 
 
 {-| Render the select
 
         yourView model =
             Html.map SelectMsg <|
-                view
-                    (single Nothing)
-                    (selectIdentifier "SingleSelectExample")
+                view (single Nothing)
 
 -}
-view : Config item -> SelectId -> Html (Msg item)
-view (Config config) selectId =
+view : Config item -> Html (Msg item)
+view (Config config) =
     let
         (State state_) =
             config.state
+
+        selectId =
+            state_.selectId
 
         enterSelectTargetItem =
             if state_.menuOpen && not (List.isEmpty viewableMenuItems) then
@@ -1516,7 +1505,7 @@ viewControl data =
                 else
                     lazy viewDummyInput
                         (ViewDummyInputData
-                            (getSelectId data.selectId)
+                            (getSelectId data.config.state)
                             data.enterSelectTargetItem
                             data.totalMenuItems
                             state_.menuOpen
@@ -1937,8 +1926,8 @@ viewSelectedPlaceholder controlStyles item =
 viewSelectInput : ViewSelectInputData item -> Html (Msg item)
 viewSelectInput viewSelectInputData =
     let
-        selectId =
-            getSelectId viewSelectInputData.id
+        (SelectId selectId) =
+            viewSelectInputData.id
 
         resolveEnterMsg mi =
             case viewSelectInputData.variant of
@@ -2088,7 +2077,7 @@ viewDummyInput viewDummyInputData =
          , value ""
          , tabindex 0
          , attribute "data-test-id" "dummyInputSelect"
-         , id ("dummy-input-" ++ viewDummyInputData.id)
+         , id viewDummyInputData.id
          , onFocus InputReceivedFocused
          , onBlur (OnInputBlurred Nothing)
          , preventDefaultOn "keydown" <|
@@ -2152,29 +2141,23 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
         (getMenuItemLabel menuItem)
 
 
-dummyInputId : SelectId -> String
-dummyInputId selectId =
-    dummyInputIdPrefix ++ getSelectId selectId
-
-
-dummyInputIdPrefix : String
-dummyInputIdPrefix =
-    "dummy-input-"
-
-
 menuItemId : SelectId -> Int -> String
-menuItemId selectId index =
-    "select-menu-item-" ++ String.fromInt index ++ "-" ++ getSelectId selectId
+menuItemId (SelectId id_) index =
+    "select-menu-item-" ++ String.fromInt index ++ "-" ++ id_
 
 
 menuListId : SelectId -> String
-menuListId selectId =
-    "select-menu-list-" ++ getSelectId selectId
+menuListId (SelectId id_) =
+    "select-menu-list-" ++ id_
 
 
-getSelectId : SelectId -> String
-getSelectId (SelectId id_) =
-    id_
+getSelectId : State -> String
+getSelectId (State { selectId }) =
+    let
+        (SelectId idString) =
+            selectId
+    in
+    idString
 
 
 

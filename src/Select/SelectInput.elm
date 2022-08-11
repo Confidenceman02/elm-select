@@ -5,7 +5,6 @@ module Select.SelectInput exposing
     , default
     , defaultWidth
     , disabled
-    , inputId
     , inputSizing
     , onBlurMsg
     , onFocusMsg
@@ -93,11 +92,6 @@ default =
 sizerId : String -> String
 sizerId sid =
     "kaizen-select-input-sizer-target-" ++ sid
-
-
-inputId : String -> String
-inputId iid =
-    "kaizen-select-input-target-" ++ iid
 
 
 
@@ -189,7 +183,7 @@ view (Config config) id_ =
             sizerId id_
 
         resolveInputId =
-            inputId id_
+            id_
 
         buildDynamicSelectInputProps =
             Encode.encode 0 <|
