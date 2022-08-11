@@ -30,7 +30,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState
+    ( { selectState = initState (selectIdentifier "SingleSelectExample")
       , items =
             Loaded
                 []
@@ -152,7 +152,6 @@ view m =
                         -- |> Select.menuItems allItems
                         |> withItems
                     )
-                    (selectIdentifier "SingleSelectExample")
             ]
         ]
 

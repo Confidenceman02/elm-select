@@ -12,16 +12,15 @@ type Msg
 
 
 type alias Model =
-    { selectState : Select.State String
+    { selectState : Select.State 
     , items : List (MenuItem String)
     , selectedItem : Maybe String
-    , selectId : Select.SelectId
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState
+    ( { selectState = initState (selectIdentifier "SingleSelectExample")
       , items =
             [ Select.basicMenuItem { item = "Elm", label = "Elm" }
             , Select.basicMenuItem { item = "Is", label = "Is" }
@@ -29,8 +28,6 @@ init =
             , Select.basicMenuItem { item = "Great", label = "Great" }
             ]
       , selectedItem = Nothing
-      , selectId =
-            selectIdentifier "SingleSelectExample"
       }
     , Cmd.none
     )
@@ -92,5 +89,4 @@ view m =
                     |> Select.placeholder "Placeholder"
                     |> Select.searchable False
                 )
-                m.selectId
         ]

@@ -20,7 +20,7 @@ type Item
 
 
 type alias Model =
-    { selectState : Select.State Item
+    { selectState : Select.State 
     , items : List Item
     , selectedItems : List Item
     }
@@ -28,7 +28,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState
+    ( { selectState = initState (selectIdentifier "SingleSelectExample")
       , items =
             [ Item "Elm"
             , Item "Is"
@@ -208,5 +208,4 @@ view m =
                     |> Select.placeholder "Placeholder"
                     |> Select.setStyles customStyles
                 )
-                (selectIdentifier "SingleSelectExample")
         ]
