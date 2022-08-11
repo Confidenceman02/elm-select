@@ -1673,7 +1673,7 @@ viewNative viewNativeData =
                             False
             in
             select
-                ([ id ("native-single-select-" ++ selectId)
+                ([ id selectId
                  , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)

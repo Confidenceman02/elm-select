@@ -229,7 +229,7 @@ describe("NativeSingle", () => {
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
 
-    await page.selectOption("select#native-single-select-SingleSelectExample", {
+    await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
     await page.type("[data-test-id=nativeSingleSelect]", "e");
@@ -246,7 +246,7 @@ describe("NativeSingle", () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
-    await page.selectOption("select#native-single-select-SingleSelectExample", {
+    await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
 
@@ -263,12 +263,12 @@ describe("NativeSingle", () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
-    await page.selectOption("select#native-single-select-SingleSelectExample", {
+    await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
 
     const isSelected: boolean = await page.$eval(
-      "#native-single-select-SingleSelectExample",
+      "#SingleSelectExample__elm-select",
       (el: HTMLSelectElement) => {
         const selectedIndex = el.selectedIndex;
         return el.options[selectedIndex].selected;
