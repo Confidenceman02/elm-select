@@ -74,15 +74,15 @@ type SelectId
 
 {-| -}
 type Msg item
-    = InputChanged SelectId String
+    = InputChanged String
     | InputChangedNativeSingle (List (MenuItem item)) Bool Int
     | InputReceivedFocused
     | SelectedItem item
-    | SelectedItemMulti item SelectId
-    | DeselectedMultiItem item SelectId
-    | SearchableSelectContainerClicked SelectId
-    | UnsearchableSelectContainerClicked SelectId
-    | ToggleMenuAtKey SelectId
+    | SelectedItemMulti item
+    | DeselectedMultiItem item
+    | SearchableSelectContainerClicked
+    | UnsearchableSelectContainerClicked
+    | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
     | OnInputBlurred (Maybe SelectId)
     | MenuItemClickFocus Int
@@ -92,17 +92,17 @@ type Msg item
     | ClearFocusedItem
     | HoverFocused Int
     | EnterSelect (MenuItem item)
-    | EnterSelectMulti (MenuItem item) SelectId
-    | KeyboardDown SelectId Int
-    | KeyboardUp SelectId Int
+    | EnterSelectMulti (MenuItem item)
+    | KeyboardDown Int
+    | KeyboardUp Int
     | OpenMenu
     | CloseMenu
-    | FocusMenuViewport SelectId (Result Dom.Error ( MenuListElement, MenuItemElement ))
+    | FocusMenuViewport (Result Dom.Error ( MenuListElement, MenuItemElement ))
     | MenuListScrollTop Float
     | SetMouseMenuNavigation
     | DoNothing
     | SingleSelectClearButtonMouseDowned
-    | SingleSelectClearButtonKeyDowned SelectId
+    | SingleSelectClearButtonKeyDowned
 
 
 {-| Specific events happen in the Select that you can react to from your update.
@@ -995,7 +995,7 @@ update msg (State state_) =
             , cmdWithClosedMenu
             )
 
-        EnterSelectMulti menuItem (SelectId id) ->
+        EnterSelectMulti menuItem ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
@@ -1006,13 +1006,13 @@ update msg (State state_) =
                     | initialMousedown = NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus id) ]
+            , Cmd.batch [ cmdWithClosedMenu, focus wrappedState ]
             )
 
         HoverFocused i ->
             ( Nothing, State { state_ | activeTargetIndex = i }, Cmd.none )
 
-        InputChanged _ inputValue ->
+        InputChanged inputValue ->
             let
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
@@ -1042,7 +1042,7 @@ update msg (State state_) =
             , cmdWithClosedMenu
             )
 
-        SelectedItemMulti item (SelectId id) ->
+        SelectedItemMulti item ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
@@ -1056,7 +1056,7 @@ update msg (State state_) =
             , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus id) ]
             )
 
-        DeselectedMultiItem deselectedItem (SelectId id) ->
+        DeselectedMultiItem deselectedItem ->
             ( Just (DeselectMulti deselectedItem)
             , State { state_ | initialMousedown = NothingMousedown }
             , Task.attempt OnInputFocused (Dom.focus id)
@@ -1074,17 +1074,17 @@ update msg (State state_) =
                 Err _ ->
                     ( Nothing, State state_, Cmd.none )
 
-        FocusMenuViewport selectId (Ok ( menuListElem, menuItemElem )) ->
+        FocusMenuViewport (Ok ( menuListElem, menuItemElem )) ->
             let
                 ( viewportFocusCmd, newViewportY ) =
                     menuItemOrientationInViewport menuListElem menuItemElem
-                        |> setMenuViewportPosition selectId state_.menuListScrollTop menuListElem menuItemElem
+                        |> setMenuViewportPosition state_.selectId state_.menuListScrollTop menuListElem menuItemElem
             in
             ( Nothing, State { state_ | menuViewportFocusNodes = Just ( menuListElem, menuItemElem ), menuListScrollTop = newViewportY }, viewportFocusCmd )
 
         -- If the menu list element was not found it likely has no viewable menu items.
         -- In this case the menu does not render therefore no id is present on menu element.
-        FocusMenuViewport _ (Err _) ->
+        FocusMenuViewport (Err _) ->
             ( Nothing, State { state_ | menuViewportFocusNodes = Nothing }, Cmd.none )
 
         DoNothing ->
@@ -1159,7 +1159,7 @@ update msg (State state_) =
         ClearFocusedItem ->
             ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
 
-        SearchableSelectContainerClicked (SelectId id) ->
+        SearchableSelectContainerClicked ->
             let
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
@@ -1208,7 +1208,7 @@ update msg (State state_) =
             in
             ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus id) ] )
 
-        UnsearchableSelectContainerClicked (SelectId id) ->
+        UnsearchableSelectContainerClicked ->
             let
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
@@ -1225,7 +1225,7 @@ update msg (State state_) =
             in
             ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus id) ] )
 
-        ToggleMenuAtKey _ ->
+        ToggleMenuAtKey ->
             let
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
@@ -1242,7 +1242,7 @@ update msg (State state_) =
             in
             ( Nothing, State { updatedState | controlUiFocused = True }, updatedCmd )
 
-        KeyboardDown selectId totalTargetCount ->
+        KeyboardDown totalTargetCount ->
             let
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
@@ -1252,7 +1252,7 @@ update msg (State state_) =
 
                 nodeQueryForViewportFocus =
                     if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
-                        queryNodesForViewportFocus selectId nextActiveTargetIndex
+                        queryNodesForViewportFocus state_.selectId nextActiveTargetIndex
 
                     else
                         Cmd.none
@@ -1266,7 +1266,7 @@ update msg (State state_) =
             in
             ( Nothing, State updatedState, updatedCmd )
 
-        KeyboardUp selectId totalTargetCount ->
+        KeyboardUp totalTargetCount ->
             let
                 ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
                     update OpenMenu (State state_)
@@ -1276,7 +1276,7 @@ update msg (State state_) =
 
                 nodeQueryForViewportFocus =
                     if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
-                        queryNodesForViewportFocus selectId nextActiveTargetIndex
+                        queryNodesForViewportFocus state_.selectId nextActiveTargetIndex
 
                     else
                         Cmd.none
@@ -1448,7 +1448,7 @@ viewControl data =
                     in
                     div resolveMultiValueStyles <|
                         (List.indexedMap
-                            (viewMultiValue data.selectId state_.initialMousedown data.controlStyles)
+                            (viewMultiValue state_.initialMousedown data.controlStyles)
                             multiSelectedValues
                             ++ [ buildInput ]
                         )
@@ -1590,7 +1590,7 @@ viewControl data =
             [ StyledAttribs.css
                 [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
             ]
-            [ Internal.viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator data.config data.selectId ]
+            [ Internal.viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator data.config ]
             , div [ StyledAttribs.css indicatorContainerStyles ]
                 [ span
                     [ StyledAttribs.css
@@ -1722,10 +1722,10 @@ viewWrapper config selectId =
 
         resolveContainerMsg =
             if config.searchable then
-                SearchableSelectContainerClicked selectId
+                SearchableSelectContainerClicked
 
             else
-                UnsearchableSelectContainerClicked selectId
+                UnsearchableSelectContainerClicked
     in
     div
         (StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ]
@@ -1839,7 +1839,7 @@ viewMenuItem data content =
         resolveMouseUpMsg =
             case data.variant of
                 CustomVariant (Multi _) ->
-                    SelectedItemMulti (getMenuItemItem data.menuItem) data.selectId
+                    SelectedItemMulti (getMenuItemItem data.menuItem)
 
                 _ ->
                     SelectedItem (getMenuItemItem data.menuItem)
@@ -1932,7 +1932,7 @@ viewSelectInput viewSelectInputData =
         resolveEnterMsg mi =
             case viewSelectInputData.variant of
                 CustomVariant (Multi _) ->
-                    EnterSelectMulti mi (SelectId selectId)
+                    EnterSelectMulti mi
 
                 _ ->
                     EnterSelect mi
@@ -1952,7 +1952,7 @@ viewSelectInput viewSelectInputData =
 
         spaceKeydownDecoder decoders =
             if canBeSpaceToggled viewSelectInputData.menuOpen viewSelectInputData.maybeInputValue then
-                Events.isSpace (ToggleMenuAtKey <| SelectId selectId) :: decoders
+                Events.isSpace ToggleMenuAtKey :: decoders
 
             else
                 decoders
@@ -1962,8 +1962,8 @@ viewSelectInput viewSelectInputData =
                 []
 
             else
-                [ Events.isDownArrow (KeyboardDown (SelectId selectId) viewSelectInputData.totalViewableMenuItems)
-                , Events.isUpArrow (KeyboardUp (SelectId selectId) viewSelectInputData.totalViewableMenuItems)
+                [ Events.isDownArrow (KeyboardDown viewSelectInputData.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp viewSelectInputData.totalViewableMenuItems)
                 ]
 
         resolveInputWidth selectInputConfig =
@@ -2005,7 +2005,7 @@ viewSelectInput viewSelectInputData =
     in
     SelectInput.view
         (SelectInput.default
-            |> SelectInput.onInput (InputChanged <| SelectId selectId)
+            |> SelectInput.onInput InputChanged
             |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId selectId))
             |> SelectInput.onFocusMsg InputReceivedFocused
             |> SelectInput.currentValue resolveInputValue
@@ -2044,8 +2044,8 @@ viewDummyInput viewDummyInputData =
                 []
 
             else
-                [ Events.isDownArrow (KeyboardDown (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
-                , Events.isUpArrow (KeyboardUp (SelectId viewDummyInputData.id) viewDummyInputData.totalViewableMenuItems)
+                [ Events.isDownArrow (KeyboardDown viewDummyInputData.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp viewDummyInputData.totalViewableMenuItems)
                 ]
 
         withLabelledBy =
@@ -2084,7 +2084,7 @@ viewDummyInput viewDummyInputData =
             Decode.map
                 (\msg -> ( msg, True ))
                 (Decode.oneOf
-                    ([ Events.isSpace (ToggleMenuAtKey <| SelectId viewDummyInputData.id)
+                    ([ Events.isSpace ToggleMenuAtKey
                      , Events.isEscape CloseMenu
                      ]
                         ++ whenEnterEvent
@@ -2098,8 +2098,8 @@ viewDummyInput viewDummyInputData =
         []
 
 
-viewMultiValue : SelectId -> InitialMousedown -> Styles.ControlConfig -> Int -> MenuItem item -> Html (Msg item)
-viewMultiValue selectId mousedownedItem controlStyles index menuItem =
+viewMultiValue : InitialMousedown -> Styles.ControlConfig -> Int -> MenuItem item -> Html (Msg item)
+viewMultiValue mousedownedItem controlStyles index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
@@ -2121,7 +2121,7 @@ viewMultiValue selectId mousedownedItem controlStyles index menuItem =
     in
     Tag.view
         (resolveVariant
-            |> Tag.onDismiss (DeselectedMultiItem (getMenuItemItem menuItem) selectId)
+            |> Tag.onDismiss (DeselectedMultiItem (getMenuItemItem menuItem))
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
@@ -2404,7 +2404,7 @@ queryMenuListElement selectId =
 
 queryNodesForViewportFocus : SelectId -> Int -> Cmd (Msg item)
 queryNodesForViewportFocus selectId menuItemIndex =
-    Task.attempt (FocusMenuViewport selectId) <|
+    Task.attempt FocusMenuViewport <|
         Task.map2 (\menuListElem menuItemElem -> ( MenuListElement menuListElem, MenuItemElement menuItemElem ))
             (queryMenuListElement selectId)
             (queryActiveTargetElement selectId menuItemIndex)
@@ -2474,8 +2474,8 @@ viewLoading =
     DotLoadingIcon.view
 
 
-clearIndicator : Configuration item -> SelectId -> Html (Msg item)
-clearIndicator config id =
+clearIndicator : Configuration item -> Html (Msg item)
+clearIndicator config =
     let
         resolveIconButtonStyles =
             if config.disabled then
@@ -2496,8 +2496,8 @@ clearIndicator config id =
         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
         , on "keydown"
             (Decode.oneOf
-                [ Events.isSpace (SingleSelectClearButtonKeyDowned id)
-                , Events.isEnter (SingleSelectClearButtonKeyDowned id)
+                [ Events.isSpace SingleSelectClearButtonKeyDowned
+                , Events.isEnter SingleSelectClearButtonKeyDowned
                 ]
             )
         ]
