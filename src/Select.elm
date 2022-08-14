@@ -84,7 +84,7 @@ type Msg item
     | UnsearchableSelectContainerClicked
     | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
-    | OnInputBlurred (Maybe SelectId)
+    | OnInputBlurred
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
@@ -839,6 +839,15 @@ reset (State state_) =
         }
 
 
+focus : State -> Cmd (Msg item)
+focus (State state_) =
+    let
+        (SelectId id) =
+            state_.selectId
+    in
+    Task.attempt OnInputFocused (Dom.focus id)
+
+
 
 -- VARIANT
 
@@ -962,7 +971,7 @@ selectIdentifier id_ =
 
 -}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
-update msg (State state_) =
+update msg ((State state_) as wrappedState) =
     case msg of
         InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
             let
@@ -1053,13 +1062,13 @@ update msg (State state_) =
                     | initialMousedown = NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, Task.attempt OnInputFocused (Dom.focus id) ]
+            , Cmd.batch [ cmdWithClosedMenu, focus wrappedState ]
             )
 
         DeselectedMultiItem deselectedItem ->
             ( Just (DeselectMulti deselectedItem)
             , State { state_ | initialMousedown = NothingMousedown }
-            , Task.attempt OnInputFocused (Dom.focus id)
+            , focus wrappedState
             )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
@@ -1090,7 +1099,7 @@ update msg (State state_) =
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
 
-        OnInputBlurred _ ->
+        OnInputBlurred ->
             let
                 resolveAction =
                     case state_.inputValue of
@@ -1206,7 +1215,7 @@ update msg (State state_) =
                             else
                                 ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, Task.attempt OnInputFocused (Dom.focus id) ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, focus wrappedState ] )
 
         UnsearchableSelectContainerClicked ->
             let
@@ -1223,7 +1232,7 @@ update msg (State state_) =
                     else
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, Task.attempt OnInputFocused (Dom.focus id) ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, focus wrappedState ] )
 
         ToggleMenuAtKey ->
             let
@@ -1313,8 +1322,8 @@ update msg (State state_) =
         SingleSelectClearButtonMouseDowned ->
             ( Just ClearSingleSelectItem, State state_, Cmd.none )
 
-        SingleSelectClearButtonKeyDowned (SelectId id) ->
-            ( Just ClearSingleSelectItem, State state_, Task.attempt OnInputFocused (Dom.focus id) )
+        SingleSelectClearButtonKeyDowned ->
+            ( Just ClearSingleSelectItem, State state_, focus wrappedState )
 
 
 {-| Render the select
@@ -1354,7 +1363,6 @@ view (Config config) =
 
         selectWrapper =
             viewWrapper config
-                selectId
 
         controlStyles =
             Styles.getControlConfig config.styles
@@ -1699,8 +1707,8 @@ viewNative viewNativeData =
                 (withPlaceholder :: List.map buildList viewNativeData.menuItems)
 
 
-viewWrapper : Configuration item -> SelectId -> List (Html (Msg item)) -> Html (Msg item)
-viewWrapper config selectId =
+viewWrapper : Configuration item -> List (Html (Msg item)) -> Html (Msg item)
+viewWrapper config =
     let
         (State state_) =
             config.state
@@ -2006,7 +2014,7 @@ viewSelectInput viewSelectInputData =
     SelectInput.view
         (SelectInput.default
             |> SelectInput.onInput InputChanged
-            |> SelectInput.onBlurMsg (OnInputBlurred (Just <| SelectId selectId))
+            |> SelectInput.onBlurMsg OnInputBlurred
             |> SelectInput.onFocusMsg InputReceivedFocused
             |> SelectInput.currentValue resolveInputValue
             |> SelectInput.onMousedown InputMousedowned
@@ -2079,7 +2087,7 @@ viewDummyInput viewDummyInputData =
          , attribute "data-test-id" "dummyInputSelect"
          , id viewDummyInputData.id
          , onFocus InputReceivedFocused
-         , onBlur (OnInputBlurred Nothing)
+         , onBlur OnInputBlurred
          , preventDefaultOn "keydown" <|
             Decode.map
                 (\msg -> ( msg, True ))
