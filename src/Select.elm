@@ -5,6 +5,7 @@ module Select exposing
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
+    , singleMenu
     )
 
 {-| Select items from a menu list.
@@ -860,6 +861,7 @@ type Variant item
 type CustomVariant item
     = Single (Maybe (MenuItem item))
     | Multi (List (MenuItem item))
+    | SingleMenu (Maybe (MenuItem item))
 
 
 type NativeVariant item
@@ -887,6 +889,11 @@ type NativeVariant item
 single : Maybe (MenuItem item) -> Config item
 single maybeSelectedItem =
     Config { defaults | variant = CustomVariant (Single maybeSelectedItem) }
+
+
+singleMenu : Maybe (MenuItem item) -> Config item
+singleMenu mi =
+    Config { defaults | variant = CustomVariant (SingleMenu mi) }
 
 
 {-| Select a single item with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
@@ -1367,9 +1374,9 @@ view (Config config) =
         controlStyles =
             Styles.getControlConfig config.styles
     in
-    selectWrapper
-        (case config.variant of
-            Native variant ->
+    case config.variant of
+        Native variant ->
+            selectWrapper
                 [ viewNative
                     (ViewNativeData controlStyles
                         variant
@@ -1392,7 +1399,34 @@ view (Config config) =
                     [ dropdownIndicator controlStyles False ]
                 ]
 
-            _ ->
+        CustomVariant (SingleMenu _) ->
+            div []
+                [ lazy viewDummyInput
+                    (ViewDummyInputData
+                        (getSelectId config.state)
+                        enterSelectTargetItem
+                        totalMenuItems
+                        True
+                        config.labelledBy
+                        config.ariaDescribedBy
+                    )
+                , lazy viewMenu
+                    (ViewMenuData
+                        config.variant
+                        selectId
+                        viewableMenuItems
+                        state_.initialMousedown
+                        state_.activeTargetIndex
+                        state_.menuNavigation
+                        config.isLoading
+                        config.loadingMessage
+                        (Styles.getMenuConfig config.styles)
+                        (Styles.getMenuItemConfig config.styles)
+                    )
+                ]
+
+        _ ->
+            selectWrapper
                 [ lazy viewControl (ViewControlData config selectId config.state controlStyles enterSelectTargetItem totalMenuItems)
                 , Internal.viewIf state_.menuOpen
                     (lazy viewMenu
@@ -1410,7 +1444,6 @@ view (Config config) =
                         )
                     )
                 ]
-        )
 
 
 type alias ViewControlData item =
@@ -1462,6 +1495,9 @@ viewControl data =
                         )
 
                 CustomVariant (Single _) ->
+                    buildInput
+
+                CustomVariant (SingleMenu _) ->
                     buildInput
 
                 _ ->
@@ -2272,6 +2308,9 @@ buildViewableMenuItems data =
             filteredMenuItems
                 |> filterMultiSelectedItems maybeSelectedMenuItems
 
+        CustomVariant (SingleMenu _) ->
+            filteredMenuItems
+
         _ ->
             []
 
@@ -2291,6 +2330,24 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
         Basic _ ->
             case variant of
                 CustomVariant (Single maybeSelectedItem) ->
+                    ( getMenuItemLabel item
+                    , lazy2 viewMenuItem
+                        (ViewMenuItemData
+                            idx
+                            (isSelected item maybeSelectedItem)
+                            (isMenuItemClickFocused initialMousedown idx)
+                            (isTarget activeTargetIndex idx)
+                            selectId
+                            item
+                            menuNavigation
+                            initialMousedown
+                            variant
+                            menuItemStyles
+                        )
+                        [ text (getMenuItemLabel item) ]
+                    )
+
+                CustomVariant (SingleMenu maybeSelectedItem) ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
