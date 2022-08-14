@@ -194,7 +194,8 @@ filter the menu down to a specific menu item.
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/SingleFilter.png)
 
-For stylistic reasons, this input element dynamically adjusts its width to just accommodate the text. 
+In order for the input to be displayed inline with other UI elements, the input element dynamically adjusts its width to just accommodate the text.
+More info [here](https://github.com/Confidenceman02/elm-select/issues/88) about why this decision was made.
 
 Without a javascript optimization elm-select achieves this via the [size](https://www.w3schools.com/tags/att_input_size.asp) 
 attribute on the input element. It's performant but not a completely ideal solution.
