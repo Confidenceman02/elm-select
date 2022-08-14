@@ -12,7 +12,7 @@ type Msg
 
 
 type alias Model =
-    { selectState : Select.State 
+    { selectState : Select.State
     , items : List (MenuItem String)
     , selectedItem : Maybe String
     }
@@ -79,11 +79,12 @@ view m =
             , Css.width (Css.pct 50)
             , Css.marginLeft Css.auto
             , Css.marginRight Css.auto
+            , Css.position Css.relative
             ]
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.single selectedItem
+                (Select.singleMenu selectedItem
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
