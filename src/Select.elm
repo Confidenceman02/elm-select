@@ -1406,22 +1406,24 @@ view (Config config) =
                         (getSelectId config.state)
                         enterSelectTargetItem
                         totalMenuItems
-                        True
+                        state_.menuOpen
                         config.labelledBy
                         config.ariaDescribedBy
                     )
-                , lazy viewMenu
-                    (ViewMenuData
-                        config.variant
-                        selectId
-                        viewableMenuItems
-                        state_.initialMousedown
-                        state_.activeTargetIndex
-                        state_.menuNavigation
-                        config.isLoading
-                        config.loadingMessage
-                        (Styles.getMenuConfig config.styles)
-                        (Styles.getMenuItemConfig config.styles)
+                , Internal.viewIf state_.menuOpen
+                    (lazy viewMenu
+                        (ViewMenuData
+                            config.variant
+                            selectId
+                            viewableMenuItems
+                            state_.initialMousedown
+                            state_.activeTargetIndex
+                            state_.menuNavigation
+                            config.isLoading
+                            config.loadingMessage
+                            (Styles.getMenuConfig config.styles)
+                            (Styles.getMenuItemConfig config.styles)
+                        )
                     )
                 ]
 
