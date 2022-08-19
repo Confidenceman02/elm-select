@@ -1,11 +1,11 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
-    , focus, singleMenu
+    , singleMenu
     )
 
 {-| Select items from a menu list.
@@ -13,7 +13,7 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -833,6 +833,15 @@ reset (State state_) =
         }
 
 
+{-| Focus the select variant.
+
+        yourUpdate : (model, Cmd msg )
+        yourUpdate msg model =
+            case msg of
+                FocusTheSelect ->
+                    (model, Cmd.map SelectMsg  (focus model.selectState))
+
+-}
 focus : State -> Cmd (Msg item)
 focus ((State state_) as wrappedState) =
     if state_.controlUiFocused then
