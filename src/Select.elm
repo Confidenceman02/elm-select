@@ -73,6 +73,10 @@ type SelectId
     = SelectId String
 
 
+type HeadlessMsg
+    = OnInputFocusedH (Result Dom.Error ())
+
+
 {-| -}
 type Msg item
     = InputChanged String
@@ -104,6 +108,7 @@ type Msg item
     | DoNothing
     | SingleSelectClearButtonMouseDowned
     | SingleSelectClearButtonKeyDowned
+    | HeadlessMsg HeadlessMsg
 
 
 {-| Specific events happen in the Select that you can react to from your update.
@@ -157,18 +162,6 @@ type State
     = State SelectState
 
 
-
--- Determines what was mousedowned first within the container
-
-
-type InitialMousedown
-    = MultiItemMousedown Int
-    | MenuItemMousedown Int
-    | InputMousedown
-    | ContainerMousedown
-    | NothingMousedown
-
-
 type MenuItemVisibility
     = Within
     | Above
@@ -197,7 +190,7 @@ type alias ViewMenuItemData item =
     , selectId : SelectId
     , menuItem : MenuItem item
     , menuNavigation : MenuNavigation
-    , initialMousedown : InitialMousedown
+    , initialMousedown : Internal.InitialMousedown
     , variant : Variant item
     , menuItemStyles : Styles.MenuItemConfig
     }
@@ -207,7 +200,7 @@ type alias ViewMenuData item =
     { variant : Variant item
     , selectId : SelectId
     , viewableMenuItems : List (MenuItem item)
-    , initialMousedown : InitialMousedown
+    , initialMousedown : Internal.InitialMousedown
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
     , loading : Bool
@@ -276,7 +269,7 @@ type alias Configuration item =
 type alias SelectState =
     { inputValue : Maybe String
     , menuOpen : Bool
-    , initialMousedown : InitialMousedown
+    , initialMousedown : Internal.InitialMousedown
     , controlUiFocused : Bool
     , activeTargetIndex : Int
     , menuViewportFocusNodes : Maybe ( MenuListElement, MenuItemElement )
@@ -435,7 +428,7 @@ initState id_ =
     State
         { inputValue = Nothing
         , menuOpen = False
-        , initialMousedown = NothingMousedown
+        , initialMousedown = Internal.NothingMousedown
         , controlUiFocused = False
 
         -- Always focus the first menu item by default. This facilitates auto selecting the first item on Enter
@@ -841,12 +834,21 @@ reset (State state_) =
 
 
 focus : State -> Cmd (Msg item)
-focus (State state_) =
+focus ((State state_) as wrappedState) =
+    if state_.controlUiFocused then
+        Cmd.none
+
+    else
+        internalFocus wrappedState (OnInputFocusedH >> HeadlessMsg)
+
+
+internalFocus : State -> (Result Dom.Error () -> msg) -> Cmd msg
+internalFocus (State state_) msg =
     let
         (SelectId id) =
             state_.selectId
     in
-    Task.attempt OnInputFocused (Dom.focus id)
+    Task.attempt msg (Dom.focus id)
 
 
 
@@ -980,6 +982,14 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg ((State state_) as wrappedState) =
     case msg of
+        HeadlessMsg (OnInputFocusedH focusResult) ->
+            case focusResult of
+                Ok () ->
+                    ( Nothing, State { state_ | menuOpen = True, initialMousedown = Internal.NothingMousedown }, Cmd.none )
+
+                Err _ ->
+                    ( Nothing, wrappedState, Cmd.none )
+
         InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
             let
                 resolveIndex =
@@ -1005,7 +1015,7 @@ update msg ((State state_) as wrappedState) =
             ( Just (Select (getMenuItemItem menuItem))
             , State
                 { stateWithClosedMenu
-                    | initialMousedown = NothingMousedown
+                    | initialMousedown = Internal.NothingMousedown
                     , inputValue = Nothing
                 }
             , cmdWithClosedMenu
@@ -1019,10 +1029,10 @@ update msg ((State state_) as wrappedState) =
             ( Just (Select (getMenuItemItem menuItem))
             , State
                 { stateWithClosedMenu
-                    | initialMousedown = NothingMousedown
+                    | initialMousedown = Internal.NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, focus wrappedState ]
+            , Cmd.batch [ cmdWithClosedMenu, internalFocus wrappedState OnInputFocused ]
             )
 
         HoverFocused i ->
@@ -1052,7 +1062,7 @@ update msg ((State state_) as wrappedState) =
             ( Just (Select item)
             , State
                 { stateWithClosedMenu
-                    | initialMousedown = NothingMousedown
+                    | initialMousedown = Internal.NothingMousedown
                     , inputValue = Nothing
                 }
             , cmdWithClosedMenu
@@ -1066,16 +1076,16 @@ update msg ((State state_) as wrappedState) =
             ( Just (Select item)
             , State
                 { stateWithClosedMenu
-                    | initialMousedown = NothingMousedown
+                    | initialMousedown = Internal.NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, focus wrappedState ]
+            , Cmd.batch [ cmdWithClosedMenu, internalFocus wrappedState OnInputFocused ]
             )
 
         DeselectedMultiItem deselectedItem ->
             ( Just (DeselectMulti deselectedItem)
-            , State { state_ | initialMousedown = NothingMousedown }
-            , focus wrappedState
+            , State { state_ | initialMousedown = Internal.NothingMousedown }
+            , internalFocus wrappedState OnInputFocused
             )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
@@ -1085,10 +1095,10 @@ update msg ((State state_) as wrappedState) =
         OnInputFocused focusResult ->
             case focusResult of
                 Ok () ->
-                    ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+                    ( Nothing, State { state_ | initialMousedown = Internal.NothingMousedown }, Cmd.none )
 
                 Err _ ->
-                    ( Nothing, State state_, Cmd.none )
+                    ( Nothing, wrappedState, Cmd.none )
 
         FocusMenuViewport (Ok ( menuListElem, menuItemElem )) ->
             let
@@ -1124,15 +1134,15 @@ update msg ((State state_) as wrappedState) =
 
                 ( updatedState, updatedCmds, action ) =
                     case state_.initialMousedown of
-                        ContainerMousedown ->
+                        Internal.ContainerMousedown ->
                             ( { state_ | inputValue = Nothing }, Cmd.none, resolveAction )
 
-                        MultiItemMousedown _ ->
+                        Internal.MultiItemMousedown _ ->
                             ( state_, Cmd.none, Nothing )
 
                         _ ->
                             ( { stateWithClosedMenu
-                                | initialMousedown = NothingMousedown
+                                | initialMousedown = Internal.NothingMousedown
                                 , controlUiFocused = False
                                 , inputValue = Nothing
                               }
@@ -1146,13 +1156,13 @@ update msg ((State state_) as wrappedState) =
             )
 
         MenuItemClickFocus i ->
-            ( Nothing, State { state_ | initialMousedown = MenuItemMousedown i }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = Internal.MenuItemMousedown i }, Cmd.none )
 
         MultiItemFocus index ->
-            ( Nothing, State { state_ | initialMousedown = MultiItemMousedown index }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = Internal.MultiItemMousedown index }, Cmd.none )
 
         InputMousedowned ->
-            ( Nothing, State { state_ | initialMousedown = InputMousedown }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = Internal.InputMousedown }, Cmd.none )
 
         InputEscape ->
             let
@@ -1173,7 +1183,7 @@ update msg ((State state_) as wrappedState) =
             ( resolveAction, State { stateWithClosedMenu | inputValue = Nothing }, cmdWithClosedMenu )
 
         ClearFocusedItem ->
-            ( Nothing, State { state_ | initialMousedown = NothingMousedown }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = Internal.NothingMousedown }, Cmd.none )
 
         SearchableSelectContainerClicked ->
             let
@@ -1189,31 +1199,31 @@ update msg ((State state_) as wrappedState) =
                         -- bubble and fire the the mousedown on the container div which toggles the menu.
                         -- To avoid the annoyance of opening and closing the menu whenever a multi tag item is dismissed
                         -- we just want to leave the menu open which it will be when it reaches here.
-                        MultiItemMousedown _ ->
+                        Internal.MultiItemMousedown _ ->
                             ( state_, Cmd.none )
 
                         -- This is set by a mousedown event in the input. Because the container mousedown will also fire
                         -- as a result of bubbling we want to ensure that the preventDefault on the container is set to
                         -- false and allow the input to do all the native click things i.e. double click to select text.
                         -- If the initClicked values are InputInitClick || NothingInitClick we will not preventDefault.
-                        InputMousedown ->
-                            ( { stateWithOpenMenu | initialMousedown = NothingMousedown }, cmdWithOpenMenu )
+                        Internal.InputMousedown ->
+                            ( { stateWithOpenMenu | initialMousedown = Internal.NothingMousedown }, cmdWithOpenMenu )
 
                         -- When no container children i.e. tag, input, have initiated a click, then this means a click on the container itself
                         -- has been initiated.
-                        NothingMousedown ->
+                        Internal.NothingMousedown ->
                             if state_.menuOpen then
-                                ( { stateWithClosedMenu | initialMousedown = ContainerMousedown }, cmdWithClosedMenu )
+                                ( { stateWithClosedMenu | initialMousedown = Internal.ContainerMousedown }, cmdWithClosedMenu )
 
                             else
-                                ( { stateWithOpenMenu | initialMousedown = ContainerMousedown }, cmdWithOpenMenu )
+                                ( { stateWithOpenMenu | initialMousedown = Internal.ContainerMousedown }, cmdWithOpenMenu )
 
-                        ContainerMousedown ->
+                        Internal.ContainerMousedown ->
                             if state_.menuOpen then
-                                ( { stateWithClosedMenu | initialMousedown = NothingMousedown }, cmdWithClosedMenu )
+                                ( { stateWithClosedMenu | initialMousedown = Internal.NothingMousedown }, cmdWithClosedMenu )
 
                             else
-                                ( { stateWithOpenMenu | initialMousedown = NothingMousedown }, cmdWithOpenMenu )
+                                ( { stateWithOpenMenu | initialMousedown = Internal.NothingMousedown }, cmdWithOpenMenu )
 
                         _ ->
                             if state_.menuOpen then
@@ -1222,7 +1232,7 @@ update msg ((State state_) as wrappedState) =
                             else
                                 ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, focus wrappedState ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, internalFocus wrappedState OnInputFocused ] )
 
         UnsearchableSelectContainerClicked ->
             let
@@ -1239,7 +1249,7 @@ update msg ((State state_) as wrappedState) =
                     else
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, focus wrappedState ] )
+            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmd, internalFocus wrappedState OnInputFocused ] )
 
         ToggleMenuAtKey ->
             let
@@ -1330,7 +1340,7 @@ update msg ((State state_) as wrappedState) =
             ( Just ClearSingleSelectItem, State state_, Cmd.none )
 
         SingleSelectClearButtonKeyDowned ->
-            ( Just ClearSingleSelectItem, State state_, focus wrappedState )
+            ( Just ClearSingleSelectItem, State state_, internalFocus wrappedState OnInputFocused )
 
 
 {-| Render the select
@@ -1754,10 +1764,10 @@ viewWrapper config =
         preventDefault =
             if config.searchable then
                 case state_.initialMousedown of
-                    NothingMousedown ->
+                    Internal.NothingMousedown ->
                         False
 
-                    InputMousedown ->
+                    Internal.InputMousedown ->
                         False
 
                     _ ->
@@ -1892,7 +1902,7 @@ viewMenuItem data content =
 
         resolveMouseUp =
             case data.initialMousedown of
-                MenuItemMousedown _ ->
+                Internal.MenuItemMousedown _ ->
                     [ on "mouseup" <| Decode.succeed resolveMouseUpMsg ]
 
                 _ ->
@@ -2144,12 +2154,12 @@ viewDummyInput viewDummyInputData =
         []
 
 
-viewMultiValue : InitialMousedown -> Styles.ControlConfig -> Int -> MenuItem item -> Html (Msg item)
+viewMultiValue : Internal.InitialMousedown -> Styles.ControlConfig -> Int -> MenuItem item -> Html (Msg item)
 viewMultiValue mousedownedItem controlStyles index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
-                MultiItemMousedown i ->
+                Internal.MultiItemMousedown i ->
                     i == index
 
                 _ ->
@@ -2220,10 +2230,10 @@ isSelected menuItem maybeSelectedItem =
             False
 
 
-isMenuItemClickFocused : InitialMousedown -> Int -> Bool
+isMenuItemClickFocused : Internal.InitialMousedown -> Int -> Bool
 isMenuItemClickFocused initialMousedown i =
     case initialMousedown of
-        MenuItemMousedown int ->
+        Internal.MenuItemMousedown int ->
             int == i
 
         _ ->
@@ -2321,7 +2331,7 @@ buildMenuItem :
     Styles.MenuItemConfig
     -> SelectId
     -> Variant item
-    -> InitialMousedown
+    -> Internal.InitialMousedown
     -> Int
     -> MenuNavigation
     -> Int
