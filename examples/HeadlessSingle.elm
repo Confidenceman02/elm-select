@@ -2,13 +2,15 @@ module HeadlessSingle exposing (..)
 
 import Browser
 import Css
-import Html.Styled as Styled exposing (Html, div)
+import Html.Styled as Styled exposing (Html, button, div, text)
 import Html.Styled.Attributes as StyledAttribs
+import Html.Styled.Events exposing (onClick)
 import Select exposing (MenuItem, initState, selectIdentifier, update)
 
 
 type Msg
     = SelectMsg (Select.Msg String)
+    | FocusInput
 
 
 type alias Model =
@@ -61,6 +63,9 @@ update msg model =
             in
             ( { model | selectState = selectState, selectedItem = updatedSelectedItem }, Cmd.map SelectMsg cmds )
 
+        FocusInput ->
+            ( model, Cmd.map SelectMsg (Select.focus model.selectState) )
+
 
 view : Model -> Html Msg
 view m =
@@ -82,7 +87,8 @@ view m =
             , Css.position Css.relative
             ]
         ]
-        [ Styled.map SelectMsg <|
+        [ button [ onClick FocusInput ] [ text "Open menu" ]
+        , Styled.map SelectMsg <|
             Select.view
                 (Select.singleMenu selectedItem
                     |> Select.state m.selectState

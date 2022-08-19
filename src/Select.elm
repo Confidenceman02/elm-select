@@ -5,7 +5,7 @@ module Select exposing
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
-    , singleMenu
+    , focus, singleMenu
     )
 
 {-| Select items from a menu list.
