@@ -1419,7 +1419,7 @@ view (Config config) =
                 ]
 
         CustomVariant (SingleMenu _) ->
-            div []
+            div [ StyledAttribs.css [ Css.height (Css.px 0) ] ]
                 [ lazy viewDummyInput
                     (ViewDummyInputData
                         (getSelectId config.state)
