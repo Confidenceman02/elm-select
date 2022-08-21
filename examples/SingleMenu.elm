@@ -1,4 +1,4 @@
-module HeadlessSingle exposing (..)
+module SingleMenu exposing (..)
 
 import Browser
 import Css
@@ -12,12 +12,13 @@ import Svg.Styled.Attributes as SvgAttribs
 
 type Msg
     = SelectMsg (Select.Msg DropdownAction)
-    | FocusInput Action
+    | ActionClicked Action
 
 
 type alias Model =
     { items : List (MenuItem DropdownAction)
     , activeAction : Maybe ( Action, Select.State )
+    , selectedAction : Maybe DropdownAction
     }
 
 
@@ -39,15 +40,15 @@ type DropdownAction
 
 init : ( Model, Cmd Msg )
 init =
-    ( { -- selectState = initState (selectIdentifier "SingleSelectExample")
-        activeAction = Nothing
+    ( { activeAction = Nothing
+      , selectedAction = Nothing
       , items =
-            [ Select.basicMenuItem { item = HideSettings, label = "Hide settings" }
-            , Select.basicMenuItem { item = Duplicate, label = "Duplicate" }
-            , Select.basicMenuItem { item = InsertBefore, label = "Insert Before" }
-            , Select.basicMenuItem { item = InsertAfter, label = "Insert After" }
-            , Select.basicMenuItem { item = EditAsHTML, label = "Edit as HTML" }
-            , Select.basicMenuItem { item = AddToBlocks, label = "Add to Blocks" }
+            [ customMenuItem HideSettings "Hide settings"
+            , customMenuItem Duplicate "Duplicate"
+            , customMenuItem InsertBefore "Insert Before"
+            , customMenuItem InsertAfter "Insert After"
+            , customMenuItem EditAsHTML "Edit as HTML"
+            , customMenuItem AddToBlocks "Add to Blocks"
             ]
       }
     , Cmd.none
@@ -74,25 +75,44 @@ update msg model =
                         ( maybeAction, selectState, cmds ) =
                             Select.update sm actionSelectState
 
-                        updatedSelectedItem =
+                        updatedModel =
                             case maybeAction of
                                 Just (Select.Select i) ->
-                                    Debug.log "Selected"
+                                    { model | activeAction = Nothing, selectedAction = Just i }
+
+                                Just Select.FocusSet ->
+                                    { model | activeAction = Just ( action, selectState ) }
 
                                 _ ->
-                                    Debug.log "Something else happened"
+                                    if not <| Select.isMenuOpen selectState then
+                                        { model | activeAction = Nothing } |> Debug.log "MENU NOT OPEN"
+
+                                    else
+                                        { model | activeAction = Just ( action, selectState ) } |> Debug.log "Something else"
                     in
-                    ( { model | activeAction = Just ( action, selectState ) }, Cmd.map SelectMsg cmds )
+                    ( updatedModel, Cmd.map SelectMsg cmds )
 
                 _ ->
                     ( model, Cmd.none )
 
-        FocusInput action ->
+        ActionClicked action ->
             let
                 ss =
                     initState (selectIdentifier "SingleSelectExample")
+
+                ( _, updatedState, cmds ) =
+                    Select.update Select.focus ss
             in
-            ( { model | activeAction = Just ( action, ss ) }, Cmd.map SelectMsg (Select.focus ss) )
+            case model.activeAction of
+                Just ( act, _ ) ->
+                    if action == act then
+                        ( { model | activeAction = Nothing }, Cmd.none )
+
+                    else
+                        ( { model | activeAction = Nothing }, Cmd.none )
+
+                _ ->
+                    ( { model | activeAction = Just ( action, updatedState ) }, Cmd.map SelectMsg cmds )
 
 
 view : Model -> Html Msg
@@ -131,7 +151,67 @@ view m =
 
             _ ->
                 text ""
+        , case m.selectedAction of
+            Just act ->
+                case act of
+                    HideSettings ->
+                        div [] [ text "Hide settings" ]
+
+                    Duplicate ->
+                        div [] [ text "Duplicate" ]
+
+                    InsertBefore ->
+                        div [] [ text "Insert Before" ]
+
+                    InsertAfter ->
+                        div [] [ text "Insert After" ]
+
+                    EditAsHTML ->
+                        div [] [ text "Edit as HTML" ]
+
+                    AddToBlocks ->
+                        div [] [ text "Add to Blocks" ]
+
+            _ ->
+                text ""
         ]
+
+
+customMenuItem : DropdownAction -> String -> MenuItem DropdownAction
+customMenuItem act label =
+    let
+        resolveIcon =
+            case act of
+                HideSettings ->
+                    hideSettings
+
+                Duplicate ->
+                    duplicate
+
+                InsertBefore ->
+                    insertBefore
+
+                InsertAfter ->
+                    insertAfter
+
+                EditAsHTML ->
+                    code
+
+                AddToBlocks ->
+                    addToBlocks
+    in
+    Select.customMenuItem
+        { item = act
+        , label = label
+        , view =
+            div
+                [ StyledAttribs.css
+                    [ Css.displayFlex
+                    , Css.property "gap" (Css.rem 1).value
+                    ]
+                ]
+                [ resolveIcon, text label ]
+        }
 
 
 
@@ -163,7 +243,7 @@ withButton selectedAction action =
              ]
                 ++ resolveBackgroundColor
             )
-        , onClick (FocusInput action)
+        , onClick (ActionClicked action)
         ]
 
 
