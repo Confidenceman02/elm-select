@@ -1,5 +1,5 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi
     , singleNative
@@ -13,7 +13,7 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, isFocused, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -821,18 +821,6 @@ jsOptimize pred (State state_) =
     State { state_ | jsOptimize = pred }
 
 
-reset : State -> State
-reset (State state_) =
-    State
-        { state_
-            | menuOpen = False
-            , activeTargetIndex = 0
-            , menuViewportFocusNodes = Nothing
-            , menuListScrollTop = 0
-            , menuNavigation = Mouse
-        }
-
-
 {-| Focus the select variant.
 
         yourUpdate : (model, Cmd msg )
@@ -849,6 +837,25 @@ focus ((State state_) as wrappedState) =
 
     else
         internalFocus wrappedState (OnInputFocusedH >> HeadlessMsg)
+
+
+{-| Returns True when the variant is focused.
+-}
+isFocused : State -> Bool
+isFocused (State state_) =
+    state_.controlUiFocused
+
+
+reset : State -> State
+reset (State state_) =
+    State
+        { state_
+            | menuOpen = False
+            , activeTargetIndex = 0
+            , menuViewportFocusNodes = Nothing
+            , menuListScrollTop = 0
+            , menuNavigation = Mouse
+        }
 
 
 internalFocus : State -> (Result Dom.Error () -> msg) -> Cmd msg
@@ -994,7 +1001,15 @@ update msg ((State state_) as wrappedState) =
         HeadlessMsg (OnInputFocusedH focusResult) ->
             case focusResult of
                 Ok () ->
-                    ( Nothing, State { state_ | menuOpen = True, initialMousedown = Internal.NothingMousedown }, Cmd.none )
+                    ( Nothing
+                    , State
+                        { state_
+                            | menuOpen = True
+                            , initialMousedown = Internal.NothingMousedown
+                            , controlUiFocused = True
+                        }
+                    , Cmd.none
+                    )
 
                 Err _ ->
                     ( Nothing, wrappedState, Cmd.none )

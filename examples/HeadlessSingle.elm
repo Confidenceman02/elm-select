@@ -12,13 +12,20 @@ import Svg.Styled.Attributes as SvgAttribs
 
 type Msg
     = SelectMsg (Select.Msg DropdownAction)
-    | FocusInput
+    | FocusInput Action
 
 
 type alias Model =
-    { selectState : Select.State
-    , items : List (MenuItem DropdownAction)
+    { items : List (MenuItem DropdownAction)
+    , activeAction : Maybe ( Action, Select.State )
     }
+
+
+type Action
+    = Bold
+    | Italic
+    | Attachment
+    | Dropdown
 
 
 type DropdownAction
@@ -32,7 +39,8 @@ type DropdownAction
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState (selectIdentifier "SingleSelectExample")
+    ( { -- selectState = initState (selectIdentifier "SingleSelectExample")
+        activeAction = Nothing
       , items =
             [ Select.basicMenuItem { item = HideSettings, label = "Hide settings" }
             , Select.basicMenuItem { item = Duplicate, label = "Duplicate" }
@@ -60,22 +68,31 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SelectMsg sm ->
+            case model.activeAction of
+                Just ( action, actionSelectState ) ->
+                    let
+                        ( maybeAction, selectState, cmds ) =
+                            Select.update sm actionSelectState
+
+                        updatedSelectedItem =
+                            case maybeAction of
+                                Just (Select.Select i) ->
+                                    Debug.log "Selected"
+
+                                _ ->
+                                    Debug.log "Something else happened"
+                    in
+                    ( { model | activeAction = Just ( action, selectState ) }, Cmd.map SelectMsg cmds )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        FocusInput action ->
             let
-                ( maybeAction, selectState, cmds ) =
-                    Select.update sm model.selectState
-
-                updatedSelectedItem =
-                    case maybeAction of
-                        Just (Select.Select i) ->
-                            Debug.log "Selected"
-
-                        _ ->
-                            Debug.log "Something else happened"
+                ss =
+                    initState (selectIdentifier "SingleSelectExample")
             in
-            ( { model | selectState = selectState }, Cmd.map SelectMsg cmds )
-
-        FocusInput ->
-            ( model, Cmd.map SelectMsg (Select.focus model.selectState) )
+            ( { model | activeAction = Just ( action, ss ) }, Cmd.map SelectMsg (Select.focus ss) )
 
 
 view : Model -> Html Msg
@@ -96,19 +113,24 @@ view m =
                 , Css.displayFlex
                 ]
             ]
-            [ withButton [ bold ]
-            , withButton [ italic ]
-            , withButton [ attachment ]
-            , withButton [ horizontalKebab ]
+            [ withButton m.activeAction Bold [ bold ]
+            , withButton m.activeAction Italic [ italic ]
+            , withButton m.activeAction Attachment [ attachment ]
+            , withButton m.activeAction Dropdown [ horizontalKebab ]
             ]
-        , Styled.map SelectMsg <|
-            Select.view
-                (Select.singleMenu Nothing
-                    |> Select.state m.selectState
-                    |> Select.menuItems m.items
-                    |> Select.placeholder "Placeholder"
-                    |> Select.searchable False
-                )
+        , case m.activeAction of
+            Just ( _, st ) ->
+                Styled.map SelectMsg <|
+                    Select.view
+                        (Select.singleMenu Nothing
+                            |> Select.state st
+                            |> Select.menuItems m.items
+                            |> Select.placeholder "Placeholder"
+                            |> Select.searchable False
+                        )
+
+            _ ->
+                text ""
         ]
 
 
@@ -116,18 +138,32 @@ view m =
 -- ICONS
 
 
-withButton : List (Html Msg) -> Html Msg
-withButton =
+withButton : Maybe ( Action, Select.State ) -> Action -> List (Html Msg) -> Html Msg
+withButton selectedAction action =
+    let
+        resolveBackgroundColor =
+            case selectedAction of
+                Just ( act, st ) ->
+                    if Select.isFocused st && act == action then
+                        [ Css.backgroundColor (Css.hex "#D3D3D3"), Css.color (Css.hex "#8D8D8D") ]
+
+                    else
+                        [ Css.backgroundColor (Css.hex "#E4E4E4") ]
+
+                _ ->
+                    [ Css.backgroundColor (Css.hex "#E4E4E4") ]
+    in
     button
         [ StyledAttribs.css
-            [ Css.displayFlex
-            , Css.border (Css.px 0)
-            , Css.padding (Css.rem 0.5)
-            , Css.color (Css.hsla 0 0 0.68 1)
-            , Css.backgroundColor (Css.hex "#E4E4E4")
-            , Css.hover [ Css.backgroundColor (Css.hex "#D3D3D3"), Css.color (Css.hex "#8D8D8D") ]
-            ]
-        , onClick FocusInput
+            ([ Css.displayFlex
+             , Css.border (Css.px 0)
+             , Css.padding (Css.rem 0.5)
+             , Css.color (Css.hsla 0 0 0.68 1)
+             , Css.hover [ Css.backgroundColor (Css.hex "#D3D3D3"), Css.color (Css.hex "#8D8D8D") ]
+             ]
+                ++ resolveBackgroundColor
+            )
+        , onClick (FocusInput action)
         ]
 
 
@@ -193,6 +229,114 @@ horizontalKebab =
             [ SvgStyled.path
                 [ SvgAttribs.fill "currentColor"
                 , SvgAttribs.d "M7.5 12.5C6.125 12.5 5 13.625 5 15C5 16.375 6.125 17.5 7.5 17.5C8.875 17.5 10 16.375 10 15C10 13.625 8.875 12.5 7.5 12.5ZM22.5 12.5C21.125 12.5 20 13.625 20 15C20 16.375 21.125 17.5 22.5 17.5C23.875 17.5 25 16.375 25 15C25 13.625 23.875 12.5 22.5 12.5ZM15 12.5C13.625 12.5 12.5 13.625 12.5 15C12.5 16.375 13.625 17.5 15 17.5C16.375 17.5 17.5 16.375 17.5 15C17.5 13.625 16.375 12.5 15 12.5Z"
+                ]
+                []
+            ]
+        ]
+
+
+hideSettings : Html msg
+hideSettings =
+    Styled.span
+        [ StyledAttribs.css
+            [ Css.width (Css.px 20)
+            , Css.displayFlex
+            ]
+        ]
+        [ SvgStyled.svg [ SvgAttribs.viewBox "0 0 20 20" ]
+            [ SvgStyled.path
+                [ SvgAttribs.fill "currentColor"
+                , SvgAttribs.d "M9.16669 5.83333L8.00002 7L10.1667 9.16667H1.66669V10.8333H10.1667L8.00002 13L9.16669 14.1667L13.3334 10L9.16669 5.83333ZM16.6667 15.8333H10V17.5H16.6667C17.5834 17.5 18.3334 16.75 18.3334 15.8333V4.16667C18.3334 3.25 17.5834 2.5 16.6667 2.5H10V4.16667H16.6667V15.8333Z"
+                ]
+                []
+            ]
+        ]
+
+
+duplicate : Html msg
+duplicate =
+    Styled.span
+        [ StyledAttribs.css
+            [ Css.width (Css.px 20)
+            , Css.displayFlex
+            ]
+        ]
+        [ SvgStyled.svg [ SvgAttribs.viewBox "0 0 20 20" ]
+            [ SvgStyled.path
+                [ SvgAttribs.fill "currentColor"
+                , SvgAttribs.d "M13.3333 0.833374H3.33334C2.41667 0.833374 1.66667 1.58337 1.66667 2.50004V14.1667H3.33334V2.50004H13.3333V0.833374ZM15.8333 4.16671H6.66667C5.75 4.16671 5.00001 4.91671 5.00001 5.83337V17.5C5.00001 18.4167 5.75 19.1667 6.66667 19.1667H15.8333C16.75 19.1667 17.5 18.4167 17.5 17.5V5.83337C17.5 4.91671 16.75 4.16671 15.8333 4.16671ZM15.8333 17.5H6.66667V5.83337H15.8333V17.5Z"
+                ]
+                []
+            ]
+        ]
+
+
+insertBefore : Html msg
+insertBefore =
+    Styled.span
+        [ StyledAttribs.css
+            [ Css.width (Css.px 20)
+            , Css.displayFlex
+            ]
+        ]
+        [ SvgStyled.svg [ SvgAttribs.viewBox "0 0 20 20" ]
+            [ SvgStyled.path
+                [ SvgAttribs.fill "currentColor"
+                , SvgAttribs.d "M6.66666 9.16667H9.16666V17.5H10.8333V9.16667H13.3333L9.99999 5.83333L6.66666 9.16667ZM3.33333 2.5V4.16667H16.6667V2.5H3.33333Z"
+                ]
+                []
+            ]
+        ]
+
+
+insertAfter : Html msg
+insertAfter =
+    Styled.span
+        [ StyledAttribs.css
+            [ Css.width (Css.px 20)
+            , Css.displayFlex
+            ]
+        ]
+        [ SvgStyled.svg [ SvgAttribs.viewBox "0 0 20 20" ]
+            [ SvgStyled.path
+                [ SvgAttribs.fill "currentColor"
+                , SvgAttribs.d "M13.3333 10.8333H10.8333V2.5H9.16666V10.8333H6.66666L9.99999 14.1667L13.3333 10.8333ZM3.33333 15.8333V17.5H16.6667V15.8333H3.33333Z"
+                ]
+                []
+            ]
+        ]
+
+
+code : Html msg
+code =
+    Styled.span
+        [ StyledAttribs.css
+            [ Css.width (Css.px 20)
+            , Css.displayFlex
+            ]
+        ]
+        [ SvgStyled.svg [ SvgAttribs.viewBox "0 0 20 20" ]
+            [ SvgStyled.path
+                [ SvgAttribs.fill "currentColor"
+                , SvgAttribs.d "M7.83334 13.8333L4.00001 10L7.83334 6.16667L6.66667 5L1.66667 10L6.66667 15L7.83334 13.8333ZM12.1667 13.8333L16 10L12.1667 6.16667L13.3333 5L18.3333 10L13.3333 15L12.1667 13.8333V13.8333Z"
+                ]
+                []
+            ]
+        ]
+
+
+addToBlocks : Html msg
+addToBlocks =
+    Styled.span
+        [ StyledAttribs.css
+            [ Css.width (Css.px 20)
+            , Css.displayFlex
+            ]
+        ]
+        [ SvgStyled.svg [ SvgAttribs.viewBox "0 0 20 20" ]
+            [ SvgStyled.path
+                [ SvgAttribs.fill "currentColor"
+                , SvgAttribs.d "M10 1.66663C5.40001 1.66663 1.66667 5.39996 1.66667 9.99996C1.66667 14.6 5.40001 18.3333 10 18.3333C14.6 18.3333 18.3333 14.6 18.3333 9.99996C18.3333 5.39996 14.6 1.66663 10 1.66663ZM14.1667 10.8333H10.8333V14.1666H9.16667V10.8333H5.83334V9.16663H9.16667V5.83329H10.8333V9.16663H14.1667V10.8333Z"
                 ]
                 []
             ]
