@@ -26,20 +26,36 @@ describe("examples", () => {
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
-    const singleMenuVisible = await page.isVisible("text=Single.elm");
+    const singleVisible = await page.isVisible("text=Single.elm");
     const formVisible = await page.isVisible("text=Form.elm");
     const customMenuItemsVisible = await page.isVisible(
       "text=CustomMenuItems.elm"
     );
+    const singleMenuVisible = await page.isVisible("text=SingleMenu.elm");
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
-    expect(singleMenuVisible).toBeTruthy();
+    expect(singleVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
+    expect(singleMenuVisible).toBeTruthy();
+  });
+});
+
+describe("SingleMenu", () => {
+  it("renders the menu on input focus", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const menuListVisble = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisble).toBeTruthy();
   });
 });
 

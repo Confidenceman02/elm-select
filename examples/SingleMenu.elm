@@ -232,6 +232,20 @@ withButton selectedAction action =
 
                 _ ->
                     [ Css.backgroundColor (Css.hex "#E4E4E4") ]
+
+        resolveDataTestId =
+            case action of
+                Bold ->
+                    "bold"
+
+                Italic ->
+                    "italic"
+
+                Attachment ->
+                    "attachment"
+
+                Dropdown ->
+                    "dropdown"
     in
     button
         [ StyledAttribs.css
@@ -244,6 +258,7 @@ withButton selectedAction action =
                 ++ resolveBackgroundColor
             )
         , onClick (ActionClicked action)
+        , StyledAttribs.attribute "data-test-id" resolveDataTestId
         ]
 
 
