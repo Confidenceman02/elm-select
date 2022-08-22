@@ -1,5 +1,5 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, isMenuOpen, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
     , multi
     , singleNative
@@ -13,7 +13,7 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, isFocused, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, isFocused, isMenuOpen, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
@@ -74,7 +74,11 @@ type SelectId
 
 
 type HeadlessMsg
-    = OnInputFocusedH (Result Dom.Error ())
+    = FocusInputH
+
+
+type HeadlessState
+    = FocusingH
 
 
 {-| -}
@@ -155,6 +159,7 @@ type Action item
     | Select item
     | DeselectMulti item
     | ClearSingleSelectItem
+    | FocusSet
 
 
 {-| -}
@@ -277,6 +282,7 @@ type alias SelectState =
     , menuNavigation : MenuNavigation
     , jsOptimize : Bool
     , selectId : SelectId
+    , headlessState : Maybe HeadlessState
     }
 
 
@@ -438,6 +444,7 @@ initState id_ =
         , menuNavigation = Mouse
         , jsOptimize = False
         , selectId = id_
+        , headlessState = Nothing
         }
 
 
@@ -830,20 +837,23 @@ jsOptimize pred (State state_) =
                     (model, Cmd.map SelectMsg  (focus model.selectState))
 
 -}
-focus : State -> Cmd (Msg item)
-focus ((State state_) as wrappedState) =
-    if state_.controlUiFocused then
-        Cmd.none
-
-    else
-        internalFocus wrappedState (OnInputFocusedH >> HeadlessMsg)
+focus : Msg item
+focus =
+    HeadlessMsg FocusInputH
 
 
-{-| Returns True when the variant is focused.
+{-| Returns `True` when the variant is focused.
 -}
 isFocused : State -> Bool
 isFocused (State state_) =
     state_.controlUiFocused
+
+
+{-| Returns `True` when the menu is visible.
+-}
+isMenuOpen : State -> Bool
+isMenuOpen (State state_) =
+    state_.menuOpen
 
 
 reset : State -> State
@@ -909,6 +919,25 @@ single maybeSelectedItem =
     Config { defaults | variant = CustomVariant (Single maybeSelectedItem) }
 
 
+{-| Menu only single select.
+
+This could be used as a dropdown menu.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ basicMenuItem
+              { item = Australia, label = "Australia" }
+          , basicMenuitem
+              { item = Taiwan, label = "Taiwan"
+            -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                (singleMenu Nothing |> menuItems countries)
+
+-}
 singleMenu : Maybe (MenuItem item) -> Config item
 singleMenu mi =
     Config { defaults | variant = CustomVariant (SingleMenu mi) }
@@ -998,21 +1027,26 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg ((State state_) as wrappedState) =
     case msg of
-        HeadlessMsg (OnInputFocusedH focusResult) ->
-            case focusResult of
-                Ok () ->
-                    ( Nothing
-                    , State
-                        { state_
-                            | menuOpen = True
-                            , initialMousedown = Internal.NothingMousedown
-                            , controlUiFocused = True
-                        }
-                    , Cmd.none
-                    )
-
-                Err _ ->
-                    ( Nothing, wrappedState, Cmd.none )
+        -- HeadlessMsg (OnInputFocusedH focusResult) ->
+        --     case focusResult of
+        --         Ok () ->
+        --             ( Just FocusSet
+        --             , State
+        --                 { state_
+        --                     | menuOpen = True
+        --                     , initialMousedown = Internal.NothingMousedown
+        --                     , controlUiFocused = True
+        --                 }
+        --             , Cmd.none
+        --             )
+        --         Err _ ->
+        --             ( Nothing, wrappedState, Cmd.none )
+        HeadlessMsg FocusInputH ->
+            let
+                updatedState =
+                    State { state_ | headlessState = Just FocusingH }
+            in
+            ( Nothing, updatedState, internalFocus updatedState OnInputFocused )
 
         InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
             let
@@ -1070,11 +1104,25 @@ update msg ((State state_) as wrappedState) =
             ( Just (InputChange inputValue), State { stateWithOpenMenu | inputValue = Just inputValue }, cmdWithOpenMenu )
 
         InputReceivedFocused ->
-            ( Nothing
+            let
+                ( action, updatedState ) =
+                    case state_.headlessState of
+                        Just FocusingH ->
+                            ( Just FocusSet
+                            , { state_
+                                | menuOpen = True
+                                , initialMousedown = Internal.NothingMousedown
+                                , controlUiFocused = True
+                                , headlessState = Nothing
+                              }
+                            )
+
+                        _ ->
+                            ( Nothing, { state_ | controlUiFocused = True } )
+            in
+            ( action
             , State
-                { state_
-                    | controlUiFocused = True
-                }
+                updatedState
             , Cmd.none
             )
 
