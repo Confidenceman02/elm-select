@@ -90,7 +90,7 @@ type HeadlessState
 type Msg item
     = InputChanged String
     | InputChangedNativeSingle (List (MenuItem item)) Bool Int
-    | InputReceivedFocused
+    | InputReceivedFocused (Variant item)
     | SelectedItem item
     | SelectedItemMulti item
     | DeselectedMultiItem item
@@ -237,6 +237,7 @@ type alias ViewSelectInputData item =
 
 type alias ViewDummyInputData item =
     { id : String
+    , variant : Variant item
     , maybeTargetItem : Maybe (MenuItem item)
     , totalViewableMenuItems : Int
     , menuOpen : Bool
@@ -1122,19 +1123,24 @@ update msg ((State state_) as wrappedState) =
             in
             ( Just (InputChange inputValue), State { stateWithOpenMenu | inputValue = Just inputValue }, cmdWithOpenMenu )
 
-        InputReceivedFocused ->
+        InputReceivedFocused variant ->
             let
                 ( action, updatedState ) =
-                    case state_.headlessState of
-                        Just FocusingH ->
-                            ( Just FocusSet
-                            , { state_
-                                | menuOpen = True
-                                , initialMousedown = Internal.NothingMousedown
-                                , controlUiFocused = True
-                                , headlessState = Nothing
-                              }
-                            )
+                    case variant of
+                        CustomVariant _ ->
+                            case state_.headlessState of
+                                Just FocusingH ->
+                                    ( Just FocusSet
+                                    , { state_
+                                        | menuOpen = True
+                                        , initialMousedown = Internal.NothingMousedown
+                                        , controlUiFocused = True
+                                        , headlessState = Nothing
+                                      }
+                                    )
+
+                                _ ->
+                                    ( Nothing, { state_ | controlUiFocused = True } )
 
                         _ ->
                             ( Nothing, { state_ | controlUiFocused = True } )
@@ -1505,6 +1511,7 @@ view (Config config) =
                 [ lazy viewDummyInput
                     (ViewDummyInputData
                         (getSelectId config.state)
+                        config.variant
                         enterSelectTargetItem
                         totalMenuItems
                         state_.menuOpen
@@ -1653,6 +1660,7 @@ viewControl data =
                     lazy viewDummyInput
                         (ViewDummyInputData
                             (getSelectId data.config.state)
+                            data.config.variant
                             data.enterSelectTargetItem
                             data.totalMenuItems
                             state_.menuOpen
@@ -1824,7 +1832,7 @@ viewNative viewNativeData =
                  , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)
-                 , onFocus InputReceivedFocused
+                 , onFocus (InputReceivedFocused (Native viewNativeData.variant))
                  , onBlur OnInputBlurred
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
@@ -2156,7 +2164,7 @@ viewSelectInput viewSelectInputData =
         (SelectInput.default
             |> SelectInput.onInput InputChanged
             |> SelectInput.onBlurMsg OnInputBlurred
-            |> SelectInput.onFocusMsg InputReceivedFocused
+            |> SelectInput.onFocusMsg (InputReceivedFocused viewSelectInputData.variant)
             |> SelectInput.currentValue resolveInputValue
             |> SelectInput.onMousedown InputMousedowned
             |> resolveInputWidth
@@ -2227,7 +2235,7 @@ viewDummyInput viewDummyInputData =
          , tabindex 0
          , attribute "data-test-id" "dummyInputSelect"
          , id viewDummyInputData.id
-         , onFocus InputReceivedFocused
+         , onFocus (InputReceivedFocused viewDummyInputData.variant)
          , onBlur OnInputBlurred
          , preventDefaultOn "keydown" <|
             Decode.map
