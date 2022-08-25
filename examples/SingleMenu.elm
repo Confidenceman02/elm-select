@@ -85,10 +85,10 @@ update msg model =
 
                                 _ ->
                                     if not <| Select.isMenuOpen selectState then
-                                        { model | activeAction = Nothing } |> Debug.log "MENU NOT OPEN"
+                                        { model | activeAction = Nothing }
 
                                     else
-                                        { model | activeAction = Just ( action, selectState ) } |> Debug.log "Something else"
+                                        { model | activeAction = Just ( action, selectState ) }
                     in
                     ( updatedModel, Cmd.map SelectMsg cmds )
 
@@ -98,9 +98,14 @@ update msg model =
         ActionClicked action ->
             let
                 ss =
+                    -- Because it's being used as a dropdown we want a fresh state
+                    -- every time an action is clicked.
                     initState (selectIdentifier "SingleSelectExample")
 
                 ( _, updatedState, cmds ) =
+                    -- Focusing the select. Using the Select Cmd
+                    -- ensures the menu is open on focus which is what you probably want
+                    -- for a dropdown menu.
                     Select.update Select.focus ss
             in
             case model.activeAction of
