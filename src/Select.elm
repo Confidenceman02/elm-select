@@ -1,11 +1,11 @@
 module Select exposing
     ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, isMenuOpen, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single, clearable
+    , singleMenu
     , multi
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
-    , singleMenu
     )
 
 {-| Select items from a menu list.
@@ -19,6 +19,11 @@ module Select exposing
 # Single select
 
 @docs single, clearable
+
+
+# Single menu select
+
+@docs singleMenu
 
 
 # Multi select
@@ -830,11 +835,20 @@ jsOptimize pred (State state_) =
 
 {-| Focus the select variant.
 
+    Whilst you could focus the element yourself, using this
+    Msg also opens the menu on successfull focus.
+
         yourUpdate : (model, Cmd msg )
         yourUpdate msg model =
             case msg of
                 FocusTheSelect ->
-                    (model, Cmd.map SelectMsg  (focus model.selectState))
+                  let
+                    ( actions, updatedState, cmds ) =
+                        update focus model.selectState
+                  in
+                  ({ model | selectState = updatedState }, Cmd.map SelectMsg cmds)
+
+    NOTE: Successfull focus will dispatch the `FocusSet` [Action](#Action)
 
 -}
 focus : Msg item
@@ -842,14 +856,14 @@ focus =
     HeadlessMsg FocusInputH
 
 
-{-| Returns `True` when the variant is focused.
+{-| Check to see that the variant has focus.
 -}
 isFocused : State -> Bool
 isFocused (State state_) =
     state_.controlUiFocused
 
 
-{-| Returns `True` when the menu is visible.
+{-| Check that the menu is open and visible.
 -}
 isMenuOpen : State -> Bool
 isMenuOpen (State state_) =
@@ -936,6 +950,11 @@ This could be used as a dropdown menu.
           Html.map SelectMsg <|
               view
                 (singleMenu Nothing |> menuItems countries)
+
+
+      NOTE: By default the menu will not render until it is focused and interacted with.
+      This is for accessibility reasons. You can use [focus](#focus) to get
+      dropdown menu like behaviour.
 
 -}
 singleMenu : Maybe (MenuItem item) -> Config item
