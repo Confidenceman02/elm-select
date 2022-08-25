@@ -54,7 +54,8 @@ type alias Model =
 
 init : Model
 init = 
-    {  selectState = Select.initState
+    {  selectState =
+            Select.initState (Select.selectIdentifier "CountrySelector")
     ,  items = 
            [ basicMenuItem 
                 { item = Australia, label = "Australia" }
@@ -159,7 +160,6 @@ renderSelect model =
             |> Select.menuItems model.items
             |> Select.placeholder "Select your country"
         )
-        (selectIdentifier "CountrySelector")
 ```
 It is required to map the `Select.Msg` that the `Select.view` outputs to a `Msg` type that our `view` is compatible with.
 
