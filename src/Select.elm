@@ -1805,6 +1805,8 @@ viewNative viewNativeData =
                  , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle viewNativeData.menuItems hasCurrentSelection)
+                 , onFocus InputReceivedFocused
+                 , onBlur OnInputBlurred
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px controlHeight)
