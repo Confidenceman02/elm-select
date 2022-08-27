@@ -1440,14 +1440,14 @@ view (Config config) =
                     config.variant
                 )
 
-        controlStyles =
+        styles =
             Styles.getControlConfig config.styles
     in
     case config.variant of
         Native variant ->
             viewWrapper config
                 [ viewNative
-                    (ViewNativeData controlStyles
+                    (ViewNativeData styles
                         variant
                         config.menuItems
                         selectId
@@ -1465,7 +1465,7 @@ view (Config config) =
                         , Css.pointerEvents Css.none
                         ]
                     ]
-                    [ dropdownIndicator controlStyles False ]
+                    [ dropdownIndicator styles False ]
                 ]
 
         CustomVariant ((SingleMenu _) as singleVariant) ->
@@ -1543,7 +1543,7 @@ view (Config config) =
                     (ViewControlData
                         config
                         config.state
-                        controlStyles
+                        styles
                         (enterSelectTargetItem state_ viewableMenuItems)
                         totalMenuItems
                     )
@@ -1819,38 +1819,11 @@ viewControlWrapper data =
     let
         (State state_) =
             data.state
-
-        controlFocusedStyles =
-            if state_.controlUiFocused then
-                [ controlBorderFocused data.controlStyles ]
-
-            else
-                []
     in
     div
         -- control
         (StyledAttribs.css
-            ([ Css.alignItems Css.center
-             , Css.backgroundColor (Styles.getControlBackgroundColor data.controlStyles)
-             , Css.color (Styles.getControlColor data.controlStyles)
-             , Css.cursor Css.default
-             , Css.displayFlex
-             , Css.flexWrap Css.wrap
-             , Css.justifyContent Css.spaceBetween
-             , Css.minHeight (Css.px (Styles.getControlMinHeight data.controlStyles))
-             , Css.position Css.relative
-             , Css.boxSizing Css.borderBox
-             , controlBorder data.controlStyles
-             , controlRadius data.controlStyles
-             , Css.outline Css.zero
-             , if data.disabled then
-                controlDisabled data.controlStyles
-
-               else
-                controlHover data.controlStyles
-             ]
-                ++ controlFocusedStyles
-            )
+            (controlStyles data.controlStyles state_ data.disabled)
             :: (if data.disabled then
                     []
 
@@ -2164,26 +2137,26 @@ viewMenuItem data content =
 viewPlaceholder : Configuration item -> Html msg
 viewPlaceholder config =
     let
-        controlStyles =
+        styles =
             Styles.getControlConfig config.styles
     in
     div
         [ -- baseplaceholder
           StyledAttribs.css
-            (placeholderStyles controlStyles)
+            (placeholderStyles styles)
         ]
         [ text config.placeholder ]
 
 
 viewSelectedPlaceholder : Styles.ControlConfig -> MenuItem item -> Html msg
-viewSelectedPlaceholder controlStyles item =
+viewSelectedPlaceholder styles item =
     let
         addedStyles =
             [ Css.maxWidth (Css.calc (Css.pct 100) Css.minus (Css.px 8))
             , Css.textOverflow Css.ellipsis
             , Css.whiteSpace Css.noWrap
             , Css.overflow Css.hidden
-            , Css.color (Styles.getControlSelectedColor controlStyles)
+            , Css.color (Styles.getControlSelectedColor styles)
             , Css.fontWeight (Css.int 400)
             ]
     in
@@ -2374,7 +2347,7 @@ viewDummyInput viewDummyInputData =
 
 
 viewMultiValue : Internal.InitialMousedown -> Styles.ControlConfig -> Int -> MenuItem item -> Html (Msg item)
-viewMultiValue mousedownedItem controlStyles index menuItem =
+viewMultiValue mousedownedItem styles index menuItem =
     let
         isMousedowned =
             case mousedownedItem of
@@ -2400,7 +2373,7 @@ viewMultiValue mousedownedItem controlStyles index menuItem =
             |> Tag.onMousedown (MultiItemFocus index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
-            |> Tag.setControlStyles controlStyles
+            |> Tag.setControlStyles styles
             |> resolveMouseleave
         )
         (getMenuItemLabel menuItem)
@@ -2801,7 +2774,7 @@ clearIndicator config =
             else
                 [ Css.height (Css.px 16), Css.cursor Css.pointer ]
 
-        controlStyles =
+        styles =
             Styles.getControlConfig config.styles
     in
     -- TODO dispatch Msg for menu variants
@@ -2821,9 +2794,9 @@ clearIndicator config =
         ]
         [ span
             [ StyledAttribs.css
-                [ Css.color <| Styles.getControlClearIndicatorColor controlStyles
+                [ Css.color <| Styles.getControlClearIndicatorColor styles
                 , Css.displayFlex
-                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover controlStyles) ]
+                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover styles) ]
                 ]
             ]
             [ ClearIcon.view
@@ -2832,11 +2805,11 @@ clearIndicator config =
 
 
 indicatorSeparator : Styles.ControlConfig -> Html msg
-indicatorSeparator controlStyles =
+indicatorSeparator styles =
     span
         [ StyledAttribs.css
             [ Css.alignSelf Css.stretch
-            , Css.backgroundColor (Styles.getControlSeparatorColor controlStyles)
+            , Css.backgroundColor (Styles.getControlSeparatorColor styles)
             , Css.marginBottom (Css.px 8)
             , Css.marginTop (Css.px 8)
             , Css.width (Css.px 1)
@@ -2847,7 +2820,7 @@ indicatorSeparator controlStyles =
 
 
 dropdownIndicator : Styles.ControlConfig -> Bool -> Html msg
-dropdownIndicator controlStyles disabledInput =
+dropdownIndicator styles disabledInput =
     let
         resolveIconButtonStyles =
             if disabledInput then
@@ -2857,8 +2830,8 @@ dropdownIndicator controlStyles disabledInput =
             else
                 [ Css.height (Css.px 20)
                 , Css.cursor Css.pointer
-                , Css.color (Styles.getControlDropdownIndicatorColor controlStyles)
-                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover controlStyles) ]
+                , Css.color (Styles.getControlDropdownIndicatorColor styles)
+                , Css.hover [ Css.color (Styles.getControlDropdownIndicatorColorHover styles) ]
                 ]
     in
     span
@@ -2981,14 +2954,46 @@ listBoxBorder =
     6
 
 
+controlStyles : Styles.ControlConfig -> SelectState -> Bool -> List Css.Style
+controlStyles styles state_ dsb =
+    let
+        controlFocusedStyles =
+            if state_.controlUiFocused then
+                [ controlBorderFocused styles ]
+
+            else
+                []
+    in
+    [ Css.alignItems Css.center
+    , Css.backgroundColor (Styles.getControlBackgroundColor styles)
+    , Css.color (Styles.getControlColor styles)
+    , Css.cursor Css.default
+    , Css.displayFlex
+    , Css.flexWrap Css.wrap
+    , Css.justifyContent Css.spaceBetween
+    , Css.minHeight (Css.px (Styles.getControlMinHeight styles))
+    , Css.position Css.relative
+    , Css.boxSizing Css.borderBox
+    , controlBorder styles
+    , controlRadius styles
+    , Css.outline Css.zero
+    , if dsb then
+        controlDisabled styles
+
+      else
+        controlHover styles
+    ]
+        ++ controlFocusedStyles
+
+
 controlRadius : Styles.ControlConfig -> Css.Style
-controlRadius controlStyles =
-    Css.borderRadius <| Css.px (Styles.getControlBorderRadius controlStyles)
+controlRadius styles =
+    Css.borderRadius <| Css.px (Styles.getControlBorderRadius styles)
 
 
 controlBorder : Styles.ControlConfig -> Css.Style
-controlBorder controlStyles =
-    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor controlStyles)
+controlBorder styles =
+    Css.border3 (Css.px 2) Css.solid (Styles.getControlBorderColor styles)
 
 
 controlBorderFocused : Styles.ControlConfig -> Css.Style
@@ -2997,13 +3002,13 @@ controlBorderFocused styles =
 
 
 controlDisabled : Styles.ControlConfig -> Css.Style
-controlDisabled controlStyles =
-    Css.opacity (Css.num (Styles.getControlDisabledOpacity controlStyles))
+controlDisabled styles =
+    Css.opacity (Css.num (Styles.getControlDisabledOpacity styles))
 
 
 controlHover : Styles.ControlConfig -> Css.Style
-controlHover controlStyles =
+controlHover styles =
     Css.hover
-        [ Css.backgroundColor (Styles.getControlBackgroundColorHover controlStyles)
-        , Css.borderColor (Styles.getControlBorderColorHover controlStyles)
+        [ Css.backgroundColor (Styles.getControlBackgroundColorHover styles)
+        , Css.borderColor (Styles.getControlBorderColorHover styles)
         ]

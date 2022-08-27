@@ -95,7 +95,7 @@ type Config
 
 {-| -}
 type ControlConfig
-    = ControlConfig ControlConfiguration
+    = ControlConfig (ControlConfiguration BaseControlConfiguration)
 
 
 {-| -}
@@ -128,10 +128,11 @@ type alias MenuConfiguration =
     , boxShadowColor : Css.Color
     , boxShadowHOffset : Float
     , boxShadowVOffset : Float
+    , control : BaseControlConfiguration
     }
 
 
-type alias ControlConfiguration =
+type alias BaseControlConfiguration =
     { backgroundColor : Css.Color
     , backgroundColorHover : Css.Color
     , borderColor : Css.Color
@@ -142,17 +143,22 @@ type alias ControlConfiguration =
     , clearIndicatorColorHover : Css.Color
     , color : Css.Color
     , disabledOpacity : Float
-    , dropdownIndicatorColor : Css.Color
-    , dropdownIndicatorColorHover : Css.Color
     , loadingIndicatorColor : Css.Color
     , minHeight : Float
-    , multiTagBackgroundColor : Css.Color
-    , multiTagBorderRadius : Float
-    , multiTagDismissibleBackgroundColor : Css.Color
-    , multiTagTruncationWidth : Maybe Float
     , placeholderOpacity : Float
-    , selectedColor : Css.Color
-    , separatorColor : Css.Color
+    }
+
+
+type alias ControlConfiguration compatible =
+    { compatible
+        | dropdownIndicatorColor : Css.Color
+        , dropdownIndicatorColorHover : Css.Color
+        , multiTagBackgroundColor : Css.Color
+        , multiTagBorderRadius : Float
+        , multiTagDismissibleBackgroundColor : Css.Color
+        , multiTagTruncationWidth : Maybe Float
+        , selectedColor : Css.Color
+        , separatorColor : Css.Color
     }
 
 
@@ -185,10 +191,25 @@ defaultsMenu =
     , boxShadowColor = Css.rgba 0 0 0 0.19
     , boxShadowHOffset = 0
     , boxShadowVOffset = 0
+    , control =
+        { backgroundColor = Css.hex "#FFFFFF"
+        , backgroundColorHover = Css.hex "#F0F1F4"
+        , borderColor = Css.hex "#898BA9"
+        , borderColorFocus = Css.hex "#0168b3"
+        , borderColorHover = Css.hex "#4B4D68"
+        , borderRadius = 7
+        , clearIndicatorColor = Css.rgb 102 102 102
+        , clearIndicatorColorHover = Css.rgb 51 51 51
+        , color = Css.hex "#000000"
+        , disabledOpacity = 0.3
+        , loadingIndicatorColor = Css.rgb 102 102 102
+        , minHeight = 35
+        , placeholderOpacity = 0.5
+        }
     }
 
 
-defaultsControl : ControlConfiguration
+defaultsControl : ControlConfiguration BaseControlConfiguration
 defaultsControl =
     { backgroundColor = Css.hex "#FFFFFF"
     , backgroundColorHover = Css.hex "#F0F1F4"
