@@ -8,7 +8,7 @@ module Select.Styles exposing
     , setMenuItemColorHoverNotSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-    , getControlLoadingIndicatorColor, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
+    , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColorNotSelected
@@ -64,7 +64,7 @@ Get styles
 
 @docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-@docs getControlLoadingIndicatorColor, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
+@docs getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
 
 
 # Menu
@@ -145,6 +145,7 @@ type alias ControlConfiguration =
     , dropdownIndicatorColor : Css.Color
     , dropdownIndicatorColorHover : Css.Color
     , loadingIndicatorColor : Css.Color
+    , minHeight : Float
     , multiTagBackgroundColor : Css.Color
     , multiTagBorderRadius : Float
     , multiTagDismissibleBackgroundColor : Css.Color
@@ -202,6 +203,7 @@ defaultsControl =
     , dropdownIndicatorColor = Css.rgb 102 102 102
     , dropdownIndicatorColorHover = Css.rgb 51 51 51
     , loadingIndicatorColor = Css.rgb 102 102 102
+    , minHeight = 48
     , multiTagBackgroundColor = Css.hex "#E1E2EA"
     , multiTagBorderRadius = 16
     , multiTagDismissibleBackgroundColor = Css.hex "#6B6E94"
@@ -729,6 +731,12 @@ getControlBorderColorHover (ControlConfig config) =
 getControlColor : ControlConfig -> Css.Color
 getControlColor (ControlConfig config) =
     config.color
+
+
+{-| -}
+getControlMinHeight : ControlConfig -> Float
+getControlMinHeight (ControlConfig config) =
+    config.minHeight
 
 
 {-| -}

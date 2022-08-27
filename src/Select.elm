@@ -1471,31 +1471,69 @@ view (Config config) =
         CustomVariant ((SingleMenu _) as singleVariant) ->
             -- Compose the SingleMenu variant
             Internal.viewIf state_.menuOpen
-                (viewMenuWrapper
-                    (ViewMenuWrapperData config.variant (Styles.getMenuConfig config.styles) state_.menuNavigation selectId)
-                    -- TODO create searchable input
-                    (( "dummy-input"
-                     , lazy viewDummyInput
-                        (ViewDummyInputData
-                            (getSelectId config.state)
-                            config.variant
-                            (enterSelectTargetItem state_ viewableMenuItems)
-                            totalMenuItems
-                            state_.menuOpen
-                            config.labelledBy
-                            config.ariaDescribedBy
+                (Keyed.node "div"
+                    [ StyledAttribs.css (menuWrapperStyles (Styles.getMenuConfig config.styles)) ]
+                    -- TODO create searchable input, handle disabled state
+                    ((if not config.searchable then
+                        ( "dummy-input"
+                        , lazy viewDummyInput
+                            (ViewDummyInputData
+                                (getSelectId config.state)
+                                config.variant
+                                (enterSelectTargetItem state_ viewableMenuItems)
+                                totalMenuItems
+                                state_.menuOpen
+                                config.labelledBy
+                                config.ariaDescribedBy
+                            )
+                        )
+
+                      else
+                        ( "controlled-input"
+                        , viewControlWrapper
+                            (ViewControlWrapperData
+                                config.disabled
+                                config.state
+                                (Styles.getControlConfig config.styles)
+                            )
+                            [ lazy viewSelectInput
+                                (ViewSelectInputData
+                                    state_.selectId
+                                    state_.inputValue
+                                    (enterSelectTargetItem state_ viewableMenuItems)
+                                    state_.activeTargetIndex
+                                    totalMenuItems
+                                    state_.menuOpen
+                                    config.variant
+                                    config.labelledBy
+                                    config.ariaDescribedBy
+                                    state_.jsOptimize
+                                    state_.controlUiFocused
+                                )
+                            , viewIndicatorWrapper
+                                [ viewClearIndicator config
+                                , viewLoadingSpinner
+                                    (ViewLoadingSpinnerData config (Styles.getControlConfig config.styles))
+                                ]
+                            ]
                         )
                      )
-                        :: viewMenuItems
-                            (ViewMenuItemsData
-                                (Styles.getMenuItemConfig config.styles)
-                                selectId
-                                singleVariant
-                                state_.initialMousedown
-                                state_.activeTargetIndex
-                                state_.menuNavigation
-                                viewableMenuItems
-                            )
+                        :: -- TODO Handle loading menu
+                           [ ( "menu-list"
+                             , viewMenuItemsWrapper (ViewMenuItemsWrapperData singleVariant (Styles.getMenuConfig config.styles) state_.menuNavigation selectId)
+                                (viewMenuItems
+                                    (ViewMenuItemsData
+                                        (Styles.getMenuItemConfig config.styles)
+                                        selectId
+                                        singleVariant
+                                        state_.initialMousedown
+                                        state_.activeTargetIndex
+                                        state_.menuNavigation
+                                        viewableMenuItems
+                                    )
+                                )
+                             )
+                           ]
                     )
                 )
 
@@ -1633,7 +1671,7 @@ viewCustomControl data =
     in
     viewControlWrapper
         (ViewControlWrapperData
-            data.config
+            data.config.disabled
             data.state
             data.controlStyles
         )
@@ -1760,18 +1798,23 @@ viewIndicatorWrapper : List (Html (Msg item)) -> Html (Msg item)
 viewIndicatorWrapper =
     div
         [ StyledAttribs.css
-            [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
+            [ Css.alignItems Css.center
+            , Css.alignSelf Css.stretch
+            , Css.displayFlex
+            , Css.flexShrink Css.zero
+            , Css.boxSizing Css.borderBox
+            ]
         ]
 
 
-type alias ViewControlWrapperData item =
-    { config : Configuration item
+type alias ViewControlWrapperData =
+    { disabled : Bool
     , state : State
     , controlStyles : Styles.ControlConfig
     }
 
 
-viewControlWrapper : ViewControlWrapperData item -> List (Html (Msg item)) -> Html (Msg item)
+viewControlWrapper : ViewControlWrapperData -> List (Html (Msg item)) -> Html (Msg item)
 viewControlWrapper data =
     let
         (State state_) =
@@ -1794,13 +1837,13 @@ viewControlWrapper data =
              , Css.displayFlex
              , Css.flexWrap Css.wrap
              , Css.justifyContent Css.spaceBetween
-             , Css.minHeight (Css.px controlHeight)
+             , Css.minHeight (Css.px (Styles.getControlMinHeight data.controlStyles))
              , Css.position Css.relative
              , Css.boxSizing Css.borderBox
              , controlBorder data.controlStyles
              , controlRadius data.controlStyles
              , Css.outline Css.zero
-             , if data.config.disabled then
+             , if data.disabled then
                 controlDisabled data.controlStyles
 
                else
@@ -1808,7 +1851,7 @@ viewControlWrapper data =
              ]
                 ++ controlFocusedStyles
             )
-            :: (if data.config.disabled then
+            :: (if data.disabled then
                     []
 
                 else
@@ -1887,7 +1930,7 @@ viewNative viewNativeData =
                  , onBlur OnInputBlurred
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
-                    , Css.height (Css.px controlHeight)
+                    , Css.height (Css.px (Styles.getControlMinHeight viewNativeData.controlStyles))
                     , controlRadius viewNativeData.controlStyles
                     , Css.backgroundColor (Styles.getControlBackgroundColor viewNativeData.controlStyles)
                     , controlBorder viewNativeData.controlStyles
@@ -1955,16 +1998,16 @@ viewWrapper config =
         )
 
 
-type alias ViewMenuWrapperData item =
-    { variant : Variant item
+type alias ViewMenuItemsWrapperData item =
+    { variant : CustomVariant item
     , menuStyles : Styles.MenuConfig
     , menuNavigation : MenuNavigation
     , selectId : SelectId
     }
 
 
-viewMenuWrapper : ViewMenuWrapperData item -> List ( String, Html (Msg item) ) -> Html (Msg item)
-viewMenuWrapper data =
+viewMenuItemsWrapper : ViewMenuItemsWrapperData item -> List ( String, Html (Msg item) ) -> Html (Msg item)
+viewMenuItemsWrapper data =
     let
         resolveAttributes =
             if data.menuNavigation == Keyboard then
@@ -1972,9 +2015,17 @@ viewMenuWrapper data =
 
             else
                 [ attribute "data-test-id" "listBox" ]
+
+        resolveStyles =
+            case data.variant of
+                SingleMenu _ ->
+                    menuListStyles
+
+                _ ->
+                    menuWrapperStyles data.menuStyles ++ menuListStyles
     in
     Keyed.node "ul"
-        ([ StyledAttribs.css (menuListStyles data.menuStyles)
+        ([ StyledAttribs.css resolveStyles
          , id (menuListId data.selectId)
          , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
          , role "listbox"
@@ -1991,8 +2042,8 @@ viewMenuWrapper data =
 
 viewMenu : ViewMenuData item -> Html (Msg item)
 viewMenu data =
-    viewMenuWrapper
-        (ViewMenuWrapperData
+    viewMenuItemsWrapper
+        (ViewMenuItemsWrapperData
             data.variant
             data.menuStyles
             data.menuNavigation
@@ -2015,7 +2066,8 @@ viewLoadingMenu : Styles.MenuConfig -> String -> Html msg
 viewLoadingMenu menuStyles loadingText =
     div
         [ StyledAttribs.css
-            (menuListStyles menuStyles
+            (menuWrapperStyles menuStyles
+                ++ menuListStyles
                 ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]
             )
         ]
@@ -2752,6 +2804,7 @@ clearIndicator config =
         controlStyles =
             Styles.getControlConfig config.styles
     in
+    -- TODO dispatch Msg for menu variants
     button
         [ attribute "data-test-id" "clear"
         , type_ "button"
@@ -2817,17 +2870,11 @@ dropdownIndicator controlStyles disabledInput =
 -- STYLES
 
 
-menuListStyles : Styles.MenuConfig -> List Css.Style
-menuListStyles menuStyles =
-    [ Css.maxHeight (Css.px 215)
-    , Css.overflowY Css.auto
-    , Css.paddingBottom (Css.px listBoxPaddingBottom)
+menuWrapperStyles : Styles.MenuConfig -> List Css.Style
+menuWrapperStyles menuStyles =
+    [ Css.paddingBottom (Css.px listBoxPaddingBottom)
     , Css.paddingTop (Css.px listBoxPaddingTop)
-    , Css.paddingLeft (Css.px 0)
-    , Css.marginTop (Css.px 0)
-    , Css.marginBottom (Css.px 0)
     , Css.boxSizing Css.borderBox
-    , Css.position Css.relative
     , Css.top (Css.pct 100)
     , Css.backgroundColor (Styles.getMenuBackgroundColor menuStyles)
     , Css.marginBottom (Css.px 8)
@@ -2843,6 +2890,14 @@ menuListStyles menuStyles =
         (Styles.getMenuBoxShadowColor menuStyles)
     , Css.marginTop (Css.px menuMarginTop)
     , Css.zIndex (Css.int 2)
+    ]
+
+
+menuListStyles : List Css.Style
+menuListStyles =
+    [ Css.maxHeight (Css.px 215)
+    , Css.overflowY Css.auto
+    , Css.paddingLeft (Css.px 0)
     ]
 
 
@@ -2929,11 +2984,6 @@ listBoxBorder =
 controlRadius : Styles.ControlConfig -> Css.Style
 controlRadius controlStyles =
     Css.borderRadius <| Css.px (Styles.getControlBorderRadius controlStyles)
-
-
-controlHeight : Float
-controlHeight =
-    48
 
 
 controlBorder : Styles.ControlConfig -> Css.Style
