@@ -1048,7 +1048,7 @@ update msg ((State state_) as wrappedState) =
         HeadlessMsg FocusInputH ->
             let
                 updatedState =
-                    State { state_ | headlessState = Just FocusingH }
+                    State { state_ | headlessState = Just FocusingH, menuOpen = True }
             in
             ( Nothing, updatedState, internalFocus updatedState OnInputFocused )
 
