@@ -1481,31 +1481,35 @@ view (Config config) =
                 ]
 
         CustomVariant (SingleMenu _) ->
-            div [ StyledAttribs.css [ Css.height (Css.px 0) ] ]
-                [ lazy viewDummyInput
-                    (ViewDummyInputData
-                        (getSelectId config.state)
-                        config.variant
-                        (enterSelectTargetItem state_ viewableMenuItems)
-                        totalMenuItems
-                        state_.menuOpen
-                        config.labelledBy
-                        config.ariaDescribedBy
-                    )
-                , Internal.viewIf state_.menuOpen
-                    (lazy viewMenu
-                        (ViewMenuData
+            -- Compose the SingleMenu variant
+            Internal.viewIf state_.menuOpen
+                (viewMenuWrapper
+                    (ViewMenuWrapperData config.variant (Styles.getMenuConfig config.styles) state_.menuNavigation selectId)
+                    -- TODO create searchable input
+                    (( "dummy-input"
+                     , lazy viewDummyInput
+                        (ViewDummyInputData
+                            (getSelectId config.state)
                             config.variant
-                            selectId
-                            viewableMenuItems
-                            state_.initialMousedown
-                            state_.activeTargetIndex
-                            state_.menuNavigation
-                            (Styles.getMenuConfig config.styles)
-                            (Styles.getMenuItemConfig config.styles)
+                            (enterSelectTargetItem state_ viewableMenuItems)
+                            totalMenuItems
+                            state_.menuOpen
+                            config.labelledBy
+                            config.ariaDescribedBy
                         )
+                     )
+                        :: viewMenuItems
+                            (ViewMenuItemsData
+                                (Styles.getMenuItemConfig config.styles)
+                                selectId
+                                config.variant
+                                state_.initialMousedown
+                                state_.activeTargetIndex
+                                state_.menuNavigation
+                                viewableMenuItems
+                            )
                     )
-                ]
+                )
 
         _ ->
             viewWrapper config
@@ -2283,6 +2287,7 @@ viewDummyInput viewDummyInputData =
     input
         ([ style "label" "dummyinput"
          , style "background" "0"
+         , style "position" "absolute"
          , style "border" "0"
          , style "font-size" "inherit"
          , style "outline" "0"
