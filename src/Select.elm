@@ -213,8 +213,6 @@ type alias ViewMenuData item =
     , initialMousedown : Internal.InitialMousedown
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
-    , loading : Bool
-    , loadingMessage : String
     , menuStyles : Styles.MenuConfig
     , menuItemStyles : Styles.MenuItemConfig
     }
@@ -1047,20 +1045,6 @@ selectIdentifier id_ =
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg ((State state_) as wrappedState) =
     case msg of
-        -- HeadlessMsg (OnInputFocusedH focusResult) ->
-        --     case focusResult of
-        --         Ok () ->
-        --             ( Just FocusSet
-        --             , State
-        --                 { state_
-        --                     | menuOpen = True
-        --                     , initialMousedown = Internal.NothingMousedown
-        --                     , controlUiFocused = True
-        --                 }
-        --             , Cmd.none
-        --             )
-        --         Err _ ->
-        --             ( Nothing, wrappedState, Cmd.none )
         HeadlessMsg FocusInputH ->
             let
                 updatedState =
@@ -1456,13 +1440,6 @@ view (Config config) =
         selectId =
             state_.selectId
 
-        enterSelectTargetItem =
-            if state_.menuOpen && not (List.isEmpty viewableMenuItems) then
-                ListExtra.getAt state_.activeTargetIndex viewableMenuItems
-
-            else
-                Nothing
-
         totalMenuItems =
             List.length viewableMenuItems
 
@@ -1475,15 +1452,12 @@ view (Config config) =
                     config.variant
                 )
 
-        selectWrapper =
-            viewWrapper config
-
         controlStyles =
             Styles.getControlConfig config.styles
     in
     case config.variant of
         Native variant ->
-            selectWrapper
+            viewWrapper config
                 [ viewNative
                     (ViewNativeData controlStyles
                         variant
@@ -1512,7 +1486,7 @@ view (Config config) =
                     (ViewDummyInputData
                         (getSelectId config.state)
                         config.variant
-                        enterSelectTargetItem
+                        (enterSelectTargetItem state_ viewableMenuItems)
                         totalMenuItems
                         state_.menuOpen
                         config.labelledBy
@@ -1527,8 +1501,6 @@ view (Config config) =
                             state_.initialMousedown
                             state_.activeTargetIndex
                             state_.menuNavigation
-                            config.isLoading
-                            config.loadingMessage
                             (Styles.getMenuConfig config.styles)
                             (Styles.getMenuItemConfig config.styles)
                         )
@@ -1536,29 +1508,37 @@ view (Config config) =
                 ]
 
         _ ->
-            selectWrapper
-                [ lazy viewControl (ViewControlData config selectId config.state controlStyles enterSelectTargetItem totalMenuItems)
+            viewWrapper config
+                [ lazy viewCustomControl
+                    (ViewControlData
+                        config
+                        config.state
+                        controlStyles
+                        (enterSelectTargetItem state_ viewableMenuItems)
+                        totalMenuItems
+                    )
                 , Internal.viewIf state_.menuOpen
-                    (lazy viewMenu
-                        (ViewMenuData
-                            config.variant
-                            selectId
-                            viewableMenuItems
-                            state_.initialMousedown
-                            state_.activeTargetIndex
-                            state_.menuNavigation
-                            config.isLoading
-                            config.loadingMessage
-                            (Styles.getMenuConfig config.styles)
-                            (Styles.getMenuItemConfig config.styles)
-                        )
+                    (if config.isLoading && List.isEmpty viewableMenuItems then
+                        viewLoadingMenu (Styles.getMenuConfig config.styles) config.loadingMessage
+
+                     else
+                        lazy viewMenu
+                            (ViewMenuData
+                                config.variant
+                                selectId
+                                viewableMenuItems
+                                state_.initialMousedown
+                                state_.activeTargetIndex
+                                state_.menuNavigation
+                                (Styles.getMenuConfig config.styles)
+                                (Styles.getMenuItemConfig config.styles)
+                            )
                     )
                 ]
 
 
 type alias ViewControlData item =
     { config : Configuration item
-    , selectId : SelectId
     , state : State
     , controlStyles : Styles.ControlConfig
     , enterSelectTargetItem : Maybe (MenuItem item)
@@ -1566,25 +1546,11 @@ type alias ViewControlData item =
     }
 
 
-viewControl : ViewControlData item -> Html (Msg item)
-viewControl data =
+viewCustomControl : ViewControlData item -> Html (Msg item)
+viewCustomControl data =
     let
         (State state_) =
             data.state
-
-        controlFocusedStyles =
-            if state_.controlUiFocused then
-                [ controlBorderFocused data.controlStyles ]
-
-            else
-                []
-
-        withDisabledStyles =
-            if data.config.disabled then
-                [ Css.position Css.static ]
-
-            else
-                []
 
         buildVariantInput =
             case data.config.variant of
@@ -1643,7 +1609,7 @@ viewControl data =
                 if data.config.searchable then
                     lazy viewSelectInput
                         (ViewSelectInputData
-                            data.selectId
+                            state_.selectId
                             state_.inputValue
                             data.enterSelectTargetItem
                             state_.activeTargetIndex
@@ -1671,16 +1637,106 @@ viewControl data =
             else
                 text ""
 
+        -- resolveIndicators =
+    in
+    viewControlWrapper
+        (ViewControlWrapperData
+            data.config
+            data.state
+            data.controlStyles
+        )
+        [ viewInputWrapper data.config
+            [ buildVariantInput
+            , buildPlaceholder
+            ]
+
+        -- indicators
+        , viewIndicatorWrapper
+            [ viewClearIndicator data.config
+            , viewLoadingSpinner
+                (ViewLoadingSpinnerData data.config data.controlStyles)
+            , indicatorSeparator data.controlStyles
+            , viewDropdownIndicator
+                (ViewDropdownIndicatorData data.config data.controlStyles)
+            ]
+        ]
+
+
+viewInputWrapper : Configuration item -> List (Html (Msg item)) -> Html (Msg item)
+viewInputWrapper config =
+    let
+        withDisabledStyles =
+            if config.disabled then
+                [ Css.position Css.static ]
+
+            else
+                []
+    in
+    div
+        [ StyledAttribs.css
+            ([ Css.displayFlex
+             , Css.flexWrap Css.wrap
+             , Css.position Css.relative
+             , Css.alignItems Css.center
+             , Css.boxSizing Css.borderBox
+             , Css.flex (Css.int 1)
+             , Css.padding2 (Css.px 2) (Css.px 8)
+             , Css.overflow Css.hidden
+             ]
+                ++ withDisabledStyles
+            )
+        ]
+
+
+type alias ViewDropdownIndicatorData item =
+    { config : Configuration item
+    , controlStyles : Styles.ControlConfig
+    }
+
+
+viewDropdownIndicator : ViewDropdownIndicatorData item -> Html msg
+viewDropdownIndicator data =
+    div
+        [ StyledAttribs.css indicatorContainerStyles ]
+        [ dropdownIndicator data.controlStyles data.config.disabled
+        ]
+
+
+type alias ViewLoadingSpinnerData item =
+    { config : Configuration item
+    , controlStyles : Styles.ControlConfig
+    }
+
+
+viewLoadingSpinner : ViewLoadingSpinnerData item -> Html msg
+viewLoadingSpinner data =
+    let
         resolveLoadingSpinner =
             if data.config.isLoading && data.config.searchable then
                 viewLoading
 
             else
                 text ""
+    in
+    div [ StyledAttribs.css indicatorContainerStyles ]
+        [ span
+            [ StyledAttribs.css
+                [ Css.color (Styles.getControlLoadingIndicatorColor data.controlStyles)
+                , Css.height (Css.px 20)
+                , Css.displayFlex
+                , Css.alignItems Css.center
+                ]
+            ]
+            [ resolveLoadingSpinner ]
+        ]
 
+
+viewClearIndicator : Configuration item -> Html (Msg item)
+viewClearIndicator config =
+    let
         clearButtonVisible =
-            if data.config.clearable && not data.config.disabled then
-                case data.config.variant of
+            if config.clearable && not config.disabled then
+                case config.variant of
                     CustomVariant (Single (Just _)) ->
                         True
 
@@ -1689,6 +1745,38 @@ viewControl data =
 
             else
                 False
+    in
+    Internal.viewIf clearButtonVisible <|
+        div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator config ]
+
+
+viewIndicatorWrapper : List (Html (Msg item)) -> Html (Msg item)
+viewIndicatorWrapper =
+    div
+        [ StyledAttribs.css
+            [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
+        ]
+
+
+type alias ViewControlWrapperData item =
+    { config : Configuration item
+    , state : State
+    , controlStyles : Styles.ControlConfig
+    }
+
+
+viewControlWrapper : ViewControlWrapperData item -> List (Html (Msg item)) -> Html (Msg item)
+viewControlWrapper data =
+    let
+        (State state_) =
+            data.state
+
+        controlFocusedStyles =
+            if state_.controlUiFocused then
+                [ controlBorderFocused data.controlStyles ]
+
+            else
+                []
     in
     div
         -- control
@@ -1722,49 +1810,6 @@ viewControl data =
                     ]
                )
         )
-        [ div
-            [ StyledAttribs.css
-                ([ Css.displayFlex
-                 , Css.flexWrap Css.wrap
-                 , Css.position Css.relative
-                 , Css.alignItems Css.center
-                 , Css.boxSizing Css.borderBox
-                 , Css.flex (Css.int 1)
-                 , Css.padding2 (Css.px 2) (Css.px 8)
-                 , Css.overflow Css.hidden
-                 ]
-                    ++ withDisabledStyles
-                )
-            ]
-            [ buildVariantInput
-            , buildPlaceholder
-            ]
-
-        -- indicators
-        , div
-            [ StyledAttribs.css
-                [ Css.alignItems Css.center, Css.alignSelf Css.stretch, Css.displayFlex, Css.flexShrink Css.zero, Css.boxSizing Css.borderBox ]
-            ]
-            [ Internal.viewIf clearButtonVisible <| div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator data.config ]
-            , div [ StyledAttribs.css indicatorContainerStyles ]
-                [ span
-                    [ StyledAttribs.css
-                        [ Css.color (Styles.getControlLoadingIndicatorColor data.controlStyles)
-                        , Css.height (Css.px 20)
-                        , Css.displayFlex
-                        , Css.alignItems Css.center
-                        ]
-                    ]
-                    [ resolveLoadingSpinner ]
-                ]
-            , indicatorSeparator data.controlStyles
-            , -- indicatorContainer
-              div
-                [ StyledAttribs.css indicatorContainerStyles ]
-                [ dropdownIndicator data.controlStyles data.config.disabled
-                ]
-            ]
-        ]
 
 
 viewNative : ViewNativeData item -> Html (Msg item)
@@ -1904,83 +1949,97 @@ viewWrapper config =
         )
 
 
-viewMenu : ViewMenuData item -> Html (Msg item)
-viewMenu viewMenuData =
+type alias ViewMenuWrapperData item =
+    { variant : Variant item
+    , menuStyles : Styles.MenuConfig
+    , menuNavigation : MenuNavigation
+    , selectId : SelectId
+    }
+
+
+viewMenuWrapper : ViewMenuWrapperData item -> List ( String, Html (Msg item) ) -> Html (Msg item)
+viewMenuWrapper data =
     let
         resolveAttributes =
-            if viewMenuData.menuNavigation == Keyboard then
+            if data.menuNavigation == Keyboard then
                 [ attribute "data-test-id" "listBox", on "mousemove" <| Decode.succeed SetMouseMenuNavigation ]
 
             else
                 [ attribute "data-test-id" "listBox" ]
-
-        menuStyles =
-            [ Css.top (Css.pct 100)
-            , Css.backgroundColor (Styles.getMenuBackgroundColor viewMenuData.menuStyles)
-            , Css.marginBottom (Css.px 8)
-            , Css.position Css.absolute
-            , Css.width (Css.pct 100)
-            , Css.boxSizing Css.borderBox
-            , Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
-            , Css.borderRadius (Css.px (Styles.getMenuBorderRadius viewMenuData.menuStyles))
-            , Css.boxShadow4
-                (Css.px <| Styles.getMenuBoxShadowHOffset viewMenuData.menuStyles)
-                (Css.px <| Styles.getMenuBoxShadowVOffset viewMenuData.menuStyles)
-                (Css.px <| Styles.getMenuBoxShadowBlur viewMenuData.menuStyles)
-                (Styles.getMenuBoxShadowColor viewMenuData.menuStyles)
-            , Css.marginTop (Css.px menuMarginTop)
-            , Css.zIndex (Css.int 2)
-            ]
-
-        menuListStyles =
-            [ Css.maxHeight (Css.px 215)
-            , Css.overflowY Css.auto
-            , Css.paddingBottom (Css.px listBoxPaddingBottom)
-            , Css.paddingTop (Css.px listBoxPaddingTop)
-            , Css.paddingLeft (Css.px 0)
-            , Css.marginTop (Css.px 0)
-            , Css.marginBottom (Css.px 0)
-            , Css.boxSizing Css.borderBox
-            , Css.position Css.relative
-            ]
-                ++ menuStyles
     in
-    case viewMenuData.viewableMenuItems of
-        [] ->
-            if viewMenuData.loading then
-                div [ StyledAttribs.css (menuListStyles ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]) ]
-                    [ text viewMenuData.loadingMessage
-                    ]
+    Keyed.node "ul"
+        ([ StyledAttribs.css (menuListStyles data.menuStyles)
+         , id (menuListId data.selectId)
+         , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+         , role "listbox"
+         , custom "mousedown"
+            (Decode.map
+                (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
+             <|
+                Decode.succeed DoNothing
+            )
+         ]
+            ++ resolveAttributes
+        )
 
-            else
-                text ""
 
-        _ ->
-            Keyed.node "ul"
-                ([ StyledAttribs.css menuListStyles
-                 , id (menuListId viewMenuData.selectId)
-                 , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
-                 , role "listbox"
-                 , custom "mousedown"
-                    (Decode.map
-                        (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
-                     <|
-                        Decode.succeed DoNothing
-                    )
-                 ]
-                    ++ resolveAttributes
-                )
-                (List.indexedMap
-                    (buildMenuItem
-                        viewMenuData.menuItemStyles
-                        viewMenuData.selectId
-                        viewMenuData.variant
-                        viewMenuData.initialMousedown
-                        viewMenuData.activeTargetIndex
-                        viewMenuData.menuNavigation
-                    )
-                    viewMenuData.viewableMenuItems
-                )
+viewMenu : ViewMenuData item -> Html (Msg item)
+viewMenu data =
+    viewMenuWrapper
+        (ViewMenuWrapperData
+            data.variant
+            data.menuStyles
+            data.menuNavigation
+            data.selectId
+        )
+        (viewMenuItems
+            (ViewMenuItemsData
+                data.menuItemStyles
+                data.selectId
+                data.variant
+                data.initialMousedown
+                data.activeTargetIndex
+                data.menuNavigation
+                data.viewableMenuItems
+            )
+        )
+
+
+viewLoadingMenu : Styles.MenuConfig -> String -> Html msg
+viewLoadingMenu menuStyles loadingText =
+    div
+        [ StyledAttribs.css
+            (menuListStyles menuStyles
+                ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]
+            )
+        ]
+        [ text loadingText
+        ]
+
+
+type alias ViewMenuItemsData item =
+    { menuItemStyles : Styles.MenuItemConfig
+    , selectId : SelectId
+    , variant : Variant item
+    , initialMousedown : Internal.InitialMousedown
+    , activeTargetIndex : Int
+    , menuNavigation : MenuNavigation
+    , viewableMenuItems : List (MenuItem item)
+    }
+
+
+viewMenuItems : ViewMenuItemsData item -> List ( String, Html (Msg item) )
+viewMenuItems data =
+    List.indexedMap
+        (buildMenuItem
+            data.menuItemStyles
+            data.selectId
+            data.variant
+            data.initialMousedown
+            data.activeTargetIndex
+            data.menuNavigation
+        )
+        data.viewableMenuItems
 
 
 viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
@@ -2390,6 +2449,15 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 -- UTILS
 
 
+enterSelectTargetItem : SelectState -> List (MenuItem item) -> Maybe (MenuItem item)
+enterSelectTargetItem state_ viewableMenuItems =
+    if state_.menuOpen && not (List.isEmpty viewableMenuItems) then
+        ListExtra.getAt state_.activeTargetIndex viewableMenuItems
+
+    else
+        Nothing
+
+
 type alias BuildViewableMenuItemsData item =
     { searchable : Bool
     , inputValue : Maybe String
@@ -2728,6 +2796,35 @@ dropdownIndicator controlStyles disabledInput =
 
 
 -- STYLES
+
+
+menuListStyles : Styles.MenuConfig -> List Css.Style
+menuListStyles menuStyles =
+    [ Css.maxHeight (Css.px 215)
+    , Css.overflowY Css.auto
+    , Css.paddingBottom (Css.px listBoxPaddingBottom)
+    , Css.paddingTop (Css.px listBoxPaddingTop)
+    , Css.paddingLeft (Css.px 0)
+    , Css.marginTop (Css.px 0)
+    , Css.marginBottom (Css.px 0)
+    , Css.boxSizing Css.borderBox
+    , Css.position Css.relative
+    , Css.top (Css.pct 100)
+    , Css.backgroundColor (Styles.getMenuBackgroundColor menuStyles)
+    , Css.marginBottom (Css.px 8)
+    , Css.position Css.absolute
+    , Css.width (Css.pct 100)
+    , Css.boxSizing Css.borderBox
+    , Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
+    , Css.borderRadius (Css.px (Styles.getMenuBorderRadius menuStyles))
+    , Css.boxShadow4
+        (Css.px <| Styles.getMenuBoxShadowHOffset menuStyles)
+        (Css.px <| Styles.getMenuBoxShadowVOffset menuStyles)
+        (Css.px <| Styles.getMenuBoxShadowBlur menuStyles)
+        (Styles.getMenuBoxShadowColor menuStyles)
+    , Css.marginTop (Css.px menuMarginTop)
+    , Css.zIndex (Css.int 2)
+    ]
 
 
 menuItemContainerStyles : ViewMenuItemData item -> List Css.Style
