@@ -1834,9 +1834,28 @@ viewClearIndicator data =
 
             else
                 False
+
+        ctrlStyles =
+            Styles.getControlConfig data.styles
+
+        menuControlStyles =
+            Styles.getMenuConfig data.styles
+
+        resolveClearIndicatorData =
+            case data.variant of
+                Single _ ->
+                    ClearIndicatorData data.disabled (Styles.getControlClearIndicatorColor ctrlStyles) (Styles.getControlClearIndicatorColorHover ctrlStyles)
+
+                Multi _ ->
+                    ClearIndicatorData data.disabled (Styles.getControlClearIndicatorColor ctrlStyles) (Styles.getControlClearIndicatorColorHover ctrlStyles)
+
+                SingleMenu _ ->
+                    ClearIndicatorData data.disabled
+                        (Styles.getMenuControl menuControlStyles).clearIndicatorColor
+                        (Styles.getMenuControl menuControlStyles).clearIndicatorColorHover
     in
     Internal.viewIf clearButtonVisible <|
-        div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator (ClearIndicatorData data.disabled data.styles) ]
+        div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator resolveClearIndicatorData ]
 
 
 viewIndicatorWrapper : List (Html (Msg item)) -> Html (Msg item)
@@ -2864,7 +2883,8 @@ viewLoading =
 
 type alias ClearIndicatorData =
     { disabled : Bool
-    , styles : Styles.Config
+    , indicatorColor : Css.Color
+    , indicatorColorHover : Css.Color
     }
 
 
@@ -2877,12 +2897,8 @@ clearIndicator data =
 
             else
                 [ Css.height (Css.px 16), Css.cursor Css.pointer ]
-
-        ctrlStyles =
-            Styles.getControlConfig data.styles
     in
     -- TODO dispatch Msg for menu variants
-    -- TODO handle styles for Menu control
     button
         [ attribute "data-test-id" "clear"
         , type_ "button"
@@ -2899,9 +2915,9 @@ clearIndicator data =
         ]
         [ span
             [ StyledAttribs.css
-                [ Css.color <| Styles.getControlClearIndicatorColor ctrlStyles
+                [ Css.color data.indicatorColor
                 , Css.displayFlex
-                , Css.hover [ Css.color (Styles.getControlClearIndicatorColorHover ctrlStyles) ]
+                , Css.hover [ Css.color data.indicatorColorHover ]
                 ]
             ]
             [ ClearIcon.view
