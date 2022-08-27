@@ -832,10 +832,10 @@ jsOptimize pred (State state_) =
     State { state_ | jsOptimize = pred }
 
 
-{-| Focus the select variant.
+{-| Opens the menu and sets focus on the Variant input.
 
-    Whilst you could focus the element yourself, using this
-    Msg also opens the menu on successfull focus.
+    Handy for programatically setting focus on the `SingleMenu`
+    [Variant](#Variant) as the focusable element exists inside of the menu.
 
         yourUpdate : (model, Cmd msg )
         yourUpdate msg model =
@@ -867,18 +867,6 @@ isFocused (State state_) =
 isMenuOpen : State -> Bool
 isMenuOpen (State state_) =
     state_.menuOpen
-
-
-reset : State -> State
-reset (State state_) =
-    State
-        { state_
-            | menuOpen = False
-            , activeTargetIndex = 0
-            , menuViewportFocusNodes = Nothing
-            , menuListScrollTop = 0
-            , menuNavigation = Mouse
-        }
 
 
 internalFocus : State -> (Result Dom.Error () -> msg) -> Cmd msg
@@ -952,8 +940,8 @@ This could be used as a dropdown menu.
 
 
       NOTE: By default the menu will not render until it is focused and interacted with.
-      This is for accessibility reasons. You can use [focus](#focus) to get
-      dropdown menu like behaviour.
+      This is for accessibility reasons. You can use [focus](#focus) to
+      open and focus the menu.
 
 -}
 singleMenu : Maybe (MenuItem item) -> Config item
@@ -1407,7 +1395,7 @@ update msg ((State state_) as wrappedState) =
 
         CloseMenu ->
             ( Nothing
-            , reset (State state_)
+            , resetState (State state_)
             , Cmd.none
             )
 
@@ -2452,6 +2440,18 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 
 -- UTILS
+
+
+resetState : State -> State
+resetState (State state_) =
+    State
+        { state_
+            | menuOpen = False
+            , activeTargetIndex = 0
+            , menuViewportFocusNodes = Nothing
+            , menuListScrollTop = 0
+            , menuNavigation = Mouse
+        }
 
 
 enterSelectTargetItem : SelectState -> List (MenuItem item) -> Maybe (MenuItem item)
