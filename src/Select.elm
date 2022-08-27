@@ -201,13 +201,13 @@ type alias ViewMenuItemData item =
     , menuItem : MenuItem item
     , menuNavigation : MenuNavigation
     , initialMousedown : Internal.InitialMousedown
-    , variant : Variant item
+    , variant : CustomVariant item
     , menuItemStyles : Styles.MenuItemConfig
     }
 
 
 type alias ViewMenuData item =
-    { variant : Variant item
+    { variant : CustomVariant item
     , selectId : SelectId
     , viewableMenuItems : List (MenuItem item)
     , initialMousedown : Internal.InitialMousedown
@@ -1468,7 +1468,7 @@ view (Config config) =
                     [ dropdownIndicator controlStyles False ]
                 ]
 
-        CustomVariant (SingleMenu _) ->
+        CustomVariant ((SingleMenu _) as singleVariant) ->
             -- Compose the SingleMenu variant
             Internal.viewIf state_.menuOpen
                 (viewMenuWrapper
@@ -1490,7 +1490,7 @@ view (Config config) =
                             (ViewMenuItemsData
                                 (Styles.getMenuItemConfig config.styles)
                                 selectId
-                                config.variant
+                                singleVariant
                                 state_.initialMousedown
                                 state_.activeTargetIndex
                                 state_.menuNavigation
@@ -1499,7 +1499,7 @@ view (Config config) =
                     )
                 )
 
-        _ ->
+        CustomVariant variant ->
             viewWrapper config
                 [ lazy viewCustomControl
                     (ViewControlData
@@ -1516,7 +1516,7 @@ view (Config config) =
                      else
                         lazy viewMenu
                             (ViewMenuData
-                                config.variant
+                                variant
                                 selectId
                                 viewableMenuItems
                                 state_.initialMousedown
@@ -1726,11 +1726,25 @@ viewLoadingSpinner data =
 viewClearIndicator : Configuration item -> Html (Msg item)
 viewClearIndicator config =
     let
+        (State state_) =
+            config.state
+
         clearButtonVisible =
             if config.clearable && not config.disabled then
                 case config.variant of
                     CustomVariant (Single (Just _)) ->
                         True
+
+                    CustomVariant (SingleMenu _) ->
+                        case state_.inputValue of
+                            Just "" ->
+                                False
+
+                            Just _ ->
+                                True
+
+                            _ ->
+                                False
 
                     _ ->
                         False
@@ -2012,7 +2026,7 @@ viewLoadingMenu menuStyles loadingText =
 type alias ViewMenuItemsData item =
     { menuItemStyles : Styles.MenuItemConfig
     , selectId : SelectId
-    , variant : Variant item
+    , variant : CustomVariant item
     , initialMousedown : Internal.InitialMousedown
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
@@ -2046,7 +2060,7 @@ viewMenuItem data content =
 
         resolveMouseUpMsg =
             case data.variant of
-                CustomVariant (Multi _) ->
+                Multi _ ->
                     SelectedItemMulti (getMenuItemItem data.menuItem)
 
                 _ ->
@@ -2504,7 +2518,7 @@ buildViewableMenuItems data =
 buildMenuItem :
     Styles.MenuItemConfig
     -> SelectId
-    -> Variant item
+    -> CustomVariant item
     -> Internal.InitialMousedown
     -> Int
     -> MenuNavigation
@@ -2515,7 +2529,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
     case item of
         Basic _ ->
             case variant of
-                CustomVariant (Single maybeSelectedItem) ->
+                Single maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
@@ -2533,7 +2547,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                         [ text (getMenuItemLabel item) ]
                     )
 
-                CustomVariant (SingleMenu maybeSelectedItem) ->
+                SingleMenu maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
@@ -2571,7 +2585,7 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
 
         Custom ci ->
             case variant of
-                CustomVariant (Single maybeSelectedItem) ->
+                Single maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
