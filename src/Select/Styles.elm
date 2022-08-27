@@ -9,10 +9,11 @@ module Select.Styles exposing
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
-    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
+    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColorNotSelected
     , dracula
+    , BaseControlConfiguration
     )
 
 {-| Add custom styling to the Select control, menu and menu item.
@@ -69,7 +70,7 @@ Get styles
 
 # Menu
 
-@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur
+@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl
 
 
 # Menu item
@@ -683,6 +684,11 @@ getMenuBoxShadowHOffset (MenuConfig config) =
 getMenuBoxShadowVOffset : MenuConfig -> Float
 getMenuBoxShadowVOffset (MenuConfig config) =
     config.boxShadowVOffset
+
+
+getMenuControl : MenuConfig -> BaseControlConfiguration
+getMenuControl (MenuConfig config) =
+    config.control
 
 
 
