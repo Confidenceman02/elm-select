@@ -115,8 +115,8 @@ type Msg item
     | MenuListScrollTop Float
     | SetMouseMenuNavigation
     | DoNothing
-    | SingleSelectClearButtonMouseDowned
-    | SingleSelectClearButtonKeyDowned
+    | ClearButtonMouseDowned (CustomVariant item)
+    | ClearButtonKeyDowned (CustomVariant item)
     | HeadlessMsg HeadlessMsg
 
 
@@ -1379,10 +1379,10 @@ update msg ((State state_) as wrappedState) =
         SetMouseMenuNavigation ->
             ( Nothing, State { state_ | menuNavigation = Mouse }, Cmd.none )
 
-        SingleSelectClearButtonMouseDowned ->
+        ClearButtonMouseDowned _ ->
             ( Just ClearSingleSelectItem, State state_, Cmd.none )
 
-        SingleSelectClearButtonKeyDowned ->
+        ClearButtonKeyDowned _ ->
             ( Just ClearSingleSelectItem, State state_, internalFocus wrappedState OnInputFocused )
 
 
@@ -1843,16 +1843,17 @@ viewClearIndicator data =
 
         resolveClearIndicatorData =
             case data.variant of
-                Single _ ->
-                    ClearIndicatorData data.disabled (Styles.getControlClearIndicatorColor ctrlStyles) (Styles.getControlClearIndicatorColorHover ctrlStyles)
-
-                Multi _ ->
-                    ClearIndicatorData data.disabled (Styles.getControlClearIndicatorColor ctrlStyles) (Styles.getControlClearIndicatorColorHover ctrlStyles)
-
                 SingleMenu _ ->
                     ClearIndicatorData data.disabled
                         (Styles.getMenuControl menuControlStyles).clearIndicatorColor
                         (Styles.getMenuControl menuControlStyles).clearIndicatorColorHover
+                        data.variant
+
+                _ ->
+                    ClearIndicatorData data.disabled
+                        (Styles.getControlClearIndicatorColor ctrlStyles)
+                        (Styles.getControlClearIndicatorColorHover ctrlStyles)
+                        data.variant
     in
     Internal.viewIf clearButtonVisible <|
         div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator resolveClearIndicatorData ]
@@ -2881,14 +2882,15 @@ viewLoading =
     DotLoadingIcon.view
 
 
-type alias ClearIndicatorData =
+type alias ClearIndicatorData item =
     { disabled : Bool
     , indicatorColor : Css.Color
     , indicatorColorHover : Css.Color
+    , variant : CustomVariant item
     }
 
 
-clearIndicator : ClearIndicatorData -> Html (Msg item)
+clearIndicator : ClearIndicatorData item -> Html (Msg item)
 clearIndicator data =
     let
         resolveIconButtonStyles =
@@ -2904,12 +2906,12 @@ clearIndicator data =
         , type_ "button"
         , custom "mousedown" <|
             Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
-                Decode.succeed SingleSelectClearButtonMouseDowned
+                Decode.succeed (ClearButtonMouseDowned data.variant)
         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
         , on "keydown"
             (Decode.oneOf
-                [ Events.isSpace SingleSelectClearButtonKeyDowned
-                , Events.isEnter SingleSelectClearButtonKeyDowned
+                [ Events.isSpace (ClearButtonKeyDowned data.variant)
+                , Events.isEnter (ClearButtonKeyDowned data.variant)
                 ]
             )
         ]
