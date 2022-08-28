@@ -98,7 +98,7 @@ type Msg item
     | UnsearchableSelectContainerClicked
     | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
-    | OnInputBlurred
+    | OnInputBlurred (Maybe (CustomVariant item))
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
@@ -165,6 +165,7 @@ type Action item
     | DeselectMulti item
     | ClearSingleSelectItem
     | FocusSet
+    | MenuInputCleared
 
 
 {-| -}
@@ -215,17 +216,6 @@ type alias ViewMenuData item =
     , menuNavigation : MenuNavigation
     , menuStyles : Styles.MenuConfig
     , menuItemStyles : Styles.MenuItemConfig
-    }
-
-
-type alias ViewNativeData item =
-    { controlStyles : Styles.ControlConfig
-    , variant : NativeVariant item
-    , menuItems : List (MenuItem item)
-    , selectId : SelectId
-    , labelledBy : Maybe String
-    , ariaDescribedBy : Maybe String
-    , placeholder : String
     }
 
 
@@ -1159,7 +1149,7 @@ update msg ((State state_) as wrappedState) =
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
 
-        OnInputBlurred ->
+        OnInputBlurred _ ->
             let
                 resolveAction =
                     case state_.inputValue of
@@ -1379,11 +1369,21 @@ update msg ((State state_) as wrappedState) =
         SetMouseMenuNavigation ->
             ( Nothing, State { state_ | menuNavigation = Mouse }, Cmd.none )
 
-        ClearButtonMouseDowned _ ->
-            ( Just ClearSingleSelectItem, State state_, Cmd.none )
+        ClearButtonMouseDowned variant ->
+            case variant of
+                SingleMenu _ ->
+                    ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, Cmd.none )
 
-        ClearButtonKeyDowned _ ->
-            ( Just ClearSingleSelectItem, State state_, internalFocus wrappedState OnInputFocused )
+                _ ->
+                    ( Just ClearSingleSelectItem, State state_, Cmd.none )
+
+        ClearButtonKeyDowned variant ->
+            case variant of
+                SingleMenu _ ->
+                    ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, internalFocus wrappedState OnInputFocused )
+
+                _ ->
+                    ( Just ClearSingleSelectItem, State state_, internalFocus wrappedState OnInputFocused )
 
 
 {-| Render the select
@@ -1912,6 +1912,17 @@ viewControlWrapper data =
         )
 
 
+type alias ViewNativeData item =
+    { controlStyles : Styles.ControlConfig
+    , variant : NativeVariant item
+    , menuItems : List (MenuItem item)
+    , selectId : SelectId
+    , labelledBy : Maybe String
+    , ariaDescribedBy : Maybe String
+    , placeholder : String
+    }
+
+
 viewNative : ViewNativeData item -> Html (Msg item)
 viewNative data =
     case data.variant of
@@ -1978,7 +1989,7 @@ viewNative data =
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle data.menuItems hasCurrentSelection)
                  , onFocus (InputReceivedFocused (Native data.variant))
-                 , onBlur OnInputBlurred
+                 , onBlur (OnInputBlurred Nothing)
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
@@ -2270,13 +2281,13 @@ type alias ViewSelectInputData item =
 
 
 viewSelectInput : ViewSelectInputData item -> Html (Msg item)
-viewSelectInput viewSelectInputData =
+viewSelectInput data =
     let
         (SelectId selectId) =
-            viewSelectInputData.id
+            data.id
 
         resolveEnterMsg mi =
-            case viewSelectInputData.variant of
+            case data.variant of
                 Multi _ ->
                     EnterSelectMulti mi
 
@@ -2286,7 +2297,7 @@ viewSelectInput viewSelectInputData =
         enterKeydownDecoder =
             -- there will always be a target item if the menu is
             -- open and not empty
-            case viewSelectInputData.maybeActiveTarget of
+            case data.maybeActiveTarget of
                 Just mi ->
                     [ Events.isEnter (resolveEnterMsg mi) ]
 
@@ -2294,44 +2305,44 @@ viewSelectInput viewSelectInputData =
                     []
 
         resolveInputValue =
-            Maybe.withDefault "" viewSelectInputData.maybeInputValue
+            Maybe.withDefault "" data.maybeInputValue
 
         spaceKeydownDecoder decoders =
-            if canBeSpaceToggled viewSelectInputData.menuOpen viewSelectInputData.maybeInputValue then
+            if canBeSpaceToggled data.menuOpen data.maybeInputValue then
                 Events.isSpace ToggleMenuAtKey :: decoders
 
             else
                 decoders
 
         whenArrowEvents =
-            if viewSelectInputData.menuOpen && 0 == viewSelectInputData.totalViewableMenuItems then
+            if data.menuOpen && 0 == data.totalViewableMenuItems then
                 []
 
             else
-                [ Events.isDownArrow (KeyboardDown viewSelectInputData.totalViewableMenuItems)
-                , Events.isUpArrow (KeyboardUp viewSelectInputData.totalViewableMenuItems)
+                [ Events.isDownArrow (KeyboardDown data.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp data.totalViewableMenuItems)
                 ]
 
         resolveInputWidth selectInputConfig =
-            if viewSelectInputData.jsOptmized then
-                SelectInput.inputSizing (SelectInput.DynamicJsOptimized viewSelectInputData.controlUiFocused) selectInputConfig
+            if data.jsOptmized then
+                SelectInput.inputSizing (SelectInput.DynamicJsOptimized data.controlUiFocused) selectInputConfig
 
             else
                 SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
 
         resolveAriaActiveDescendant config =
-            case viewSelectInputData.maybeActiveTarget of
+            case data.maybeActiveTarget of
                 Just _ ->
-                    SelectInput.activeDescendant (menuItemId viewSelectInputData.id viewSelectInputData.activeTargetIndex) config
+                    SelectInput.activeDescendant (menuItemId data.id data.activeTargetIndex) config
 
                 _ ->
                     config
 
         resolveAriaControls config =
-            SelectInput.setAriaControls (menuListId viewSelectInputData.id) config
+            SelectInput.setAriaControls (menuListId data.id) config
 
         resolveAriaLabelledBy config =
-            case viewSelectInputData.labelledBy of
+            case data.labelledBy of
                 Just s ->
                     SelectInput.setAriaLabelledBy s config
 
@@ -2339,7 +2350,7 @@ viewSelectInput viewSelectInputData =
                     config
 
         resolveAriaDescribedBy config =
-            case viewSelectInputData.ariaDescribedBy of
+            case data.ariaDescribedBy of
                 Just s ->
                     SelectInput.setAriaDescribedBy s config
 
@@ -2347,15 +2358,15 @@ viewSelectInput viewSelectInputData =
                     config
 
         resolveAriaExpanded config =
-            SelectInput.setAriaExpanded viewSelectInputData.menuOpen config
+            SelectInput.setAriaExpanded data.menuOpen config
     in
     SelectInput.view
         (SelectInput.default
             |> SelectInput.onInput InputChanged
-            |> SelectInput.onBlurMsg OnInputBlurred
+            |> SelectInput.onBlurMsg (OnInputBlurred (Just data.variant))
             |> SelectInput.onFocusMsg
                 (InputReceivedFocused
-                    (CustomVariant viewSelectInputData.variant)
+                    (CustomVariant data.variant)
                 )
             |> SelectInput.currentValue resolveInputValue
             |> SelectInput.onMousedown InputMousedowned
@@ -2387,12 +2398,12 @@ type alias ViewDummyInputData item =
 
 
 viewDummyInput : ViewDummyInputData item -> Html (Msg item)
-viewDummyInput viewDummyInputData =
+viewDummyInput data =
     let
         whenEnterEvent =
             -- there will always be a target item if the menu is
             -- open and not empty
-            case viewDummyInputData.maybeTargetItem of
+            case data.maybeTargetItem of
                 Just menuItem ->
                     [ Events.isEnter (EnterSelect menuItem) ]
 
@@ -2400,16 +2411,16 @@ viewDummyInput viewDummyInputData =
                     []
 
         whenArrowEvents =
-            if viewDummyInputData.menuOpen && 0 == viewDummyInputData.totalViewableMenuItems then
+            if data.menuOpen && 0 == data.totalViewableMenuItems then
                 []
 
             else
-                [ Events.isDownArrow (KeyboardDown viewDummyInputData.totalViewableMenuItems)
-                , Events.isUpArrow (KeyboardUp viewDummyInputData.totalViewableMenuItems)
+                [ Events.isDownArrow (KeyboardDown data.totalViewableMenuItems)
+                , Events.isUpArrow (KeyboardUp data.totalViewableMenuItems)
                 ]
 
         withLabelledBy =
-            case viewDummyInputData.labelledBy of
+            case data.labelledBy of
                 Just s ->
                     [ Aria.ariaLabelledby s ]
 
@@ -2417,7 +2428,7 @@ viewDummyInput viewDummyInputData =
                     []
 
         withAriaDescribedBy =
-            case viewDummyInputData.ariaDescribedBy of
+            case data.ariaDescribedBy of
                 Just s ->
                     [ Aria.ariaDescribedby s ]
 
@@ -2438,9 +2449,9 @@ viewDummyInput viewDummyInputData =
          , value ""
          , tabindex 0
          , attribute "data-test-id" "dummyInputSelect"
-         , id viewDummyInputData.id
-         , onFocus (InputReceivedFocused (CustomVariant viewDummyInputData.variant))
-         , onBlur OnInputBlurred
+         , id data.id
+         , onFocus (InputReceivedFocused (CustomVariant data.variant))
+         , onBlur (OnInputBlurred (Just data.variant))
          , preventDefaultOn "keydown" <|
             Decode.map
                 (\msg -> ( msg, True ))
@@ -2900,7 +2911,6 @@ clearIndicator data =
             else
                 [ Css.height (Css.px 16), Css.cursor Css.pointer ]
     in
-    -- TODO dispatch Msg for menu variants
     button
         [ attribute "data-test-id" "clear"
         , type_ "button"
