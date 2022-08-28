@@ -67,6 +67,7 @@ type alias BaseMenuItem comparable =
 
 type UiFocused
     = ControlInput
+    | Clearable
 
 
 type InitialMousedown

@@ -83,7 +83,8 @@ type HeadlessMsg
 
 
 type HeadlessState
-    = FocusingH
+    = FocusingInputH
+    | FocusingClearableH
 
 
 {-| -}
@@ -99,7 +100,9 @@ type Msg item
     | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
     | OnInputBlurred
-    | OnInputTabbed Bool
+    | OnMenuClearableFocus (Result Dom.Error ())
+    | OnMenuInputTabbed Bool
+    | OnMenuClearableTabbed Bool
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
@@ -251,7 +254,7 @@ type alias SelectState =
     , menuNavigation : MenuNavigation
     , jsOptimize : Bool
     , selectId : SelectId
-    , headlessState : Maybe HeadlessState
+    , headlessEvent : Maybe HeadlessState
     }
 
 
@@ -413,7 +416,7 @@ initState id_ =
         , menuNavigation = Mouse
         , jsOptimize = False
         , selectId = id_
-        , headlessState = Nothing
+        , headlessEvent = Nothing
         }
 
 
@@ -824,7 +827,7 @@ focus =
 -}
 isFocused : State -> Bool
 isFocused (State state_) =
-    state_.controlUiFocused == Just Internal.ControlInput
+    state_.controlUiFocused == Just Internal.ControlInput || state_.controlUiFocused == Just Internal.Clearable
 
 
 {-| Check that the menu is open and visible.
@@ -834,12 +837,8 @@ isMenuOpen (State state_) =
     state_.menuOpen
 
 
-internalFocus : State -> (Result Dom.Error () -> msg) -> Cmd msg
-internalFocus (State state_) msg =
-    let
-        (SelectId id) =
-            state_.selectId
-    in
+internalFocus : String -> (Result Dom.Error () -> msg) -> Cmd msg
+internalFocus id msg =
     Task.attempt msg (Dom.focus id)
 
 
@@ -997,13 +996,17 @@ selectIdentifier id_ =
 -}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
 update msg ((State state_) as wrappedState) =
+    let
+        (SelectId idString) =
+            state_.selectId
+    in
     case msg of
         HeadlessMsg FocusInputH ->
             let
                 updatedState =
-                    State { state_ | headlessState = Just FocusingH, menuOpen = True }
+                    State { state_ | headlessEvent = Just FocusingInputH, menuOpen = True }
             in
-            ( Nothing, updatedState, internalFocus updatedState OnInputFocused )
+            ( Nothing, updatedState, internalFocus idString OnInputFocused )
 
         InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
             let
@@ -1047,7 +1050,7 @@ update msg ((State state_) as wrappedState) =
                     | initialMousedown = Internal.NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, internalFocus wrappedState OnInputFocused ]
+            , Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ]
             )
 
         HoverFocused i ->
@@ -1065,14 +1068,14 @@ update msg ((State state_) as wrappedState) =
                 ( action, updatedState ) =
                     case variant of
                         CustomVariant _ ->
-                            case state_.headlessState of
-                                Just FocusingH ->
+                            case state_.headlessEvent of
+                                Just FocusingInputH ->
                                     ( Just FocusSet
                                     , { state_
                                         | menuOpen = True
                                         , initialMousedown = Internal.NothingMousedown
                                         , controlUiFocused = Just Internal.ControlInput
-                                        , headlessState = Nothing
+                                        , headlessEvent = Nothing
                                       }
                                     )
 
@@ -1113,13 +1116,13 @@ update msg ((State state_) as wrappedState) =
                     | initialMousedown = Internal.NothingMousedown
                     , inputValue = Nothing
                 }
-            , Cmd.batch [ cmdWithClosedMenu, internalFocus wrappedState OnInputFocused ]
+            , Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ]
             )
 
         DeselectedMultiItem deselectedItem ->
             ( Just (DeselectMulti deselectedItem)
             , State { state_ | initialMousedown = Internal.NothingMousedown }
-            , internalFocus wrappedState OnInputFocused
+            , internalFocus idString OnInputFocused
             )
 
         -- focusing the input is usually the last thing that happens after all the mousedown events.
@@ -1133,6 +1136,22 @@ update msg ((State state_) as wrappedState) =
 
                 Err _ ->
                     ( Nothing, wrappedState, Cmd.none )
+
+        OnMenuClearableFocus focusResult ->
+            case focusResult of
+                Ok () ->
+                    ( Nothing
+                    , State
+                        { state_
+                            | headlessEvent = Nothing
+                            , controlUiFocused = Just Internal.Clearable
+                            , initialMousedown = Internal.NothingMousedown
+                        }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( Nothing, State { state_ | headlessEvent = Nothing }, Cmd.none )
 
         FocusMenuViewport (Ok ( menuListElem, menuItemElem )) ->
             let
@@ -1151,7 +1170,6 @@ update msg ((State state_) as wrappedState) =
             ( Nothing, State state_, Cmd.none )
 
         OnInputBlurred ->
-            -- TODO Keep menu open for menu variants when tabbing to clear icon
             let
                 resolveAction =
                     case state_.inputValue of
@@ -1185,13 +1203,34 @@ update msg ((State state_) as wrappedState) =
                             , resolveAction
                             )
             in
-            ( action
-            , State updatedState
-            , updatedCmds
-            )
+            case state_.headlessEvent of
+                -- Keep menu open for menu variants when tabbing to clear icon.
+                -- Only works for menu varaints for now.
+                Just FocusingClearableH ->
+                    ( Nothing, wrappedState, Cmd.none )
 
-        OnInputTabbed clearButtonVisible ->
-            ( Nothing, State state_, Cmd.none ) |> Debug.log "Tabbed"
+                _ ->
+                    ( action
+                    , State updatedState
+                    , updatedCmds
+                    )
+
+        OnMenuInputTabbed clearButtonVisible ->
+            if clearButtonVisible then
+                ( Nothing
+                , State { state_ | headlessEvent = Just FocusingClearableH }
+                , internalFocus (clearableId state_.selectId) OnMenuClearableFocus
+                )
+
+            else
+                update CloseMenu wrappedState
+
+        OnMenuClearableTabbed shiftKey ->
+            if shiftKey then
+                ( Nothing, wrappedState, Cmd.none )
+
+            else
+                update CloseMenu wrappedState
 
         MenuItemClickFocus i ->
             ( Nothing, State { state_ | initialMousedown = Internal.MenuItemMousedown i }, Cmd.none )
@@ -1280,7 +1319,7 @@ update msg ((State state_) as wrappedState) =
                 { updatedState
                     | controlUiFocused = Just Internal.ControlInput
                 }
-            , Cmd.batch [ updatedCmds, internalFocus wrappedState OnInputFocused ]
+            , Cmd.batch [ updatedCmds, internalFocus idString OnInputFocused ]
             )
 
         UnsearchableSelectContainerClicked ->
@@ -1292,7 +1331,6 @@ update msg ((State state_) as wrappedState) =
                     update CloseMenu (State state_)
 
                 ( updatedState, updatedCmd ) =
-                    -- TODO Don't close the menu for menu variants when clicking the control.
                     if state_.menuOpen then
                         ( stateWithClosedMenu, cmdWithClosedMenu )
 
@@ -1301,7 +1339,7 @@ update msg ((State state_) as wrappedState) =
             in
             ( Nothing
             , State { updatedState | controlUiFocused = Just Internal.ControlInput }
-            , Cmd.batch [ updatedCmd, internalFocus wrappedState OnInputFocused ]
+            , Cmd.batch [ updatedCmd, internalFocus idString OnInputFocused ]
             )
 
         ToggleMenuAtKey ->
@@ -1400,10 +1438,10 @@ update msg ((State state_) as wrappedState) =
         ClearButtonKeyDowned variant ->
             case variant of
                 SingleMenu _ ->
-                    ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, internalFocus wrappedState OnInputFocused )
+                    ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, internalFocus idString OnInputFocused )
 
                 _ ->
-                    ( Just ClearSingleSelectItem, State state_, internalFocus wrappedState OnInputFocused )
+                    ( Just ClearSingleSelectItem, State state_, internalFocus idString OnInputFocused )
 
 
 {-| Render the select
@@ -1476,8 +1514,9 @@ view (Config config) =
                     )
                     [ Keyed.node "div"
                         [ StyledAttribs.css (menuWrapperStyles (Styles.getMenuConfig config.styles)) ]
-                        -- TODO create searchable input, handle disabled state
-                        ((if not config.searchable then
+                        -- TODO handle disabled state
+                        -- TODO handle placeholder
+                        [ if not config.searchable then
                             ( "dummy-input"
                             , lazy viewDummyInput
                                 (ViewDummyInputData
@@ -1515,6 +1554,12 @@ view (Config config) =
                                         config.clearable
                                         state_
                                     )
+                                , buildPlaceholder
+                                    (BuildPlaceholderData singleVariant
+                                        state_
+                                        ctrlStyles
+                                        config.placeholder
+                                    )
                                 , viewIndicatorWrapper
                                     [ viewClearIndicator
                                         (ViewClearIndicatorData
@@ -1532,18 +1577,26 @@ view (Config config) =
                                     ]
                                 ]
                             )
-                         )
-                            :: -- TODO Handle loading menu
-                               -- TODO Remove margin bottom styles
-                               [ ( "menu-list"
-                                 , viewMenuItemsWrapper
-                                    (ViewMenuItemsWrapperData
-                                        singleVariant
-                                        (Styles.getMenuConfig config.styles)
-                                        state_.menuNavigation
-                                        selectId
-                                    )
-                                    (viewMenuItems
+                        , ( "menu-list"
+                          , viewMenuItemsWrapper
+                                (ViewMenuItemsWrapperData
+                                    singleVariant
+                                    (Styles.getMenuConfig config.styles)
+                                    state_.menuNavigation
+                                    selectId
+                                )
+                                (if config.isLoading && List.isEmpty viewableMenuItems then
+                                    [ ( "loading-menu"
+                                      , viewLoadingMenu
+                                            (ViewLoadingMenuData singleVariant
+                                                config.loadingMessage
+                                                (Styles.getMenuConfig config.styles)
+                                            )
+                                      )
+                                    ]
+
+                                 else
+                                    viewMenuItems
                                         (ViewMenuItemsData
                                             (Styles.getMenuItemConfig config.styles)
                                             selectId
@@ -1553,10 +1606,9 @@ view (Config config) =
                                             state_.menuNavigation
                                             viewableMenuItems
                                         )
-                                    )
-                                 )
-                               ]
-                        )
+                                )
+                          )
+                        ]
                     ]
                 )
 
@@ -1585,7 +1637,12 @@ view (Config config) =
                     )
                 , Internal.viewIf state_.menuOpen
                     (if config.isLoading && List.isEmpty viewableMenuItems then
-                        viewLoadingMenu (Styles.getMenuConfig config.styles) config.loadingMessage
+                        viewLoadingMenu
+                            (ViewLoadingMenuData
+                                variant
+                                config.loadingMessage
+                                (Styles.getMenuConfig config.styles)
+                            )
 
                      else
                         lazy viewMenu
@@ -1654,42 +1711,12 @@ viewCustomControl data =
                     buildInput
 
         resolvePlaceholder =
-            case data.variant of
-                Multi [] ->
-                    viewPlaceholder
-                        (ViewPlaceholderData
-                            (PlaceholderStylesData
-                                (Styles.getControlPlaceholderOpacity data.controlStyles)
-                            )
-                            data.placeholder
-                        )
-
-                -- Multi selected values render differently
-                Multi _ ->
-                    text ""
-
-                Single (Just v) ->
-                    viewSelectedPlaceholder data.controlStyles v
-
-                Single Nothing ->
-                    viewPlaceholder
-                        (ViewPlaceholderData
-                            (PlaceholderStylesData
-                                (Styles.getControlPlaceholderOpacity data.controlStyles)
-                            )
-                            data.placeholder
-                        )
-
-                _ ->
-                    -- Gets set seperately
-                    text ""
-
-        buildPlaceholder =
-            if isEmptyInputValue state_.inputValue then
-                resolvePlaceholder
-
-            else
-                text ""
+            buildPlaceholder
+                (BuildPlaceholderData data.variant
+                    state_
+                    data.controlStyles
+                    data.placeholder
+                )
 
         buildInput =
             if not data.disabled then
@@ -1736,7 +1763,7 @@ viewCustomControl data =
         )
         [ viewInputWrapper data.disabled
             [ buildVariantInput
-            , buildPlaceholder
+            , resolvePlaceholder
             ]
 
         -- indicators
@@ -1866,12 +1893,14 @@ viewClearIndicator data =
                         (Styles.getMenuControl menuControlStyles).clearIndicatorColor
                         (Styles.getMenuControl menuControlStyles).clearIndicatorColorHover
                         data.variant
+                        state_.selectId
 
                 _ ->
                     ClearIndicatorData data.disabled
                         (Styles.getControlClearIndicatorColor ctrlStyles)
                         (Styles.getControlClearIndicatorColorHover ctrlStyles)
                         data.variant
+                        state_.selectId
     in
     Internal.viewIf clearButtonVisible <|
         div [ StyledAttribs.css indicatorContainerStyles ] [ clearIndicator resolveClearIndicatorData ]
@@ -2156,16 +2185,30 @@ viewMenu data =
         )
 
 
-viewLoadingMenu : Styles.MenuConfig -> String -> Html msg
-viewLoadingMenu menuStyles loadingText =
+type alias ViewLoadingMenuData item =
+    { variant : CustomVariant item
+    , loadingText : String
+    , menuStyles : Styles.MenuConfig
+    }
+
+
+viewLoadingMenu : ViewLoadingMenuData item -> Html msg
+viewLoadingMenu data =
+    let
+        variantStyles =
+            case data.variant of
+                SingleMenu _ ->
+                    []
+
+                _ ->
+                    menuWrapperStyles data.menuStyles
+                        ++ menuListStyles
+    in
     div
         [ StyledAttribs.css
-            (menuWrapperStyles menuStyles
-                ++ menuListStyles
-                ++ [ Css.textAlign Css.center, Css.opacity (Css.num 0.5) ]
-            )
+            [ Css.textAlign Css.center, Css.opacity (Css.num 0.5), Css.batch variantStyles ]
         ]
-        [ text loadingText
+        [ text data.loadingText
         ]
 
 
@@ -2319,6 +2362,14 @@ viewSelectInput data =
                 _ ->
                     EnterSelect mi
 
+        tabKeydownDecoder decoders =
+            case data.variant of
+                SingleMenu _ ->
+                    Events.isTab (OnMenuInputTabbed clearButtonVisible) :: decoders
+
+                _ ->
+                    decoders
+
         enterKeydownDecoder =
             -- there will always be a target item if the menu is
             -- open and not empty
@@ -2400,11 +2451,11 @@ viewSelectInput data =
 
         preventDefault msg =
             case msg of
-                OnInputTabbed _ ->
-                    ( msg, clearButtonVisible )
+                OnMenuInputTabbed _ ->
+                    ( msg, False )
 
                 _ ->
-                    ( msg, False )
+                    ( msg, True )
     in
     SelectInput.view
         (SelectInput.default
@@ -2423,9 +2474,11 @@ viewSelectInput data =
             |> resolveAriaDescribedBy
             |> resolveAriaExpanded
             |> (SelectInput.preventKeydownOn <|
-                    ( (enterKeydownDecoder |> spaceKeydownDecoder)
+                    ( (enterKeydownDecoder
+                        |> spaceKeydownDecoder
+                        |> tabKeydownDecoder
+                      )
                         ++ ([ Events.isEscape InputEscape
-                            , Events.isTab (OnInputTabbed clearButtonVisible)
                             ]
                                 ++ whenArrowEvents
                            )
@@ -2664,6 +2717,61 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 
 -- UTILS
+
+
+type alias BuildPlaceholderData item =
+    { variant : CustomVariant item
+    , state : SelectState
+    , controlStyles : Styles.ControlConfig
+    , placeholder : String
+    }
+
+
+buildPlaceholder : BuildPlaceholderData item -> Html msg
+buildPlaceholder data =
+    if isEmptyInputValue data.state.inputValue then
+        case data.variant of
+            Multi [] ->
+                viewPlaceholder
+                    (ViewPlaceholderData
+                        (PlaceholderStylesData
+                            (Styles.getControlPlaceholderOpacity data.controlStyles)
+                        )
+                        data.placeholder
+                    )
+
+            -- Multi selected values render differently
+            Multi _ ->
+                text ""
+
+            Single (Just v) ->
+                viewSelectedPlaceholder data.controlStyles v
+
+            Single Nothing ->
+                viewPlaceholder
+                    (ViewPlaceholderData
+                        (PlaceholderStylesData
+                            (Styles.getControlPlaceholderOpacity data.controlStyles)
+                        )
+                        data.placeholder
+                    )
+
+            SingleMenu _ ->
+                viewPlaceholder
+                    (ViewPlaceholderData
+                        (PlaceholderStylesData
+                            (Styles.getControlPlaceholderOpacity data.controlStyles)
+                        )
+                        data.placeholder
+                    )
+
+    else
+        text ""
+
+
+clearableId : SelectId -> String
+clearableId (SelectId id_) =
+    id_ ++ "__Clearable"
 
 
 type alias ShowClearButtonData item =
@@ -2992,6 +3100,7 @@ type alias ClearIndicatorData item =
     , indicatorColor : Css.Color
     , indicatorColorHover : Css.Color
     , variant : CustomVariant item
+    , selectId : SelectId
     }
 
 
@@ -3004,19 +3113,30 @@ clearIndicator data =
 
             else
                 [ Css.height (Css.px 16), Css.cursor Css.pointer ]
+
+        resolveTab =
+            case data.variant of
+                SingleMenu _ ->
+                    [ Events.isTabWithShift OnMenuClearableTabbed ]
+
+                _ ->
+                    []
     in
     button
         [ attribute "data-test-id" "clear"
         , type_ "button"
+        , id (clearableId data.selectId)
         , custom "mousedown" <|
             Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
                 Decode.succeed (ClearButtonMouseDowned data.variant)
         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
         , on "keydown"
             (Decode.oneOf
-                [ Events.isSpace (ClearButtonKeyDowned data.variant)
-                , Events.isEnter (ClearButtonKeyDowned data.variant)
-                ]
+                ([ Events.isSpace (ClearButtonKeyDowned data.variant)
+                 , Events.isEnter (ClearButtonKeyDowned data.variant)
+                 ]
+                    ++ resolveTab
+                )
             )
         ]
         [ span

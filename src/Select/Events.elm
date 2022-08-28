@@ -4,6 +4,7 @@ module Select.Events exposing
     , isEscape
     , isSpace
     , isTab
+    , isTabWithShift
     , isUpArrow
     , onInputAt
     , onInputAtInt
@@ -153,6 +154,11 @@ isSpace msg =
 isEscape : msg -> Decode.Decoder msg
 isEscape msg =
     keyCode |> Decode.andThen (isCode Escape msg)
+
+
+isTabWithShift : (Bool -> msg) -> Decode.Decoder msg
+isTabWithShift msg =
+    Decode.field "shiftKey" Decode.bool |> Decode.map msg
 
 
 isTab : msg -> Decode.Decoder msg
