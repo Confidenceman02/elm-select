@@ -98,7 +98,7 @@ type Msg item
     | UnsearchableSelectContainerClicked
     | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
-    | OnInputBlurred
+    | OnInputBlurred Bool
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
@@ -243,7 +243,7 @@ type alias SelectState =
     { inputValue : Maybe String
     , menuOpen : Bool
     , initialMousedown : Internal.InitialMousedown
-    , controlUiFocused : Bool
+    , controlUiFocused : Maybe Internal.UiFocused
     , activeTargetIndex : Int
     , menuViewportFocusNodes : Maybe ( MenuListElement, MenuItemElement )
     , menuListScrollTop : Float
@@ -403,7 +403,7 @@ initState id_ =
         { inputValue = Nothing
         , menuOpen = False
         , initialMousedown = Internal.NothingMousedown
-        , controlUiFocused = False
+        , controlUiFocused = Nothing
 
         -- Always focus the first menu item by default. This facilitates auto selecting the first item on Enter
         , activeTargetIndex = 0
@@ -823,7 +823,7 @@ focus =
 -}
 isFocused : State -> Bool
 isFocused (State state_) =
-    state_.controlUiFocused
+    state_.controlUiFocused == Just Internal.ControlInput
 
 
 {-| Check that the menu is open and visible.
@@ -1070,16 +1070,16 @@ update msg ((State state_) as wrappedState) =
                                     , { state_
                                         | menuOpen = True
                                         , initialMousedown = Internal.NothingMousedown
-                                        , controlUiFocused = True
+                                        , controlUiFocused = Just Internal.ControlInput
                                         , headlessState = Nothing
                                       }
                                     )
 
                                 _ ->
-                                    ( Nothing, { state_ | controlUiFocused = True } )
+                                    ( Nothing, { state_ | controlUiFocused = Just Internal.ControlInput } )
 
                         _ ->
-                            ( Nothing, { state_ | controlUiFocused = True } )
+                            ( Nothing, { state_ | controlUiFocused = Just Internal.ControlInput } )
             in
             ( action
             , State
@@ -1149,7 +1149,8 @@ update msg ((State state_) as wrappedState) =
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
 
-        OnInputBlurred ->
+        OnInputBlurred _ ->
+            -- TODO Keep menu open for menu variants when tabbing to clear icon
             let
                 resolveAction =
                     case state_.inputValue of
@@ -1176,7 +1177,7 @@ update msg ((State state_) as wrappedState) =
                         _ ->
                             ( { stateWithClosedMenu
                                 | initialMousedown = Internal.NothingMousedown
-                                , controlUiFocused = False
+                                , controlUiFocused = Nothing
                                 , inputValue = Nothing
                               }
                             , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
@@ -1270,7 +1271,13 @@ update msg ((State state_) as wrappedState) =
                             else
                                 ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, Cmd.batch [ updatedCmds, internalFocus wrappedState OnInputFocused ] )
+            ( Nothing
+            , State
+                { updatedState
+                    | controlUiFocused = Just Internal.ControlInput
+                }
+            , Cmd.batch [ updatedCmds, internalFocus wrappedState OnInputFocused ]
+            )
 
         UnsearchableSelectContainerClicked ->
             let
@@ -1289,7 +1296,7 @@ update msg ((State state_) as wrappedState) =
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
             ( Nothing
-            , State { updatedState | controlUiFocused = True }
+            , State { updatedState | controlUiFocused = Just Internal.ControlInput }
             , Cmd.batch [ updatedCmd, internalFocus wrappedState OnInputFocused ]
             )
 
@@ -1308,7 +1315,7 @@ update msg ((State state_) as wrappedState) =
                     else
                         ( stateWithOpenMenu, cmdWithOpenMenu )
             in
-            ( Nothing, State { updatedState | controlUiFocused = True }, updatedCmd )
+            ( Nothing, State { updatedState | controlUiFocused = Just Internal.ControlInput }, updatedCmd )
 
         KeyboardDown totalTargetCount ->
             let
@@ -1431,7 +1438,7 @@ view (Config config) =
     in
     case config.variant of
         Native variant ->
-            viewWrapper config
+            div []
                 [ viewNative
                     (ViewNativeData ctrlStyles
                         variant
@@ -1477,6 +1484,9 @@ view (Config config) =
                                     state_.menuOpen
                                     config.labelledBy
                                     config.ariaDescribedBy
+                                    config.disabled
+                                    config.clearable
+                                    state_
                                 )
                             )
 
@@ -1492,17 +1502,14 @@ view (Config config) =
                                 )
                                 [ lazy viewSelectInput
                                     (ViewSelectInputData
-                                        state_.selectId
-                                        state_.inputValue
                                         (enterSelectTargetItem state_ viewableMenuItems)
-                                        state_.activeTargetIndex
                                         totalMenuItems
-                                        state_.menuOpen
                                         singleVariant
                                         config.labelledBy
                                         config.ariaDescribedBy
-                                        state_.jsOptimize
-                                        state_.controlUiFocused
+                                        config.disabled
+                                        config.clearable
+                                        state_
                                     )
                                 , viewIndicatorWrapper
                                     [ viewClearIndicator
@@ -1685,17 +1692,14 @@ viewCustomControl data =
                 if data.searchable then
                     lazy viewSelectInput
                         (ViewSelectInputData
-                            state_.selectId
-                            state_.inputValue
                             data.enterSelectTargetItem
-                            state_.activeTargetIndex
                             data.totalMenuItems
-                            state_.menuOpen
                             data.variant
                             data.labelledBy
                             data.ariaDescribedBy
-                            state_.jsOptimize
-                            state_.controlUiFocused
+                            data.disabled
+                            data.clearable
+                            state_
                         )
 
                 else
@@ -1708,6 +1712,9 @@ viewCustomControl data =
                             state_.menuOpen
                             data.labelledBy
                             data.ariaDescribedBy
+                            data.disabled
+                            data.clearable
+                            state_
                         )
 
             else
@@ -1835,27 +1842,12 @@ viewClearIndicator data =
             data.state
 
         clearButtonVisible =
-            if data.clearable && not data.disabled then
-                case data.variant of
-                    Single (Just _) ->
-                        True
-
-                    SingleMenu _ ->
-                        case state_.inputValue of
-                            Just "" ->
-                                False
-
-                            Just _ ->
-                                True
-
-                            _ ->
-                                False
-
-                    _ ->
-                        False
-
-            else
-                False
+            showClearButton
+                (ShowClearButtonData data.variant
+                    data.disabled
+                    data.clearable
+                    state_
+                )
 
         ctrlStyles =
             Styles.getControlConfig data.styles
@@ -2011,7 +2003,7 @@ viewNative data =
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle data.menuItems hasCurrentSelection)
                  , onFocus (InputReceivedFocused (Native data.variant))
-                 , onBlur OnInputBlurred
+                 , onBlur (OnInputBlurred False)
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
@@ -2298,17 +2290,14 @@ viewSelectedPlaceholder styles item =
 
 
 type alias ViewSelectInputData item =
-    { id : SelectId
-    , maybeInputValue : Maybe String
-    , maybeActiveTarget : Maybe (MenuItem item)
-    , activeTargetIndex : Int
+    { maybeActiveTarget : Maybe (MenuItem item)
     , totalViewableMenuItems : Int
-    , menuOpen : Bool
     , variant : CustomVariant item
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
-    , jsOptmized : Bool
-    , controlUiFocused : Bool
+    , disabled : Bool
+    , clearable : Bool
+    , state : SelectState
     }
 
 
@@ -2316,7 +2305,7 @@ viewSelectInput : ViewSelectInputData item -> Html (Msg item)
 viewSelectInput data =
     let
         (SelectId selectId) =
-            data.id
+            data.state.selectId
 
         resolveEnterMsg mi =
             case data.variant of
@@ -2337,17 +2326,17 @@ viewSelectInput data =
                     []
 
         resolveInputValue =
-            Maybe.withDefault "" data.maybeInputValue
+            Maybe.withDefault "" data.state.inputValue
 
         spaceKeydownDecoder decoders =
-            if canBeSpaceToggled data.menuOpen data.maybeInputValue then
+            if canBeSpaceToggled data.state.menuOpen data.state.inputValue then
                 Events.isSpace ToggleMenuAtKey :: decoders
 
             else
                 decoders
 
         whenArrowEvents =
-            if data.menuOpen && 0 == data.totalViewableMenuItems then
+            if data.state.menuOpen && 0 == data.totalViewableMenuItems then
                 []
 
             else
@@ -2356,8 +2345,12 @@ viewSelectInput data =
                 ]
 
         resolveInputWidth selectInputConfig =
-            if data.jsOptmized then
-                SelectInput.inputSizing (SelectInput.DynamicJsOptimized data.controlUiFocused) selectInputConfig
+            if data.state.jsOptimize then
+                SelectInput.inputSizing
+                    (SelectInput.DynamicJsOptimized
+                        (data.state.controlUiFocused == Just Internal.ControlInput)
+                    )
+                    selectInputConfig
 
             else
                 SelectInput.inputSizing SelectInput.Dynamic selectInputConfig
@@ -2365,13 +2358,13 @@ viewSelectInput data =
         resolveAriaActiveDescendant config =
             case data.maybeActiveTarget of
                 Just _ ->
-                    SelectInput.activeDescendant (menuItemId data.id data.activeTargetIndex) config
+                    SelectInput.activeDescendant (menuItemId data.state.selectId data.state.activeTargetIndex) config
 
                 _ ->
                     config
 
         resolveAriaControls config =
-            SelectInput.setAriaControls (menuListId data.id) config
+            SelectInput.setAriaControls (menuListId data.state.selectId) config
 
         resolveAriaLabelledBy config =
             case data.labelledBy of
@@ -2390,12 +2383,21 @@ viewSelectInput data =
                     config
 
         resolveAriaExpanded config =
-            SelectInput.setAriaExpanded data.menuOpen config
+            SelectInput.setAriaExpanded data.state.menuOpen config
+
+        clearButtonVisible =
+            showClearButton
+                (ShowClearButtonData
+                    data.variant
+                    data.disabled
+                    data.clearable
+                    data.state
+                )
     in
     SelectInput.view
         (SelectInput.default
             |> SelectInput.onInput InputChanged
-            |> SelectInput.onBlurMsg OnInputBlurred
+            |> SelectInput.onBlurMsg (OnInputBlurred clearButtonVisible)
             |> SelectInput.onFocusMsg
                 (InputReceivedFocused
                     (CustomVariant data.variant)
@@ -2410,8 +2412,11 @@ viewSelectInput data =
             |> resolveAriaExpanded
             |> (SelectInput.preventKeydownOn <|
                     (enterKeydownDecoder |> spaceKeydownDecoder)
-                        ++ (Events.isEscape InputEscape
-                                :: whenArrowEvents
+                        ++ ([ Events.isEscape InputEscape
+
+                            -- , Events.isTab InputEscape
+                            ]
+                                ++ whenArrowEvents
                            )
                )
         )
@@ -2426,6 +2431,9 @@ type alias ViewDummyInputData item =
     , menuOpen : Bool
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
+    , disabled : Bool
+    , clearable : Bool
+    , state : SelectState
     }
 
 
@@ -2466,6 +2474,14 @@ viewDummyInput data =
 
                 _ ->
                     []
+
+        clearButtonVisible =
+            showClearButton
+                (ShowClearButtonData data.variant
+                    data.disabled
+                    data.clearable
+                    data.state
+                )
     in
     input
         ([ style "label" "dummyinput"
@@ -2483,7 +2499,7 @@ viewDummyInput data =
          , attribute "data-test-id" "dummyInputSelect"
          , id data.id
          , onFocus (InputReceivedFocused (CustomVariant data.variant))
-         , onBlur OnInputBlurred
+         , onBlur (OnInputBlurred clearButtonVisible)
          , preventDefaultOn "keydown" <|
             Decode.map
                 (\msg -> ( msg, True ))
@@ -2635,6 +2651,39 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 
 -- UTILS
+
+
+type alias ShowClearButtonData item =
+    { variant : CustomVariant item
+    , disabled : Bool
+    , clearable : Bool
+    , state : SelectState
+    }
+
+
+showClearButton : ShowClearButtonData item -> Bool
+showClearButton data =
+    if data.clearable && not data.disabled then
+        case data.variant of
+            Single (Just _) ->
+                True
+
+            SingleMenu _ ->
+                case data.state.inputValue of
+                    Just "" ->
+                        False
+
+                    Just _ ->
+                        True
+
+                    _ ->
+                        False
+
+            _ ->
+                False
+
+    else
+        False
 
 
 resetState : State -> State
@@ -3123,11 +3172,12 @@ controlBaseStyles : Styles.BaseControlConfiguration -> SelectState -> Bool -> Li
 controlBaseStyles styles state_ dsb =
     let
         controlFocusedStyles =
-            if state_.controlUiFocused then
-                [ controlBorderFocused (ControlBorderFocusedData styles.borderColorFocus) ]
+            case state_.controlUiFocused of
+                Just Internal.ControlInput ->
+                    [ controlBorderFocused (ControlBorderFocusedData styles.borderColorFocus) ]
 
-            else
-                []
+                _ ->
+                    []
     in
     [ Css.alignItems Css.center
     , Css.backgroundColor styles.backgroundColor
@@ -3155,11 +3205,12 @@ controlStyles : Styles.ControlConfig -> SelectState -> Bool -> List Css.Style
 controlStyles styles state_ dsb =
     let
         controlFocusedStyles =
-            if state_.controlUiFocused then
-                [ controlBorderFocused (ControlBorderFocusedData (Styles.getControlBorderColorFocus styles)) ]
+            case state_.controlUiFocused of
+                Just Internal.ControlInput ->
+                    [ controlBorderFocused (ControlBorderFocusedData (Styles.getControlBorderColorFocus styles)) ]
 
-            else
-                []
+                _ ->
+                    []
     in
     [ Css.alignItems Css.center
     , Css.backgroundColor (Styles.getControlBackgroundColor styles)

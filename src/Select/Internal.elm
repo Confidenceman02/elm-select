@@ -2,6 +2,7 @@ module Select.Internal exposing
     ( BaseMenuItem
     , Direction(..)
     , InitialMousedown(..)
+    , UiFocused(..)
     , calculateNextActiveTarget
     , shouldQueryNextTargetElement
     , viewIf
@@ -62,6 +63,10 @@ viewIf condition html =
 
 type alias BaseMenuItem comparable =
     { comparable | filterable : Bool }
+
+
+type UiFocused
+    = ControlInput
 
 
 type InitialMousedown
