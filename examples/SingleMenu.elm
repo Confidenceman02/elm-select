@@ -151,7 +151,9 @@ view m =
                             |> Select.state st
                             |> Select.menuItems m.items
                             |> Select.placeholder "Placeholder"
-                            |> Select.searchable False
+                            |> Select.searchable True
+                            |> Select.clearable True
+                            |> Select.loading True
                         )
 
             _ ->

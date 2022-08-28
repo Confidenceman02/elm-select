@@ -3107,6 +3107,7 @@ type alias ClearIndicatorData item =
 clearIndicator : ClearIndicatorData item -> Html (Msg item)
 clearIndicator data =
     let
+        -- TODO Handle blur then close menu
         resolveIconButtonStyles =
             if data.disabled then
                 [ Css.height (Css.px 16) ]
