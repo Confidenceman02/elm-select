@@ -102,7 +102,8 @@ type Msg item
     | OnInputBlurred
     | OnMenuClearableFocus (Result Dom.Error ())
     | OnMenuInputTabbed Bool
-    | OnMenuClearableTabbed Bool
+    | OnMenuClearableShiftTabbed Bool
+    | OnMenuClearableBlurred
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
@@ -1225,12 +1226,27 @@ update msg ((State state_) as wrappedState) =
             else
                 update CloseMenu wrappedState
 
-        OnMenuClearableTabbed shiftKey ->
+        OnMenuClearableShiftTabbed shiftKey ->
             if shiftKey then
-                ( Nothing, wrappedState, Cmd.none )
+                ( Nothing, State { state_ | headlessEvent = Just FocusingInputH }, internalFocus idString OnInputFocused )
 
             else
                 update CloseMenu wrappedState
+
+        OnMenuClearableBlurred ->
+            case state_.initialMousedown of
+                Internal.NothingMousedown ->
+                    case state_.headlessEvent of
+                        -- Dont close the menu when the blur occurs as a
+                        -- result of focusing the input programatically.
+                        Just FocusingInputH ->
+                            ( Nothing, wrappedState, Cmd.none )
+
+                        _ ->
+                            update CloseMenu wrappedState
+
+                _ ->
+                    ( Nothing, wrappedState, Cmd.none )
 
         MenuItemClickFocus i ->
             ( Nothing, State { state_ | initialMousedown = Internal.MenuItemMousedown i }, Cmd.none )
@@ -1292,7 +1308,7 @@ update msg ((State state_) as wrappedState) =
                             if state_.menuOpen then
                                 case variant of
                                     SingleMenu _ ->
-                                        ( state_, Cmd.none )
+                                        ( { state_ | initialMousedown = Internal.ContainerMousedown }, Cmd.none )
 
                                     _ ->
                                         ( { stateWithClosedMenu | initialMousedown = Internal.ContainerMousedown }, cmdWithClosedMenu )
@@ -1515,7 +1531,6 @@ view (Config config) =
                     [ Keyed.node "div"
                         [ StyledAttribs.css (menuWrapperStyles (Styles.getMenuConfig config.styles)) ]
                         -- TODO handle disabled state
-                        -- TODO handle placeholder
                         [ if not config.searchable then
                             ( "dummy-input"
                             , lazy viewDummyInput
@@ -2816,6 +2831,7 @@ resetState (State state_) =
             , menuViewportFocusNodes = Nothing
             , menuListScrollTop = 0
             , menuNavigation = Mouse
+            , headlessEvent = Nothing
         }
 
 
@@ -3107,7 +3123,6 @@ type alias ClearIndicatorData item =
 clearIndicator : ClearIndicatorData item -> Html (Msg item)
 clearIndicator data =
     let
-        -- TODO Handle blur then close menu
         resolveIconButtonStyles =
             if data.disabled then
                 [ Css.height (Css.px 16) ]
@@ -3118,28 +3133,48 @@ clearIndicator data =
         resolveTab =
             case data.variant of
                 SingleMenu _ ->
-                    [ Events.isTabWithShift OnMenuClearableTabbed ]
+                    [ Events.isTabWithShift OnMenuClearableShiftTabbed ]
 
                 _ ->
                     []
+
+        withMenuBlur =
+            case data.variant of
+                SingleMenu _ ->
+                    [ onBlur OnMenuClearableBlurred
+                    ]
+
+                _ ->
+                    []
+
+        preventDefault msg =
+            case msg of
+                OnMenuClearableShiftTabbed _ ->
+                    ( msg, True )
+
+                _ ->
+                    ( msg, False )
     in
     button
-        [ attribute "data-test-id" "clear"
-        , type_ "button"
-        , id (clearableId data.selectId)
-        , custom "mousedown" <|
+        ([ attribute "data-test-id" "clear"
+         , type_ "button"
+         , id (clearableId data.selectId)
+         , custom "mousedown" <|
             Decode.map (\msg -> { message = msg, stopPropagation = True, preventDefault = True }) <|
                 Decode.succeed (ClearButtonMouseDowned data.variant)
-        , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
-        , on "keydown"
-            (Decode.oneOf
-                ([ Events.isSpace (ClearButtonKeyDowned data.variant)
-                 , Events.isEnter (ClearButtonKeyDowned data.variant)
-                 ]
-                    ++ resolveTab
-                )
+         , StyledAttribs.css (resolveIconButtonStyles ++ iconButtonStyles)
+         , preventDefaultOn "keydown"
+            (Decode.map preventDefault <|
+                Decode.oneOf
+                    ([ Events.isSpace (ClearButtonKeyDowned data.variant)
+                     , Events.isEnter (ClearButtonKeyDowned data.variant)
+                     ]
+                        ++ resolveTab
+                    )
             )
-        ]
+         ]
+            ++ withMenuBlur
+        )
         [ span
             [ StyledAttribs.css
                 [ Css.color data.indicatorColor
