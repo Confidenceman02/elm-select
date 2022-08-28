@@ -22,7 +22,7 @@ module Select.SelectInput exposing
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
 import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaDescribedby, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
-import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
+import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Select.Events as Events
@@ -45,7 +45,7 @@ type alias Configuration msg =
     { onInput : Maybe (String -> msg)
     , onBlur : Maybe msg
     , onFocus : Maybe msg
-    , onMousedown : Maybe msg
+    , onMousedown : Maybe ( msg, msg -> ( msg, Bool ) )
     , currentValue : Maybe String
     , disabled : Bool
     , minWidth : Int
@@ -157,7 +157,7 @@ onFocusMsg msg (Config config) =
     Config { config | onFocus = Just msg }
 
 
-onMousedown : msg -> Config msg -> Config msg
+onMousedown : ( msg, msg -> ( msg, Bool ) ) -> Config msg -> Config msg
 onMousedown msg (Config config) =
     Config { config | onMousedown = Just msg }
 
@@ -216,8 +216,9 @@ view (Config config) id_ =
         focus focusMsg =
             onFocus focusMsg
 
-        mousedown mousedownMsg =
-            on "mousedown" <| Decode.succeed mousedownMsg
+        mousedown ( msg, stopProp ) =
+            stopPropagationOn "mousedown" <|
+                Decode.map stopProp (Decode.succeed msg)
 
         inputValue =
             Maybe.withDefault "" config.currentValue

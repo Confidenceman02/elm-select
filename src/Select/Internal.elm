@@ -73,6 +73,5 @@ type UiFocused
 type InitialMousedown
     = MultiItemMousedown Int
     | MenuItemMousedown Int
-    | InputMousedown
     | ContainerMousedown
     | NothingMousedown

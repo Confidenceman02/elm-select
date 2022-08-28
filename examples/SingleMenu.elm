@@ -153,7 +153,6 @@ view m =
                             |> Select.placeholder "Placeholder"
                             |> Select.searchable True
                             |> Select.clearable True
-                            |> Select.loading True
                         )
 
             _ ->

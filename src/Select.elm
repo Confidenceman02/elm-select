@@ -1230,7 +1230,7 @@ update msg ((State state_) as wrappedState) =
             ( Nothing, State { state_ | initialMousedown = Internal.MultiItemMousedown index }, Cmd.none )
 
         InputMousedowned ->
-            ( Nothing, State { state_ | initialMousedown = Internal.InputMousedown }, Cmd.none )
+            ( Nothing, State { state_ | initialMousedown = Internal.NothingMousedown }, Cmd.none )
 
         InputEscape ->
             let
@@ -1268,17 +1268,8 @@ update msg ((State state_) as wrappedState) =
                         -- To avoid the annoyance of opening and closing the menu whenever a multi tag item is dismissed
                         -- we just want to leave the menu open which it will be when it reaches here.
                         Internal.MultiItemMousedown _ ->
-                            ( state_, Cmd.none )
+                            ( state_, internalFocus idString OnInputFocused )
 
-                        -- This is set by a mousedown event in the input. Because the container mousedown will also fire
-                        -- as a result of bubbling we want to ensure that the preventDefault on the container is set to
-                        -- false and allow the input to do all the native click things i.e. double click to select text.
-                        -- If the initClicked values are InputInitClick || NothingInitClick we will not preventDefault.
-                        Internal.InputMousedown ->
-                            ( { stateWithOpenMenu | initialMousedown = Internal.NothingMousedown }, cmdWithOpenMenu )
-
-                        -- When no container children i.e. tag, input, have initiated a click, then this means a click on the container itself
-                        -- has been initiated.
                         Internal.NothingMousedown ->
                             if state_.menuOpen then
                                 case variant of
@@ -1286,31 +1277,46 @@ update msg ((State state_) as wrappedState) =
                                         ( { state_ | initialMousedown = Internal.ContainerMousedown }, Cmd.none )
 
                                     _ ->
-                                        ( { stateWithClosedMenu | initialMousedown = Internal.ContainerMousedown }, cmdWithClosedMenu )
+                                        ( { stateWithClosedMenu
+                                            | initialMousedown = Internal.ContainerMousedown
+                                          }
+                                        , Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ]
+                                        )
 
                             else
-                                ( { stateWithOpenMenu | initialMousedown = Internal.ContainerMousedown }, cmdWithOpenMenu )
+                                ( { stateWithOpenMenu | initialMousedown = Internal.ContainerMousedown }
+                                , Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ]
+                                )
 
                         Internal.ContainerMousedown ->
-                            if state_.menuOpen then
-                                ( { stateWithClosedMenu | initialMousedown = Internal.NothingMousedown }, cmdWithClosedMenu )
+                            case variant of
+                                SingleMenu _ ->
+                                    ( { state_ | initialMousedown = Internal.ContainerMousedown }, Cmd.none )
 
-                            else
-                                ( { stateWithOpenMenu | initialMousedown = Internal.NothingMousedown }, cmdWithOpenMenu )
+                                _ ->
+                                    if state_.menuOpen then
+                                        ( { stateWithClosedMenu | initialMousedown = Internal.NothingMousedown }
+                                        , Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ]
+                                        )
+
+                                    else
+                                        ( { stateWithOpenMenu | initialMousedown = Internal.NothingMousedown }
+                                        , Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ]
+                                        )
 
                         _ ->
                             if state_.menuOpen then
-                                ( stateWithClosedMenu, cmdWithClosedMenu )
+                                ( stateWithClosedMenu, Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ] )
 
                             else
-                                ( stateWithOpenMenu, cmdWithOpenMenu )
+                                ( stateWithOpenMenu, Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ] )
             in
             ( Nothing
             , State
                 { updatedState
                     | controlUiFocused = Just Internal.ControlInput
                 }
-            , Cmd.batch [ updatedCmds, internalFocus idString OnInputFocused ]
+            , updatedCmds
             )
 
         UnsearchableSelectContainerClicked ->
@@ -2091,24 +2097,20 @@ viewWrapper : ViewWrapperData item -> List (Html (Msg item)) -> Html (Msg item)
 viewWrapper data =
     let
         preventDefault =
-            if data.searchable then
-                case data.variant of
-                    SingleMenu _ ->
-                        True
+            case data.state.initialMousedown of
+                Internal.NothingMousedown ->
+                    case data.variant of
+                        SingleMenu _ ->
+                            data.state.controlUiFocused == Just Internal.ControlInput
 
-                    _ ->
-                        case data.state.initialMousedown of
-                            Internal.NothingMousedown ->
-                                False
+                        _ ->
+                            False
 
-                            Internal.InputMousedown ->
-                                False
+                Internal.ContainerMousedown ->
+                    True
 
-                            _ ->
-                                True
-
-            else
-                True
+                _ ->
+                    True
 
         resolveContainerMsg =
             if data.searchable then
@@ -2496,6 +2498,14 @@ viewSelectInput data =
 
                 _ ->
                     ( msg, True )
+
+        stopProp =
+            case data.variant of
+                SingleMenu _ ->
+                    \msg -> ( msg, True )
+
+                _ ->
+                    \msg -> ( msg, False )
     in
     SelectInput.view
         (SelectInput.default
@@ -2506,7 +2516,7 @@ viewSelectInput data =
                     (CustomVariant data.variant)
                 )
             |> SelectInput.currentValue resolveInputValue
-            |> SelectInput.onMousedown InputMousedowned
+            |> SelectInput.onMousedown ( InputMousedowned, stopProp )
             |> resolveInputWidth
             |> resolveAriaActiveDescendant
             |> resolveAriaControls
