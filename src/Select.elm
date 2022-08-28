@@ -1523,6 +1523,7 @@ view (Config config) =
                             )
                          )
                             :: -- TODO Handle loading menu
+                               -- TODO Remove margin bottom styles
                                [ ( "menu-list"
                                  , viewMenuItemsWrapper
                                     (ViewMenuItemsWrapperData
@@ -3014,7 +3015,6 @@ menuWrapperStyles menuStyles =
     , Css.boxSizing Css.borderBox
     , Css.top (Css.pct 100)
     , Css.backgroundColor (Styles.getMenuBackgroundColor menuStyles)
-    , Css.marginBottom (Css.px 8)
     , Css.position Css.absolute
     , Css.width (Css.pct 100)
     , Css.boxSizing Css.borderBox
@@ -3035,6 +3035,7 @@ menuListStyles =
     [ Css.maxHeight (Css.px 215)
     , Css.overflowY Css.auto
     , Css.paddingLeft (Css.px 0)
+    , Css.marginBottom (Css.px 8)
     ]
 
 
