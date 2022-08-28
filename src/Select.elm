@@ -198,32 +198,6 @@ type MenuListElement
 -- These data structures make using 'lazy' function a breeze
 
 
-type alias ViewMenuItemData item =
-    { index : Int
-    , itemSelected : Bool
-    , isClickFocused : Bool
-    , menuItemIsTarget : Bool
-    , selectId : SelectId
-    , menuItem : MenuItem item
-    , menuNavigation : MenuNavigation
-    , initialMousedown : Internal.InitialMousedown
-    , variant : CustomVariant item
-    , menuItemStyles : Styles.MenuItemConfig
-    }
-
-
-type alias ViewMenuData item =
-    { variant : CustomVariant item
-    , selectId : SelectId
-    , viewableMenuItems : List (MenuItem item)
-    , initialMousedown : Internal.InitialMousedown
-    , activeTargetIndex : Int
-    , menuNavigation : MenuNavigation
-    , menuStyles : Styles.MenuConfig
-    , menuItemStyles : Styles.MenuItemConfig
-    }
-
-
 type alias MenuListBoundaries =
     ( Float, Float )
 
@@ -1530,7 +1504,7 @@ view (Config config) =
                     )
                     [ Keyed.node "div"
                         [ StyledAttribs.css (menuWrapperStyles (Styles.getMenuConfig config.styles)) ]
-                        -- TODO handle disabled state
+                        -- TODO Add search icon
                         [ if not config.searchable then
                             ( "dummy-input"
                             , lazy viewDummyInput
@@ -1558,23 +1532,27 @@ view (Config config) =
                                     (Styles.getMenuConfig config.styles)
                                     singleVariant
                                 )
-                                [ lazy viewSelectInput
-                                    (ViewSelectInputData
-                                        (enterSelectTargetItem state_ viewableMenuItems)
-                                        totalMenuItems
-                                        singleVariant
-                                        config.labelledBy
-                                        config.ariaDescribedBy
-                                        config.disabled
-                                        config.clearable
-                                        state_
-                                    )
-                                , buildPlaceholder
-                                    (BuildPlaceholderData singleVariant
-                                        state_
-                                        ctrlStyles
-                                        config.placeholder
-                                    )
+                                [ viewInputWrapper config.disabled
+                                    [ Internal.viewIf (not config.disabled)
+                                        (lazy viewSelectInput
+                                            (ViewSelectInputData
+                                                (enterSelectTargetItem state_ viewableMenuItems)
+                                                totalMenuItems
+                                                singleVariant
+                                                config.labelledBy
+                                                config.ariaDescribedBy
+                                                config.disabled
+                                                config.clearable
+                                                state_
+                                            )
+                                        )
+                                    , buildPlaceholder
+                                        (BuildPlaceholderData singleVariant
+                                            state_
+                                            ctrlStyles
+                                            config.placeholder
+                                        )
+                                    ]
                                 , viewIndicatorWrapper
                                     [ viewClearIndicator
                                         (ViewClearIndicatorData
@@ -1620,6 +1598,7 @@ view (Config config) =
                                             state_.activeTargetIndex
                                             state_.menuNavigation
                                             viewableMenuItems
+                                            config.disabled
                                         )
                                 )
                           )
@@ -1670,6 +1649,7 @@ view (Config config) =
                                 state_.menuNavigation
                                 (Styles.getMenuConfig config.styles)
                                 (Styles.getMenuItemConfig config.styles)
+                                config.disabled
                             )
                     )
                 ]
@@ -2178,6 +2158,19 @@ viewMenuItemsWrapper data =
         )
 
 
+type alias ViewMenuData item =
+    { variant : CustomVariant item
+    , selectId : SelectId
+    , viewableMenuItems : List (MenuItem item)
+    , initialMousedown : Internal.InitialMousedown
+    , activeTargetIndex : Int
+    , menuNavigation : MenuNavigation
+    , menuStyles : Styles.MenuConfig
+    , menuItemStyles : Styles.MenuItemConfig
+    , disabled : Bool
+    }
+
+
 viewMenu : ViewMenuData item -> Html (Msg item)
 viewMenu data =
     viewMenuItemsWrapper
@@ -2196,6 +2189,7 @@ viewMenu data =
                 data.activeTargetIndex
                 data.menuNavigation
                 data.viewableMenuItems
+                data.disabled
             )
         )
 
@@ -2235,6 +2229,7 @@ type alias ViewMenuItemsData item =
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
     , viewableMenuItems : List (MenuItem item)
+    , disabled : Bool
     }
 
 
@@ -2242,12 +2237,14 @@ viewMenuItems : ViewMenuItemsData item -> List ( String, Html (Msg item) )
 viewMenuItems data =
     List.indexedMap
         (buildMenuItem
-            data.menuItemStyles
-            data.selectId
-            data.variant
-            data.initialMousedown
-            data.activeTargetIndex
-            data.menuNavigation
+            (BuildMenuItemData data.menuItemStyles
+                data.selectId
+                data.variant
+                data.initialMousedown
+                data.activeTargetIndex
+                data.menuNavigation
+                data.disabled
+            )
         )
         data.viewableMenuItems
 
@@ -2294,21 +2291,29 @@ viewMenuItem data content =
 
         resolvePosinsetAriaAttrib =
             [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
+
+        allEvents =
+            if data.disabled then
+                []
+
+            else
+                [ preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
+                , on "mouseover" <| Decode.succeed (HoverFocused data.index)
+                ]
+                    ++ resolveMouseLeave
+                    ++ resolveMouseUp
     in
     li
         ([ role "option"
          , tabindex -1
-         , preventDefaultOn "mousedown" <| Decode.map (\msg -> ( msg, True )) <| Decode.succeed (MenuItemClickFocus data.index)
-         , on "mouseover" <| Decode.succeed (HoverFocused data.index)
          , id (menuItemId data.selectId data.index)
          , StyledAttribs.css
             (menuItemContainerStyles data)
          ]
-            ++ resolveMouseLeave
-            ++ resolveMouseUp
             ++ resolveDataTestId
             ++ resolveSelectedAriaAttribs
             ++ resolvePosinsetAriaAttrib
+            ++ allEvents
         )
         content
 
@@ -2882,34 +2887,41 @@ buildViewableMenuItems data =
             []
 
 
+type alias BuildMenuItemData item =
+    { menuItemStyles : Styles.MenuItemConfig
+    , selectId : SelectId
+    , variant : CustomVariant item
+    , initialMousedown : Internal.InitialMousedown
+    , activeTargetIndex : Int
+    , menuNavigation : MenuNavigation
+    , disabled : Bool
+    }
+
+
 buildMenuItem :
-    Styles.MenuItemConfig
-    -> SelectId
-    -> CustomVariant item
-    -> Internal.InitialMousedown
-    -> Int
-    -> MenuNavigation
+    BuildMenuItemData item
     -> Int
     -> MenuItem item
     -> ( String, Html (Msg item) )
-buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex menuNavigation idx item =
+buildMenuItem data idx item =
     case item of
         Basic _ ->
-            case variant of
+            case data.variant of
                 Single maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused initialMousedown idx)
-                            (isTarget activeTargetIndex idx)
-                            selectId
+                            (isMenuItemClickFocused data.initialMousedown idx)
+                            (isTarget data.activeTargetIndex idx)
+                            data.selectId
                             item
-                            menuNavigation
-                            initialMousedown
-                            variant
-                            menuItemStyles
+                            data.menuNavigation
+                            data.initialMousedown
+                            data.variant
+                            data.menuItemStyles
+                            data.disabled
                         )
                         [ text (getMenuItemLabel item) ]
                     )
@@ -2920,52 +2932,56 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                         (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused initialMousedown idx)
-                            (isTarget activeTargetIndex idx)
-                            selectId
+                            (isMenuItemClickFocused data.initialMousedown idx)
+                            (isTarget data.activeTargetIndex idx)
+                            data.selectId
                             item
-                            menuNavigation
-                            initialMousedown
-                            variant
-                            menuItemStyles
+                            data.menuNavigation
+                            data.initialMousedown
+                            data.variant
+                            data.menuItemStyles
+                            data.disabled
                         )
                         [ text (getMenuItemLabel item) ]
                     )
 
+                -- We don't render selected multi select variant options
                 _ ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             False
-                            (isMenuItemClickFocused initialMousedown idx)
-                            (isTarget activeTargetIndex idx)
-                            selectId
+                            (isMenuItemClickFocused data.initialMousedown idx)
+                            (isTarget data.activeTargetIndex idx)
+                            data.selectId
                             item
-                            menuNavigation
-                            initialMousedown
-                            variant
-                            menuItemStyles
+                            data.menuNavigation
+                            data.initialMousedown
+                            data.variant
+                            data.menuItemStyles
+                            data.disabled
                         )
                         [ text (getMenuItemLabel item) ]
                     )
 
         Custom ci ->
-            case variant of
+            case data.variant of
                 Single maybeSelectedItem ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
                         (ViewMenuItemData
                             idx
                             (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused initialMousedown idx)
-                            (isTarget activeTargetIndex idx)
-                            selectId
+                            (isMenuItemClickFocused data.initialMousedown idx)
+                            (isTarget data.activeTargetIndex idx)
+                            data.selectId
                             item
-                            menuNavigation
-                            initialMousedown
-                            variant
-                            menuItemStyles
+                            data.menuNavigation
+                            data.initialMousedown
+                            data.variant
+                            data.menuItemStyles
+                            data.disabled
                         )
                         [ Styled.map never ci.view ]
                     )
@@ -2976,14 +2992,15 @@ buildMenuItem menuItemStyles selectId variant initialMousedown activeTargetIndex
                         (ViewMenuItemData
                             idx
                             False
-                            (isMenuItemClickFocused initialMousedown idx)
-                            (isTarget activeTargetIndex idx)
-                            selectId
+                            (isMenuItemClickFocused data.initialMousedown idx)
+                            (isTarget data.activeTargetIndex idx)
+                            data.selectId
                             item
-                            menuNavigation
-                            initialMousedown
-                            variant
-                            menuItemStyles
+                            data.menuNavigation
+                            data.initialMousedown
+                            data.variant
+                            data.menuItemStyles
+                            data.disabled
                         )
                         [ Styled.map never ci.view ]
                     )
@@ -3257,6 +3274,21 @@ menuListStyles =
     ]
 
 
+type alias ViewMenuItemData item =
+    { index : Int
+    , itemSelected : Bool
+    , isClickFocused : Bool
+    , menuItemIsTarget : Bool
+    , selectId : SelectId
+    , menuItem : MenuItem item
+    , menuNavigation : MenuNavigation
+    , initialMousedown : Internal.InitialMousedown
+    , variant : CustomVariant item
+    , menuItemStyles : Styles.MenuItemConfig
+    , disabled : Bool
+    }
+
+
 menuItemContainerStyles : ViewMenuItemData item -> List Css.Style
 menuItemContainerStyles data =
     let
@@ -3284,6 +3316,15 @@ menuItemContainerStyles data =
 
             else
                 []
+
+        allStyles =
+            if data.disabled then
+                [ controlDisabled (ControlDisabledData 0.3) ]
+
+            else
+                withTargetStyles
+                    ++ withIsClickedStyles
+                    ++ withIsSelectedStyles
     in
     [ Css.cursor Css.default
     , Css.display Css.block
@@ -3295,10 +3336,8 @@ menuItemContainerStyles data =
     , Css.padding2 (Css.px (Styles.getMenuItemBlockPadding data.menuItemStyles)) (Css.px (Styles.getMenuItemInlinePadding data.menuItemStyles))
     , Css.outline Css.none
     , Css.color (Styles.getMenuItemColor data.menuItemStyles)
+    , Css.batch allStyles
     ]
-        ++ withTargetStyles
-        ++ withIsClickedStyles
-        ++ withIsSelectedStyles
 
 
 indicatorContainerStyles : List Css.Style
