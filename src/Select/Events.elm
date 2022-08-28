@@ -158,7 +158,12 @@ isEscape msg =
 
 isTabWithShift : (Bool -> msg) -> Decode.Decoder msg
 isTabWithShift msg =
-    Decode.field "shiftKey" Decode.bool |> Decode.map msg
+    Decode.field "shiftKey" Decode.bool
+        |> Decode.map2
+            (\_ isShift ->
+                msg isShift
+            )
+            (keyCode |> Decode.andThen (isCode Tab (msg True)))
 
 
 isTab : msg -> Decode.Decoder msg
