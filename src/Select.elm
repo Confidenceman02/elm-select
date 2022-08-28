@@ -62,6 +62,7 @@ import Select.DotLoadingIcon as DotLoadingIcon
 import Select.DropdownIcon as DropdownIcon
 import Select.Events as Events
 import Select.Internal as Internal
+import Select.SearchIcon as SearchIcon
 import Select.SelectInput as SelectInput
 import Select.Styles as Styles
 import Select.Tag as Tag
@@ -1441,6 +1442,12 @@ update msg ((State state_) as wrappedState) =
                 view (single Nothing)
 
 -}
+
+
+
+-- TODO configurable menu variant styles
+
+
 view : Config item -> Html (Msg item)
 view (Config config) =
     let
@@ -1504,7 +1511,6 @@ view (Config config) =
                     )
                     [ Keyed.node "div"
                         [ StyledAttribs.css (menuWrapperStyles (Styles.getMenuConfig config.styles)) ]
-                        -- TODO Add search icon
                         [ if not config.searchable then
                             ( "dummy-input"
                             , lazy viewDummyInput
@@ -1532,7 +1538,8 @@ view (Config config) =
                                     (Styles.getMenuConfig config.styles)
                                     singleVariant
                                 )
-                                [ viewInputWrapper config.disabled
+                                [ viewSearchIndicator
+                                , viewInputWrapper config.disabled
                                     [ Internal.viewIf (not config.disabled)
                                         (lazy viewSelectInput
                                             (ViewSelectInputData
@@ -1850,6 +1857,20 @@ viewLoadingSpinner data =
             ]
             [ resolveLoadingSpinner ]
         ]
+
+
+viewSearchIndicator : Html (Msg item)
+viewSearchIndicator =
+    -- TODO set color
+    span
+        [ StyledAttribs.css
+            [ Css.displayFlex
+            , Css.alignItems Css.center
+            , Css.property "margin-inline-start" (Css.rem 0.5).value
+            , Css.height (Css.px 16)
+            ]
+        ]
+        [ SearchIcon.view ]
 
 
 type alias ViewClearIndicatorData item =
@@ -2327,8 +2348,7 @@ type alias ViewPlaceholderData =
 viewPlaceholder : ViewPlaceholderData -> Html msg
 viewPlaceholder data =
     div
-        [ -- baseplaceholder
-          StyledAttribs.css
+        [ StyledAttribs.css
             (placeholderStyles data.placeholderStyles)
         ]
         [ text data.placeholder ]
@@ -3100,7 +3120,7 @@ setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem)
 
 basePlaceholderStyles : List Css.Style
 basePlaceholderStyles =
-    [ Css.marginLeft (Css.px 2)
+    [ Css.property "margin-inline-start" (Css.px 2).value
     , Css.marginRight (Css.px 2)
     , Css.top (Css.pct 50)
     , Css.position Css.absolute
