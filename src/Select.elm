@@ -98,7 +98,8 @@ type Msg item
     | UnsearchableSelectContainerClicked
     | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
-    | OnInputBlurred Bool
+    | OnInputBlurred
+    | OnInputTabbed Bool
     | MenuItemClickFocus Int
     | MultiItemFocus Int
     | InputMousedowned
@@ -1149,7 +1150,7 @@ update msg ((State state_) as wrappedState) =
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
 
-        OnInputBlurred _ ->
+        OnInputBlurred ->
             -- TODO Keep menu open for menu variants when tabbing to clear icon
             let
                 resolveAction =
@@ -1188,6 +1189,9 @@ update msg ((State state_) as wrappedState) =
             , State updatedState
             , updatedCmds
             )
+
+        OnInputTabbed clearButtonVisible ->
+            ( Nothing, State state_, Cmd.none ) |> Debug.log "Tabbed"
 
         MenuItemClickFocus i ->
             ( Nothing, State { state_ | initialMousedown = Internal.MenuItemMousedown i }, Cmd.none )
@@ -2003,7 +2007,7 @@ viewNative data =
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle data.menuItems hasCurrentSelection)
                  , onFocus (InputReceivedFocused (Native data.variant))
-                 , onBlur (OnInputBlurred False)
+                 , onBlur OnInputBlurred
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
@@ -2393,11 +2397,19 @@ viewSelectInput data =
                     data.clearable
                     data.state
                 )
+
+        preventDefault msg =
+            case msg of
+                OnInputTabbed _ ->
+                    ( msg, clearButtonVisible )
+
+                _ ->
+                    ( msg, False )
     in
     SelectInput.view
         (SelectInput.default
             |> SelectInput.onInput InputChanged
-            |> SelectInput.onBlurMsg (OnInputBlurred clearButtonVisible)
+            |> SelectInput.onBlurMsg OnInputBlurred
             |> SelectInput.onFocusMsg
                 (InputReceivedFocused
                     (CustomVariant data.variant)
@@ -2411,13 +2423,14 @@ viewSelectInput data =
             |> resolveAriaDescribedBy
             |> resolveAriaExpanded
             |> (SelectInput.preventKeydownOn <|
-                    (enterKeydownDecoder |> spaceKeydownDecoder)
+                    ( (enterKeydownDecoder |> spaceKeydownDecoder)
                         ++ ([ Events.isEscape InputEscape
-
-                            -- , Events.isTab InputEscape
+                            , Events.isTab (OnInputTabbed clearButtonVisible)
                             ]
                                 ++ whenArrowEvents
                            )
+                    , preventDefault
+                    )
                )
         )
         selectId
@@ -2499,7 +2512,7 @@ viewDummyInput data =
          , attribute "data-test-id" "dummyInputSelect"
          , id data.id
          , onFocus (InputReceivedFocused (CustomVariant data.variant))
-         , onBlur (OnInputBlurred clearButtonVisible)
+         , onBlur OnInputBlurred
          , preventDefaultOn "keydown" <|
             Decode.map
                 (\msg -> ( msg, True ))

@@ -49,7 +49,7 @@ type alias Configuration msg =
     , currentValue : Maybe String
     , disabled : Bool
     , minWidth : Int
-    , preventKeydownOn : List (Decode.Decoder msg)
+    , preventKeydownOn : ( List (Decode.Decoder msg), msg -> ( msg, Bool ) )
     , inputSizing : InputSizing
     , dataTestId : String
     , ariaActiveDescendant : Maybe String
@@ -73,7 +73,7 @@ defaults =
     , currentValue = Nothing
     , disabled = False
     , minWidth = defaultWidth
-    , preventKeydownOn = []
+    , preventKeydownOn = ( [], \msg -> ( msg, True ) )
     , inputSizing = Dynamic
     , dataTestId = "selectInput"
     , ariaActiveDescendant = Nothing
@@ -137,7 +137,7 @@ inputSizing width (Config config) =
     Config { config | inputSizing = width }
 
 
-preventKeydownOn : List (Decode.Decoder msg) -> Config msg -> Config msg
+preventKeydownOn : ( List (Decode.Decoder msg), msg -> ( msg, Bool ) ) -> Config msg -> Config msg
 preventKeydownOn decoders (Config config) =
     Config { config | preventKeydownOn = decoders }
 
@@ -238,8 +238,8 @@ view (Config config) id_ =
         preventOn =
             preventDefaultOn "keydown" <|
                 Decode.map
-                    (\m -> ( m, True ))
-                    (Decode.oneOf config.preventKeydownOn)
+                    (Tuple.second config.preventKeydownOn)
+                    (Decode.oneOf (Tuple.first config.preventKeydownOn))
 
         withAriaActiveDescendant =
             case config.ariaActiveDescendant of
