@@ -1,3 +1,24 @@
+## [6.0.0] - 2022-08-29
+
+## Added
+- Make menu variants.
+- Add helper function isFocused, isMenuOpen.
+- Add focus function to open and focus a select variant.
+- Improve docs around jsOptimize
+
+## Breaking changes
+Setting the `SelectId` now happens on `initState` instead
+of the `view` function. This makes the `focus` function possible.
+
+previous
+```
+view (single Nothing) (selectIndentifier "1234")
+```
+current
+```
+initState (selectIdentifier "1234")
+```
+
 ## [5.4.0] - 2022-08-10
 
 ## Added
@@ -297,6 +318,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[6.0.0]: https://github.com/Confidenceman02/elm-select/compare/5.4.0...6.0.0
 [5.4.0]: https://github.com/Confidenceman02/elm-select/compare/5.3.2...5.4.0
 [5.3.2]: https://github.com/Confidenceman02/elm-select/compare/5.3.1...5.3.2
 [5.3.1]: https://github.com/Confidenceman02/elm-select/compare/5.3.0...5.3.1
