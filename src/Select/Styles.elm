@@ -1221,7 +1221,6 @@ draculaControl =
         |> setControlBorderColor (Css.hex "#ff79c6")
         |> setControlBorderColorHover (Css.hex "#ff79c6")
         |> setControlBorderColorFocus (Css.hex "#ff79c6")
-        |> setControlBackgroundColorHover (Css.rgba 255 255 65 0.2)
         |> setControlSeparatorColor (Css.hex "#ff79c6")
         |> setControlDropdownIndicatorColor (Css.hex "#ff79c6")
         |> setControlDropdownIndicatorColorHover (Css.hex "#e66db2")
@@ -1239,6 +1238,16 @@ draculaMenu =
     getMenuConfig default
         |> setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
         |> setMenuBackgroundColor (Css.hex "#282a36")
+        |> setMenuControlBorderColor (Css.hex "#ff79c6")
+        |> setMenuControlBorderColorHover (Css.hex "#ff79c6")
+        |> setMenuControlBorderColorFocus (Css.hex "#ff79c6")
+        |> setMenuControlBackgroundColorHover (Css.hex "#282a36")
+        |> setMenuControlBackgroundColor (Css.hex "#282a36")
+        |> setMenuControlClearIndicatorColor (Css.hex "#ff79c6")
+        |> setMenuControlClearIndicatorColorHover (Css.hex "#e66db2")
+        |> setMenuControlColor (Css.hex "#ff79c6")
+        |> setMenuControlLoadingIndicatorColor (Css.hex "#ff79c6")
+        |> setMenuControlSearchIndicatorColor (Css.hex "#ff79c6")
 
 
 draculaMenuItem : MenuItemConfig
