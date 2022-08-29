@@ -58,6 +58,68 @@ describe("SingleMenu", () => {
     expect(menuListVisble).toBeTruthy();
   });
 
+  it("closes the menu when mouse clicking outside of menu", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.waitForTimeout(100);
+    await page.mouse.click(10, 10);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("closes the menu when double clicking on container then clicking outside menu", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.waitForTimeout(100);
+    await page.locator("[data-test-id=selectContainer]").dblclick();
+    await page.waitForTimeout(100);
+    await page.mouse.click(10, 10);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("does not close the open menu when clicking on container", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("does not clear the input value when clicking on container", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    const selectInput = page.locator("[data-test-id=selectInput]");
+    await selectInput.type("pot");
+    await page.waitForTimeout(100);
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForTimeout(100);
+    const inputValue = await selectInput.evaluate((ele: HTMLInputElement) => {
+      return ele.value;
+    });
+
+    expect(inputValue).toEqual("pot");
+  });
+
   it("closes the menu on Tab keydown", async () => {
     await browser.newContext();
     const page = await browser.newPage();
