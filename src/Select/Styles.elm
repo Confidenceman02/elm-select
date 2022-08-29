@@ -4,12 +4,15 @@ module Select.Styles exposing
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
+    , setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected, setMenuItemInlinePadding
-    , setMenuItemColorHoverNotSelected
+    , setMenuItemColorHoverNotSelected, setMenuControlBorderColorFocus, setMenuControlBorderColorHover, setMenuControlBorderRadius, setMenuControlClearIndicatorColor
+    , setMenuControlClearIndicatorColorHover, setMenuControlColor, setMenuControlDisabledOpacity, setMenuControlLoadingIndicatorColor, setMenuControlMinHeight, setMenuControlPlaceholderOpacity
+    , setMenuControlSearchIndicatorColor
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
-    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl, getMenuControlBackgroundColor
+    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor
     , getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
     , getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity, getMenuControlSearchIndicatorColor
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
@@ -49,12 +52,15 @@ Set styles
 # Menu
 
 @docs setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
+@docs setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor
 
 
 # Menu item
 
 @docs setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected, setMenuItemInlinePadding
-@docs setMenuItemColorHoverNotSelected
+@docs setMenuItemColorHoverNotSelected, setMenuControlBorderColorFocus, setMenuControlBorderColorHover, setMenuControlBorderRadius, setMenuControlClearIndicatorColor
+@docs setMenuControlClearIndicatorColorHover, setMenuControlColor, setMenuControlDisabledOpacity, setMenuControlLoadingIndicatorColor, setMenuControlMinHeight, setMenuControlPlaceholderOpacity
+@docs setMenuControlSearchIndicatorColor
 
 
 # Getters
@@ -71,7 +77,7 @@ Get styles
 
 # Menu
 
-@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl, getMenuControlBackgroundColor
+@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor
 @docs getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
 @docs getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity, getMenuControlSearchIndicatorColor
 
@@ -379,6 +385,216 @@ setMenuBoxShadowHOffset f (MenuConfig config) =
 setMenuBoxShadowVOffset : Float -> MenuConfig -> MenuConfig
 setMenuBoxShadowVOffset f (MenuConfig config) =
     MenuConfig { config | boxShadowVOffset = f }
+
+
+{-| -}
+setMenuControlBackgroundColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBackgroundColor color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | backgroundColor = color }
+        }
+
+
+{-| -}
+setMenuControlBackgroundColorHover : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBackgroundColorHover color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | backgroundColorHover = color }
+        }
+
+
+{-| -}
+setMenuControlBorderColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBorderColor color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | borderColor = color }
+        }
+
+
+{-| -}
+setMenuControlBorderColorFocus : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBorderColorFocus color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | borderColorFocus = color }
+        }
+
+
+{-| -}
+setMenuControlBorderColorHover : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBorderColorHover color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | borderColorHover = color }
+        }
+
+
+{-| -}
+setMenuControlBorderRadius : Float -> MenuConfig -> MenuConfig
+setMenuControlBorderRadius f (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | borderRadius = f }
+        }
+
+
+{-| -}
+setMenuControlClearIndicatorColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlClearIndicatorColor color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | clearIndicatorColor = color }
+        }
+
+
+{-| -}
+setMenuControlClearIndicatorColorHover : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlClearIndicatorColorHover color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | clearIndicatorColorHover = color }
+        }
+
+
+{-| -}
+setMenuControlColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlColor color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | color = color }
+        }
+
+
+{-| -}
+setMenuControlDisabledOpacity : Float -> MenuConfig -> MenuConfig
+setMenuControlDisabledOpacity f (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | disabledOpacity = f }
+        }
+
+
+{-| -}
+setMenuControlLoadingIndicatorColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlLoadingIndicatorColor color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | loadingIndicatorColor = color }
+        }
+
+
+{-| -}
+setMenuControlMinHeight : Float -> MenuConfig -> MenuConfig
+setMenuControlMinHeight f (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | minHeight = f }
+        }
+
+
+{-| -}
+setMenuControlPlaceholderOpacity : Float -> MenuConfig -> MenuConfig
+setMenuControlPlaceholderOpacity f (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | placeholderOpacity = f }
+        }
+
+
+{-| -}
+setMenuControlSearchIndicatorColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlSearchIndicatorColor color (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    MenuConfig
+        { config
+            | control =
+                MenuControlConfig
+                    { mc | searchIndicatorColor = color }
+        }
 
 
 
@@ -697,12 +913,6 @@ getMenuBoxShadowHOffset (MenuConfig config) =
 getMenuBoxShadowVOffset : MenuConfig -> Float
 getMenuBoxShadowVOffset (MenuConfig config) =
     config.boxShadowVOffset
-
-
-{-| -}
-getMenuControl : MenuConfig -> MenuControlConfig BaseControlConfiguration
-getMenuControl (MenuConfig config) =
-    config.control
 
 
 {-| -}
