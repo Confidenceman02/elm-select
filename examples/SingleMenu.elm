@@ -147,7 +147,7 @@ view m =
             Just ( _, st ) ->
                 Styled.map SelectMsg <|
                     Select.view
-                        (Select.singleMenu Nothing
+                        (Select.menu
                             |> Select.state st
                             |> Select.menuItems m.items
                             |> Select.placeholder "Placeholder"

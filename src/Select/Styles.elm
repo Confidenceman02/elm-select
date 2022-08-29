@@ -30,7 +30,7 @@ module Select.Styles exposing
 
 Styles for the different sections of the Select all have their own configuration.
 This means when you are setting styles to the [MenuConfig](#MenuConfig) you can only use the
-[Setters](#setters) for the MenuConfig.
+[Setters](#setters) for the [MenuConfig](#MenuConfig).
 
 NOTE: The [native](/packages/Confidenceman02/elm-select/latest/Select#singleNative) Select variant
 only respects some of the styles.
@@ -120,6 +120,7 @@ type MenuItemConfig
     = MenuItemConfig MenuItemConfiguration
 
 
+{-| -}
 type MenuControlConfig compatible
     = MenuControlConfig (MenuControlConfiguration compatible)
 

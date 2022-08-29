@@ -1,7 +1,8 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, isMenuOpen, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
-    , single, clearable
-    , singleMenu
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+    , placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    , single
+    , singleMenu, menu
     , multi
     , singleNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
@@ -13,17 +14,18 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, isFocused, isMenuOpen, Msg, menuItems, placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+@docs placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
 # Single select
 
-@docs single, clearable
+@docs single
 
 
-# Single menu select
+# Menu select
 
-@docs singleMenu
+@docs singleMenu, menu
 
 
 # Multi select
@@ -247,7 +249,7 @@ type MenuItem item
 
 {-| A menu item that will be represented in the menu list.
 
-The `item` property is the type representation of the menu item that will be used in an Action.
+The `item` property is the type representation of the menu item that will be used in an [Action](#Action).
 
 The `label` is the text representation that will be shown in the menu.
 
@@ -283,7 +285,7 @@ type alias BasicMenuItem item =
 
 {-| A menu item that will be represented in the menu list by a view you supply.
 
-The `item` property is the type representation of the menu item that will be used in an Action.
+The `item` property is the type representation of the menu item that will be used in an [Action](#Action).
 
 The `label` is the text representation of the item.
 
@@ -308,12 +310,11 @@ The view is a `Html` view that you supply.
                     |> menuItems toolItems
                     |> state model.selectState
                 )
-                (selectIdentifier "SingleSelectExample")
 
 The view you provide will be rendered in a `li` element that is styled according to the value set by [setStyles](#setStyles).
 
         customMenuItem { item = Hammer, label = "Hammer", view = text "Hammer" }
-        => <li>Hammer</>
+        -- => <li>Hammer</>
 
 Combine this with [customMenuItem](#customMenuItem) to create a [MenuItem](#MenuItem).
 
@@ -419,6 +420,9 @@ defaults =
 
 {-| Create a [basic](#BasicMenuItem) type of [MenuItem](#MenuItem).
 
+Use [customMenuItem](#customMenuItem) if you want more flexibility
+on how a menu item will look in the menu.
+
         type Tool
             = Screwdriver
             | Hammer
@@ -516,28 +520,27 @@ filterableMenuItem pred mi =
 Useful for styling the select using your
 color branding.
 
-        import Select.Styles as Styles
+      import Select.Styles as Styles
 
-        baseStyles : Styles.Config
-        baseStyles =
-            Styles.default
+      baseStyles : Styles.Config
+      baseStyles =
+          Styles.default
 
-        controlBranding : Styles.ControlConfig
-        controlBranding =
-            Styles.getControlConfig baseStyles
-                |> Styles.setControlBorderColor (Css.hex "#FFFFFF")
-                |> Styles.setControlBorderColorFocus (Css.hex "#0168B3")
+      controlBranding : Styles.ControlConfig
+      controlBranding =
+          Styles.getControlConfig baseStyles
+              |> Styles.setControlBorderColor (Css.hex "#FFFFFF")
+              |> Styles.setControlBorderColorFocus (Css.hex "#0168B3")
 
-        selectBranding : Styles.Config
-        selectBranding =
-          baseStyles
-              |> Styles.setControlStyles controlBranding
+      selectBranding : Styles.Config
+      selectBranding =
+        baseStyles
+            |> Styles.setControlStyles controlBranding
 
-        yourView model =
-            Html.map SelectMsg <|
-                view
-                    (single Nothing |> setStyles selectBranding)
-                    (selectIdentifier "1234")
+      yourView model =
+          Html.map SelectMsg <|
+              view
+                  (single Nothing |> setStyles selectBranding)
 
 -}
 setStyles : Styles.Config -> Config item -> Config item
@@ -550,11 +553,10 @@ setStyles sc (Config config) =
 
 {-| Renders an input that let's you input text to search for menu items.
 
-        yourView model =
-            Html.map SelectMsg <|
-                view
-                    (single Nothing |> searchable True)
-                    (selectIdentifier "1234")
+      yourView model =
+          Html.map SelectMsg <|
+              view
+                  (single Nothing |> searchable True)
 
 NOTE: This doesn't affect the [Native single select](#native-single-select)
 variant.
@@ -567,11 +569,10 @@ searchable pred (Config config) =
 
 {-| The text that will appear as an input placeholder.
 
-        yourView model =
-            Html.map SelectMsg <|
-                view
-                    (single Nothing |> placeholder "some placeholder")
-                    (selectIdentifier "1234")
+      yourView model =
+          Html.map SelectMsg <|
+              view
+                  (single Nothing |> placeholder "some placeholder")
 
 -}
 placeholder : String -> Config item -> Config item
@@ -579,18 +580,21 @@ placeholder plc (Config config) =
     Config { config | placeholder = plc }
 
 
-{-|
+{-| The select state.
 
-        model : Model
-        model =
-            { selectState = initState }
+This is usually persisted in your model.
 
-        yourView : Model
-        yourView model =
-            Html.map SelectMsg <|
-                view
-                    (single Nothing |> state model.selectState)
-                    (selectIdentifier "1234")
+      model : Model
+      model =
+          { selectState = initState }
+
+      yourView : Model
+      yourView model =
+          Html.map SelectMsg <|
+              view
+                  (single Nothing
+                      |> state model.selectState
+                  )
 
 -}
 state : State -> Config item -> Config item
@@ -611,7 +615,6 @@ visually removed from the menu list.
       yourView =
           view
               (Single Nothing |> menuItems items)
-              (selectIdentifier "1234")
 
 -}
 menuItems : List (MenuItem item) -> Config item -> Config item
@@ -635,7 +638,6 @@ To handle a cleared item refer to the [ClearedSingleSelect](#Action ) action.
                         |> clearable True
                         |> menuItems items
                     )
-                    (selectIdentifier "SingleSelectExample")
 
 -}
 clearable : Bool -> Config item -> Config item
@@ -649,7 +651,6 @@ clearable clear (Config config) =
             Html.map SelectMsg <|
                 view
                     (single Nothing |> disabled True)
-                    (selectIdentifier "SingleSelectExample")
 
 -}
 disabled : Bool -> Config item -> Config item
@@ -665,7 +666,6 @@ This would be useful if you are loading menu options asynchronously, like from a
             Html.map SelectMsg <|
                 view
                     (single Nothing |> loading True)
-                    (selectIdentifier "SingleSelectExample")
 
 -}
 loading : Bool -> Config item -> Config item
@@ -679,7 +679,6 @@ loading predicate (Config config) =
             Html.map SelectMsg <|
                 view
                     (single Nothing |> loadingMessage "Fetching items...")
-                    (selectIdentifier "SingleSelectExample")
 
 -}
 loadingMessage : String -> Config item -> Config item
@@ -698,7 +697,6 @@ It is best practice to render the select with a label.
             , Html.map SelectMsg <|
                 view
                     (single Nothing |> labelledBy "selectLabelId")
-                    (selectIdentifier "SingleSelectExample")
             ]
 
 -}
@@ -707,7 +705,7 @@ labelledBy s (Config config) =
     Config { config | labelledBy = Just s }
 
 
-{-| The ID of element that describes the select.
+{-| The ID of an element that describes the select.
 
     yourView model =
         label
@@ -719,7 +717,6 @@ labelledBy s (Config config) =
                         |> labelledBy "selectLabelId"
                         |> ariaDescribedBy "selectDescriptionId"
                     )
-                    (selectIdentifier "SingleSelectExample")
             , div [ id "selectDescriptionId" ] [ text "This text describes the select" ]
             ]
 
@@ -739,7 +736,10 @@ Read the [Advanced](https://package.elm-lang.org/packages/Confidenceman02/elm-se
 section of the README for a good explanation on why you might like to opt in.
 
         model : Model model =
-            { selectState = initState |> jsOptimize True }
+            { selectState =
+                initState (selectIdentifier "some-unique-id")
+                        |> jsOptimize True
+            }
 
 Install the Javascript package:
 
@@ -776,22 +776,21 @@ jsOptimize pred (State state_) =
     State { state_ | jsOptimize = pred }
 
 
-{-| Opens the menu and sets focus on the Variant input.
+{-| Opens the menu and sets focus on the Variant.
 
-    Handy for programatically setting focus on the `SingleMenu`
-    [Variant](#Variant) as the focusable element exists inside of the menu.
+Handy when using a menu [Variant](#Variant) as dropdown.
 
-        yourUpdate : (model, Cmd msg )
-        yourUpdate msg model =
-            case msg of
-                FocusTheSelect ->
-                  let
-                    ( actions, updatedState, cmds ) =
-                        update focus model.selectState
-                  in
-                  ({ model | selectState = updatedState }, Cmd.map SelectMsg cmds)
+      yourUpdate : (model, Cmd msg )
+      yourUpdate msg model =
+          case msg of
+              FocusTheSelect ->
+                let
+                  ( actions, updatedState, cmds ) =
+                      update focus model.selectState
+                in
+                ({ model | selectState = updatedState }, Cmd.map SelectMsg cmds)
 
-    NOTE: Successfull focus will dispatch the `FocusSet` [Action](#Action)
+NOTE: Successfull focus will dispatch the `FocusSet` [Action](#Action)
 
 -}
 focus : Msg item
@@ -800,6 +799,23 @@ focus =
 
 
 {-| Check to see that the variant has focus.
+
+This will return true if any focusable element inside the control has focus
+i.e. If the clear button is visible and has focus.
+
+      yourUpdate : (State, Cmd msg )
+      yourUpdate msg state =
+          case msg of
+              SelectMsg msg ->
+                  let
+                    ( actions, updatedState, cmds ) =
+                        update msg state
+                  in
+                  if isFocused updatedState then
+                    (updatedState, makeSomeRequest)
+                  else
+                    (updatedState, Cmd.none)
+
 -}
 isFocused : State -> Bool
 isFocused (State state_) =
@@ -807,6 +823,21 @@ isFocused (State state_) =
 
 
 {-| Check that the menu is open and visible.
+
+      yourUpdate : (State, Cmd msg )
+      yourUpdate msg state =
+          case msg of
+              SelectMsg msg ->
+                let
+                  ( actions, updatedState, cmds ) =
+                      update msg state
+                in
+                if isFocused updatedState && isMenuOpen updatedState then
+                  (updatedState, makeSomeRequest)
+
+                else
+                  (updatedState, Cmd.none)
+
 -}
 isMenuOpen : State -> Bool
 isMenuOpen (State state_) =
@@ -852,7 +883,6 @@ type NativeVariant item
           Html.map SelectMsg <|
               view
                   (single Nothing |> menuItems countries)
-                  (selectIdentifier "1234")
 
 -}
 single : Maybe (MenuItem item) -> Config item
@@ -861,8 +891,6 @@ single maybeSelectedItem =
 
 
 {-| Menu only single select.
-
-This could be used as a dropdown menu.
 
       countries : List (MenuItem Country)
       countries =
@@ -878,15 +906,50 @@ This could be used as a dropdown menu.
               view
                 (singleMenu Nothing |> menuItems countries)
 
+NOTE: By default the menu will not render until it is focused and interacted with.
+This is for accessibility reasons.
 
-      NOTE: By default the menu will not render until it is focused and interacted with.
-      This is for accessibility reasons. You can use [focus](#focus) to
-      open and focus the menu.
+You can use [focus](#focus) to open and focus the menu if you are
+using this variant as a dropdown.
 
 -}
 singleMenu : Maybe (MenuItem item) -> Config item
 singleMenu mi =
     Config { defaults | variant = CustomVariant (SingleMenu mi) }
+
+
+{-| Menu only select.
+
+Unlike a [singleMenu](#singleMenu) this variant does not
+accept or display options as selected.
+
+Useful when you want to know what someone has selected like
+a list of settings or options.
+
+      actions : List (MenuItem Actions)
+      actions =
+          [ basicMenuItem
+              { item = Update, label = "Update" }
+          , basicMenuitem
+              { item = Delete, label = "Delete"
+            -- other actions
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                (menu |> menuItems actions)
+
+NOTE: By default the menu will not render until it is focused and interacted with.
+This is for accessibility reasons.
+
+You can use [focus](#focus) to open and focus the menu if you are
+using this variant as a dropdown.
+
+-}
+menu : Config item
+menu =
+    Config { defaults | variant = CustomVariant (SingleMenu Nothing) }
 
 
 {-| Select a single item with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
@@ -914,8 +977,7 @@ devices.
   - The only [Action](#Action) event that will be fired from the native single select is
     the `Select` [Action](#Action). The other actions are not currently supported.
 
-  - Some [Config](#Config) values will not currently take effect when using the single native variant
-    i.e. [loading](#loading), [placeholder](#placeholder), [clearable](#clearable), [labelledBy](#labelledBy), [disabled](#disabled)
+  - Some [Config](#Config) values will not take effect when using the single native variant
 
 -}
 singleNative : Maybe (MenuItem item) -> Config item
@@ -933,7 +995,6 @@ Selected items will render as tags and be visually removed from the menu list.
                 (multi model.selectedCountries
                     |> menuItems model.countries
                 )
-                (selectIdentifier "1234")
 
 -}
 multi : List (MenuItem item) -> Config item
@@ -946,11 +1007,9 @@ multi selectedItems =
 NOTE: It is important that the ID's of all selects that exist on
 a page remain unique.
 
-    yourView model =
-        Html.map SelectMsg <|
-            view
-                (single Nothing)
-                (selectIdentifier "someUniqueId")
+    init : State
+    init =
+        initState (selectIdentifier "someUniqueId")
 
 -}
 selectIdentifier : String -> SelectId
@@ -964,10 +1023,10 @@ selectIdentifier id_ =
 
 {-| Add a branch in your update to handle the view Msg's.
 
-        yourUpdate msg model =
-            case msg of
-                SelectMsg selectMsg ->
-                    update selectMsg model.selectState
+      yourUpdate msg model =
+          case msg of
+              SelectMsg selectMsg ->
+                  update selectMsg model.selectState
 
 -}
 update : Msg item -> State -> ( Maybe (Action item), State, Cmd (Msg item) )
@@ -1455,9 +1514,9 @@ update msg ((State state_) as wrappedState) =
 
 {-| Render the select
 
-        yourView model =
-            Html.map SelectMsg <|
-                view (single Nothing)
+      yourView model =
+          Html.map SelectMsg <|
+              view (single Nothing)
 
 -}
 view : Config item -> Html (Msg item)

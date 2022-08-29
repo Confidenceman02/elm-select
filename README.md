@@ -13,6 +13,10 @@ Select things in style!
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/NativeSingle.png)
 
+**Menu select**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/SingleMenu.png)
+
 **Themeable**
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
@@ -126,6 +130,12 @@ update msg model =
                        
                         Just (InputChange value) -> 
                             -- handle InputChange
+
+                        Just (MenuInputCleared) ->
+                            -- handle menu input cleared
+
+                        Just (FocusSet) ->
+                            -- handle focus set
                         
                         Nothing ->
                             model
