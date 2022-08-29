@@ -1,19 +1,20 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, MenuConfig, MenuItemConfig, default
+    ( Config, ControlConfig, MenuConfig, MenuControlConfig, MenuItemConfig, default
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
-    , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
+    , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected, setMenuItemInlinePadding
     , setMenuItemColorHoverNotSelected
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
-    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl
+    , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl, getMenuControlBackgroundColor
+    , getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
+    , getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColorNotSelected
     , dracula
-    , BaseControlConfiguration
     )
 
 {-| Add custom styling to the Select control, menu and menu item.
@@ -30,7 +31,7 @@ This means when you are setting styles to the [MenuConfig](#MenuConfig) you can 
 NOTE: The [native](/packages/Confidenceman02/elm-select/latest/Select#singleNative) Select variant
 only respects some of the styles.
 
-@docs Config, ControlConfig, MenuConfig, MenuItemConfig, default
+@docs Config, ControlConfig, MenuConfig, MenuControlConfig, MenuItemConfig, default
 
 
 # Setters
@@ -47,7 +48,7 @@ Set styles
 
 # Menu
 
-@docs setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset
+@docs setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
 
 
 # Menu item
@@ -70,7 +71,9 @@ Get styles
 
 # Menu
 
-@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl
+@docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControl, getMenuControlBackgroundColor
+@docs getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
+@docs getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
 
 
 # Menu item
@@ -109,6 +112,10 @@ type MenuItemConfig
     = MenuItemConfig MenuItemConfiguration
 
 
+type MenuControlConfig
+    = MenuControlConfig BaseControlConfiguration
+
+
 type alias MenuItemConfiguration =
     { backgroundColorClicked : Css.Color
     , backgroundColorSelected : Css.Color
@@ -129,7 +136,7 @@ type alias MenuConfiguration =
     , boxShadowColor : Css.Color
     , boxShadowHOffset : Float
     , boxShadowVOffset : Float
-    , control : BaseControlConfiguration
+    , control : MenuControlConfig
     }
 
 
@@ -193,20 +200,21 @@ defaultsMenu =
     , boxShadowHOffset = 0
     , boxShadowVOffset = 0
     , control =
-        { backgroundColor = Css.hex "#FFFFFF"
-        , backgroundColorHover = Css.hex "#F0F1F4"
-        , borderColor = Css.hex "#898BA9"
-        , borderColorFocus = Css.hex "#0168b3"
-        , borderColorHover = Css.hex "#4B4D68"
-        , borderRadius = 7
-        , clearIndicatorColor = Css.rgb 102 102 102
-        , clearIndicatorColorHover = Css.rgb 51 51 51
-        , color = Css.hex "#000000"
-        , disabledOpacity = 0.3
-        , loadingIndicatorColor = Css.rgb 102 102 102
-        , minHeight = 35
-        , placeholderOpacity = 0.5
-        }
+        MenuControlConfig
+            { backgroundColor = Css.hex "#FFFFFF"
+            , backgroundColorHover = Css.hex "#F0F1F4"
+            , borderColor = Css.hex "#898BA9"
+            , borderColorFocus = Css.hex "#0168b3"
+            , borderColorHover = Css.hex "#4B4D68"
+            , borderRadius = 7
+            , clearIndicatorColor = Css.rgb 102 102 102
+            , clearIndicatorColorHover = Css.rgb 51 51 51
+            , color = Css.hex "#000000"
+            , disabledOpacity = 0.3
+            , loadingIndicatorColor = Css.rgb 102 102 102
+            , minHeight = 35
+            , placeholderOpacity = 0.5
+            }
     }
 
 
@@ -686,9 +694,140 @@ getMenuBoxShadowVOffset (MenuConfig config) =
     config.boxShadowVOffset
 
 
-getMenuControl : MenuConfig -> BaseControlConfiguration
+{-| -}
+getMenuControl : MenuConfig -> MenuControlConfig
 getMenuControl (MenuConfig config) =
     config.control
+
+
+{-| -}
+getMenuControlBackgroundColor : MenuConfig -> Css.Color
+getMenuControlBackgroundColor (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.backgroundColor
+
+
+{-| -}
+getMenuControlBackgroundColorHover : MenuConfig -> Css.Color
+getMenuControlBackgroundColorHover (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.backgroundColorHover
+
+
+{-| -}
+getMenuControlBorderColor : MenuConfig -> Css.Color
+getMenuControlBorderColor (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.borderColor
+
+
+{-| -}
+getMenuControlBorderColorFocus : MenuConfig -> Css.Color
+getMenuControlBorderColorFocus (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.borderColorFocus
+
+
+{-| -}
+getMenuControlBorderColorHover : MenuConfig -> Css.Color
+getMenuControlBorderColorHover (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.borderColorHover
+
+
+{-| -}
+getMenuControlBorderRadius : MenuConfig -> Float
+getMenuControlBorderRadius (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.borderRadius
+
+
+{-| -}
+getMenuControlClearIndicatorColor : MenuConfig -> Css.Color
+getMenuControlClearIndicatorColor (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.clearIndicatorColor
+
+
+{-| -}
+getMenuControlClearIndicatorColorHover : MenuConfig -> Css.Color
+getMenuControlClearIndicatorColorHover (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.clearIndicatorColorHover
+
+
+{-| -}
+getMenuControlColor : MenuConfig -> Css.Color
+getMenuControlColor (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.color
+
+
+{-| -}
+getMenuControlDisabledOpacity : MenuConfig -> Float
+getMenuControlDisabledOpacity (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.disabledOpacity
+
+
+{-| -}
+getMenuControlLoadingIndicatorColor : MenuConfig -> Css.Color
+getMenuControlLoadingIndicatorColor (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.loadingIndicatorColor
+
+
+{-| -}
+getMenuControlMinHeight : MenuConfig -> Float
+getMenuControlMinHeight (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.minHeight
+
+
+{-| -}
+getMenuControlPlaceholderOpacity : MenuConfig -> Float
+getMenuControlPlaceholderOpacity (MenuConfig config) =
+    let
+        (MenuControlConfig mc) =
+            config.control
+    in
+    mc.placeholderOpacity
 
 
 
