@@ -1451,7 +1451,7 @@ update msg ((State state_) as wrappedState) =
 
 
 
--- TODO configurable menu variant styles
+-- TODO render divider between control and items
 
 
 view : Config item -> Html (Msg item)
@@ -1544,7 +1544,7 @@ view (Config config) =
                                     (Styles.getMenuConfig config.styles)
                                     singleVariant
                                 )
-                                [ viewSearchIndicator
+                                [ viewSearchIndicator (Styles.getMenuControlSearchIndicatorColor menuStyles)
                                 , viewInputWrapper config.disabled
                                     [ Internal.viewIf (not config.disabled)
                                         (lazy viewSelectInput
@@ -1865,15 +1865,15 @@ viewLoadingSpinner data =
         ]
 
 
-viewSearchIndicator : Html (Msg item)
-viewSearchIndicator =
-    -- TODO set color
+viewSearchIndicator : Css.Color -> Html (Msg item)
+viewSearchIndicator color =
     span
         [ StyledAttribs.css
             [ Css.displayFlex
             , Css.alignItems Css.center
             , Css.property "margin-inline-start" (Css.rem 0.5).value
             , Css.height (Css.px 16)
+            , Css.color color
             ]
         ]
         [ SearchIcon.view ]
