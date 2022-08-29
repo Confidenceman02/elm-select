@@ -100,7 +100,7 @@ type Msg item
     | UnsearchableSelectContainerClicked
     | ToggleMenuAtKey
     | OnInputFocused (Result Dom.Error ())
-    | OnInputBlurred
+    | OnInputBlurred (Variant item)
     | OnMenuClearableFocus (Result Dom.Error ())
     | OnMenuInputTabbed Bool
     | OnMenuClearableShiftTabbed Bool
@@ -1145,7 +1145,7 @@ update msg ((State state_) as wrappedState) =
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
 
-        OnInputBlurred ->
+        OnInputBlurred variant ->
             let
                 resolveAction =
                     case state_.inputValue of
@@ -1164,7 +1164,19 @@ update msg ((State state_) as wrappedState) =
                 ( updatedState, updatedCmds, action ) =
                     case state_.initialMousedown of
                         Internal.ContainerMousedown ->
-                            ( { state_ | inputValue = Nothing }, Cmd.none, resolveAction )
+                            case variant of
+                                CustomVariant (SingleMenu _) ->
+                                    ( { stateWithClosedMenu
+                                        | initialMousedown = Internal.NothingMousedown
+                                        , controlUiFocused = Nothing
+                                        , inputValue = Nothing
+                                      }
+                                    , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
+                                    , resolveAction
+                                    )
+
+                                _ ->
+                                    ( { state_ | inputValue = Nothing }, Cmd.none, resolveAction )
 
                         Internal.MultiItemMousedown _ ->
                             ( state_, Cmd.none, Nothing )
@@ -2067,7 +2079,7 @@ viewNative data =
                  , StyledAttribs.name "SomeSelect"
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle data.menuItems hasCurrentSelection)
                  , onFocus (InputReceivedFocused (Native data.variant))
-                 , onBlur OnInputBlurred
+                 , onBlur (OnInputBlurred (Native data.variant))
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
@@ -2519,7 +2531,7 @@ viewSelectInput data =
     SelectInput.view
         (SelectInput.default
             |> SelectInput.onInput InputChanged
-            |> SelectInput.onBlurMsg OnInputBlurred
+            |> SelectInput.onBlurMsg (OnInputBlurred (CustomVariant data.variant))
             |> SelectInput.onFocusMsg
                 (InputReceivedFocused
                     (CustomVariant data.variant)
@@ -2615,7 +2627,7 @@ viewDummyInput data =
          , attribute "data-test-id" "dummyInputSelect"
          , id data.id
          , onFocus (InputReceivedFocused (CustomVariant data.variant))
-         , onBlur OnInputBlurred
+         , onBlur (OnInputBlurred (CustomVariant data.variant))
          , preventDefaultOn "keydown" <|
             Decode.map
                 (\msg -> ( msg, True ))
