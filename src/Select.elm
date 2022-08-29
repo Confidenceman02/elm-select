@@ -1578,7 +1578,7 @@ view (Config config) =
                                     , viewLoadingSpinner
                                         (ViewLoadingSpinnerData config.isLoading
                                             config.searchable
-                                            (Styles.getMenuControl menuStyles).loadingIndicatorColor
+                                            (Styles.getMenuControlLoadingIndicatorColor menuStyles)
                                         )
                                     ]
                                 ]
@@ -1905,15 +1905,15 @@ viewClearIndicator data =
         ctrlStyles =
             Styles.getControlConfig data.styles
 
-        menuControlStyles =
+        menuStyles =
             Styles.getMenuConfig data.styles
 
         resolveClearIndicatorData =
             case data.variant of
                 SingleMenu _ ->
                     ClearIndicatorData data.disabled
-                        (Styles.getMenuControl menuControlStyles).clearIndicatorColor
-                        (Styles.getMenuControl menuControlStyles).clearIndicatorColorHover
+                        (Styles.getMenuControlClearIndicatorColor menuStyles)
+                        (Styles.getMenuControlClearIndicatorColorHover menuStyles)
                         data.variant
                         state_.selectId
 
@@ -1956,13 +1956,10 @@ viewControlWrapper data =
         (State state_) =
             data.state
 
-        menuControlStyles =
-            Styles.getMenuControl data.menuStyles
-
         resolveControlStyles =
             case data.variant of
                 SingleMenu _ ->
-                    controlBaseStyles menuControlStyles state_ data.disabled
+                    menuControlStyles data.menuStyles state_ data.disabled
 
                 _ ->
                     controlStyles data.controlStyles state_ data.disabled
@@ -3406,35 +3403,35 @@ listBoxBorder =
     6
 
 
-controlBaseStyles : Styles.BaseControlConfiguration -> SelectState -> Bool -> List Css.Style
-controlBaseStyles styles state_ dsb =
+menuControlStyles : Styles.MenuConfig -> SelectState -> Bool -> List Css.Style
+menuControlStyles styles state_ dsb =
     let
         controlFocusedStyles =
             case state_.controlUiFocused of
                 Just _ ->
-                    [ controlBorderFocused (ControlBorderFocusedData styles.borderColorFocus) ]
+                    [ controlBorderFocused (ControlBorderFocusedData (Styles.getMenuControlBorderColorFocus styles)) ]
 
                 _ ->
                     []
     in
     [ Css.alignItems Css.center
-    , Css.backgroundColor styles.backgroundColor
-    , Css.color styles.color
+    , Css.backgroundColor (Styles.getMenuControlBackgroundColor styles)
+    , Css.color (Styles.getMenuControlColor styles)
     , Css.cursor Css.default
     , Css.displayFlex
     , Css.flexWrap Css.wrap
     , Css.justifyContent Css.spaceBetween
-    , Css.minHeight (Css.px styles.minHeight)
+    , Css.minHeight (Css.px (Styles.getMenuControlMinHeight styles))
     , Css.position Css.relative
     , Css.boxSizing Css.borderBox
-    , controlBorder (ControlBorderData styles.borderColor)
-    , controlRadius (ControlRadiusData styles.borderRadius)
+    , controlBorder (ControlBorderData (Styles.getMenuControlBorderColor styles))
+    , controlRadius (ControlRadiusData (Styles.getMenuControlBorderRadius styles))
     , Css.outline Css.zero
     , if dsb then
-        controlDisabled (ControlDisabledData styles.disabledOpacity)
+        controlDisabled (ControlDisabledData (Styles.getMenuControlDisabledOpacity styles))
 
       else
-        controlHover (ControlHoverData styles.backgroundColorHover styles.borderColor)
+        controlHover (ControlHoverData (Styles.getMenuControlBackgroundColor styles) (Styles.getMenuControlBorderColor styles))
     ]
         ++ controlFocusedStyles
 
