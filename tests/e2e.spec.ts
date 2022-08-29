@@ -57,6 +57,118 @@ describe("SingleMenu", () => {
 
     expect(menuListVisble).toBeTruthy();
   });
+
+  it("closes the menu on Tab keydown", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("does not close the menu when tab focusing to clear button", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("does not close the menu when tab focusing to clear button then back to input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    await page.keyboard.press("Shift+Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("closes the menu when tabing past clear button", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("clears the input when clear button is pressed", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.click("[data-test-id=clear]");
+    const inputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(inputValue).toEqual("");
+  });
+
+  it("does not close the menu when clear button is clicked", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.click("[data-test-id=clear]");
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("renders the clear button when there is input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    const clearButtonVisible = await page.isVisible("[data-test-id=clear]");
+
+    expect(clearButtonVisible).toBeTruthy;
+  });
 });
 
 describe("CustomMenuItems", () => {
