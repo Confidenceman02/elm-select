@@ -13,6 +13,7 @@ module Select.Styles exposing
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
     , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor
+    , getMenuDividerColor
     , getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
     , getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity, getMenuControlSearchIndicatorColor
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
@@ -78,6 +79,7 @@ Get styles
 # Menu
 
 @docs getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBoxShadowColor, getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor
+@docs getMenuDividerColor
 @docs getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
 @docs getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity, getMenuControlSearchIndicatorColor
 
@@ -142,6 +144,7 @@ type alias MenuConfiguration =
     , boxShadowColor : Css.Color
     , boxShadowHOffset : Float
     , boxShadowVOffset : Float
+    , dividerColor : Css.Color
     , control : MenuControlConfig BaseControlConfiguration
     }
 
@@ -209,6 +212,7 @@ defaultsMenu =
     , boxShadowColor = Css.rgba 0 0 0 0.19
     , boxShadowHOffset = 0
     , boxShadowVOffset = 0
+    , dividerColor = Css.rgba 0 0 0 0.1
     , control =
         MenuControlConfig
             { backgroundColor = Css.hex "#FFFFFF"
@@ -913,6 +917,12 @@ getMenuBoxShadowHOffset (MenuConfig config) =
 getMenuBoxShadowVOffset : MenuConfig -> Float
 getMenuBoxShadowVOffset (MenuConfig config) =
     config.boxShadowVOffset
+
+
+{-| -}
+getMenuDividerColor : MenuConfig -> Css.Color
+getMenuDividerColor (MenuConfig config) =
+    config.dividerColor
 
 
 {-| -}

@@ -22,7 +22,7 @@ module Select.SelectInput exposing
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
 import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaDescribedby, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
-import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Select.Events as Events

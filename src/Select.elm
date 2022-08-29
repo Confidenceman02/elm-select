@@ -1448,12 +1448,6 @@ update msg ((State state_) as wrappedState) =
                 view (single Nothing)
 
 -}
-
-
-
--- TODO render divider between control and items
-
-
 view : Config item -> Html (Msg item)
 view (Config config) =
     let
@@ -1583,6 +1577,17 @@ view (Config config) =
                                     ]
                                 ]
                             )
+
+                        -- , ( "divider"
+                        --   , div
+                        --         [ StyledAttribs.css
+                        --             [ Css.height (Css.px 0)
+                        --             , Css.marginTop (Css.rem 1.5)
+                        --             , Css.border3 (Css.px 1) Css.solid (Styles.getMenuDividerColor menuStyles)
+                        --             ]
+                        --         ]
+                        --         []
+                        --   )
                         , ( "menu-list"
                           , viewMenuItemsWrapper
                                 (ViewMenuItemsWrapperData
@@ -1959,7 +1964,14 @@ viewControlWrapper data =
         resolveControlStyles =
             case data.variant of
                 SingleMenu _ ->
-                    menuControlStyles data.menuStyles state_ data.disabled
+                    [ Css.margin4
+                        (Css.px 6)
+                        (Css.px 6)
+                        (Css.px 0)
+                        (Css.px 6)
+                    , Css.batch
+                        (menuControlStyles data.menuStyles state_ data.disabled)
+                    ]
 
                 _ ->
                     controlStyles data.controlStyles state_ data.disabled
@@ -2059,16 +2071,16 @@ viewNative data =
                  , StyledAttribs.css
                     [ Css.width (Css.pct 100)
                     , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
-                    , controlRadius (ControlRadiusData (Styles.getControlBorderRadius data.controlStyles))
+                    , controlRadius (Styles.getControlBorderRadius data.controlStyles)
                     , Css.backgroundColor (Styles.getControlBackgroundColor data.controlStyles)
-                    , controlBorder (ControlBorderData (Styles.getControlBorderColor data.controlStyles))
+                    , controlBorder (Styles.getControlBorderColor data.controlStyles)
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
                     , Css.color (Styles.getControlColor data.controlStyles)
                     , Css.fontSize (Css.px 16)
                     , Css.focus
-                        [ controlBorderFocused (ControlBorderFocusedData (Styles.getControlBorderColorFocus data.controlStyles)), Css.outline Css.none ]
+                        [ controlBorderFocused (Styles.getControlBorderColorFocus data.controlStyles), Css.outline Css.none ]
                     , controlHover
                         (ControlHoverData
                             (Styles.getControlBackgroundColorHover data.controlStyles)
@@ -2339,7 +2351,7 @@ viewMenuItem data content =
 
 
 type alias ViewPlaceholderData =
-    { placeholderStyles : PlaceholderStylesData
+    { placeholderOpac : Float
     , placeholder : String
     }
 
@@ -2348,7 +2360,7 @@ viewPlaceholder : ViewPlaceholderData -> Html msg
 viewPlaceholder data =
     div
         [ StyledAttribs.css
-            (placeholderStyles data.placeholderStyles)
+            (placeholderStyles data.placeholderOpac)
         ]
         [ text data.placeholder ]
 
@@ -2525,9 +2537,8 @@ viewSelectInput data =
                         |> spaceKeydownDecoder
                         |> tabKeydownDecoder
                       )
-                        ++ ([ Events.isEscape InputEscape
-                            ]
-                                ++ whenArrowEvents
+                        ++ (Events.isEscape InputEscape
+                                :: whenArrowEvents
                            )
                     , preventDefault
                     )
@@ -2587,14 +2598,6 @@ viewDummyInput data =
 
                 _ ->
                     []
-
-        clearButtonVisible =
-            showClearButton
-                (ShowClearButtonData data.variant
-                    data.disabled
-                    data.clearable
-                    data.state
-                )
     in
     input
         ([ style "label" "dummyinput"
@@ -2743,16 +2746,6 @@ canBeSpaceToggled menuOpen inputValue =
     not menuOpen && isEmptyInputValue inputValue
 
 
-isNativeVariant : Variant item -> Bool
-isNativeVariant variant =
-    case variant of
-        Native _ ->
-            True
-
-        _ ->
-            False
-
-
 
 -- CALC
 
@@ -2781,9 +2774,7 @@ buildPlaceholder data =
             Multi [] ->
                 viewPlaceholder
                     (ViewPlaceholderData
-                        (PlaceholderStylesData
-                            (Styles.getControlPlaceholderOpacity data.controlStyles)
-                        )
+                        (Styles.getControlPlaceholderOpacity data.controlStyles)
                         data.placeholder
                     )
 
@@ -2797,18 +2788,14 @@ buildPlaceholder data =
             Single Nothing ->
                 viewPlaceholder
                     (ViewPlaceholderData
-                        (PlaceholderStylesData
-                            (Styles.getControlPlaceholderOpacity data.controlStyles)
-                        )
+                        (Styles.getControlPlaceholderOpacity data.controlStyles)
                         data.placeholder
                     )
 
             SingleMenu _ ->
                 viewPlaceholder
                     (ViewPlaceholderData
-                        (PlaceholderStylesData
-                            (Styles.getControlPlaceholderOpacity data.controlStyles)
-                        )
+                        (Styles.getControlPlaceholderOpacity data.controlStyles)
                         data.placeholder
                     )
 
@@ -3136,14 +3123,9 @@ basePlaceholderStyles =
     ]
 
 
-type alias PlaceholderStylesData =
-    { controlPlaceholderOpacity : Float
-    }
-
-
-placeholderStyles : PlaceholderStylesData -> List Css.Style
-placeholderStyles styles =
-    Css.opacity (Css.num styles.controlPlaceholderOpacity) :: basePlaceholderStyles
+placeholderStyles : Float -> List Css.Style
+placeholderStyles opac =
+    Css.opacity (Css.num opac) :: basePlaceholderStyles
 
 
 
@@ -3280,7 +3262,6 @@ menuWrapperStyles menuStyles =
     , Css.position Css.absolute
     , Css.width (Css.pct 100)
     , Css.boxSizing Css.borderBox
-    , Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
     , Css.borderRadius (Css.px (Styles.getMenuBorderRadius menuStyles))
     , Css.boxShadow4
         (Css.px <| Styles.getMenuBoxShadowHOffset menuStyles)
@@ -3292,13 +3273,20 @@ menuWrapperStyles menuStyles =
     ]
 
 
+menuWrapperBorderStyle : List Css.Style
+menuWrapperBorderStyle =
+    [ Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
+    ]
+
+
 menuListStyles : List Css.Style
 menuListStyles =
-    [ Css.maxHeight (Css.px 215)
-    , Css.overflowY Css.auto
-    , Css.paddingLeft (Css.px 0)
-    , Css.marginBottom (Css.px 8)
-    ]
+    menuWrapperBorderStyle
+        ++ [ Css.maxHeight (Css.px 215)
+           , Css.overflowY Css.auto
+           , Css.paddingLeft (Css.px 0)
+           , Css.marginBottom (Css.px 8)
+           ]
 
 
 type alias ViewMenuItemData item =
@@ -3346,7 +3334,7 @@ menuItemContainerStyles data =
 
         allStyles =
             if data.disabled then
-                [ controlDisabled (ControlDisabledData 0.3) ]
+                [ controlDisabled 0.3 ]
 
             else
                 withTargetStyles
@@ -3409,7 +3397,7 @@ menuControlStyles styles state_ dsb =
         controlFocusedStyles =
             case state_.controlUiFocused of
                 Just _ ->
-                    [ controlBorderFocused (ControlBorderFocusedData (Styles.getMenuControlBorderColorFocus styles)) ]
+                    [ controlBorderFocused (Styles.getMenuControlBorderColorFocus styles) ]
 
                 _ ->
                     []
@@ -3424,11 +3412,11 @@ menuControlStyles styles state_ dsb =
     , Css.minHeight (Css.px (Styles.getMenuControlMinHeight styles))
     , Css.position Css.relative
     , Css.boxSizing Css.borderBox
-    , controlBorder (ControlBorderData (Styles.getMenuControlBorderColor styles))
-    , controlRadius (ControlRadiusData (Styles.getMenuControlBorderRadius styles))
+    , controlBorder (Styles.getMenuControlBorderColor styles)
+    , controlRadius (Styles.getMenuControlBorderRadius styles)
     , Css.outline Css.zero
     , if dsb then
-        controlDisabled (ControlDisabledData (Styles.getMenuControlDisabledOpacity styles))
+        controlDisabled (Styles.getMenuControlDisabledOpacity styles)
 
       else
         controlHover (ControlHoverData (Styles.getMenuControlBackgroundColor styles) (Styles.getMenuControlBorderColor styles))
@@ -3442,7 +3430,7 @@ controlStyles styles state_ dsb =
         controlFocusedStyles =
             case state_.controlUiFocused of
                 Just Internal.ControlInput ->
-                    [ controlBorderFocused (ControlBorderFocusedData (Styles.getControlBorderColorFocus styles)) ]
+                    [ controlBorderFocused (Styles.getControlBorderColorFocus styles) ]
 
                 _ ->
                     []
@@ -3457,11 +3445,11 @@ controlStyles styles state_ dsb =
     , Css.minHeight (Css.px (Styles.getControlMinHeight styles))
     , Css.position Css.relative
     , Css.boxSizing Css.borderBox
-    , controlBorder (ControlBorderData (Styles.getControlBorderColor styles))
-    , controlRadius (ControlRadiusData (Styles.getControlBorderRadius styles))
+    , controlBorder (Styles.getControlBorderColor styles)
+    , controlRadius (Styles.getControlBorderRadius styles)
     , Css.outline Css.zero
     , if dsb then
-        controlDisabled (ControlDisabledData (Styles.getControlDisabledOpacity styles))
+        controlDisabled (Styles.getControlDisabledOpacity styles)
 
       else
         controlHover
@@ -3473,42 +3461,24 @@ controlStyles styles state_ dsb =
         ++ controlFocusedStyles
 
 
-type alias ControlRadiusData =
-    { borderRadius : Float
-    }
+controlRadius : Float -> Css.Style
+controlRadius rad =
+    Css.borderRadius <| Css.px rad
 
 
-controlRadius : ControlRadiusData -> Css.Style
-controlRadius styles =
-    Css.borderRadius <| Css.px styles.borderRadius
+controlBorder : Css.Color -> Css.Style
+controlBorder cb =
+    Css.border3 (Css.px 2) Css.solid cb
 
 
-type alias ControlBorderData =
-    { controlBorderColor : Css.Color }
+controlBorderFocused : Css.Color -> Css.Style
+controlBorderFocused bcf =
+    Css.borderColor bcf
 
 
-controlBorder : ControlBorderData -> Css.Style
-controlBorder styles =
-    Css.border3 (Css.px 2) Css.solid styles.controlBorderColor
-
-
-type alias ControlBorderFocusedData =
-    { borderColorFocused : Css.Color
-    }
-
-
-controlBorderFocused : ControlBorderFocusedData -> Css.Style
-controlBorderFocused styles =
-    Css.borderColor styles.borderColorFocused
-
-
-type alias ControlDisabledData =
-    { disabledOpacity : Float }
-
-
-controlDisabled : ControlDisabledData -> Css.Style
-controlDisabled styles =
-    Css.opacity (Css.num styles.disabledOpacity)
+controlDisabled : Float -> Css.Style
+controlDisabled dsbOpac =
+    Css.opacity (Css.num dsbOpac)
 
 
 type alias ControlHoverData =
