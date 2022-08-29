@@ -1507,7 +1507,7 @@ view (Config config) =
                 ]
 
         CustomVariant ((SingleMenu _) as singleVariant) ->
-            -- Compose the SingleMenu variant
+            -- Compose the SingleMenu variant, def can be improved
             Internal.viewIf state_.menuOpen
                 (viewWrapper
                     (ViewWrapperData state_
@@ -3411,7 +3411,7 @@ controlBaseStyles styles state_ dsb =
     let
         controlFocusedStyles =
             case state_.controlUiFocused of
-                Just Internal.ControlInput ->
+                Just _ ->
                     [ controlBorderFocused (ControlBorderFocusedData styles.borderColorFocus) ]
 
                 _ ->
