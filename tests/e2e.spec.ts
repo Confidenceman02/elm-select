@@ -26,20 +26,210 @@ describe("examples", () => {
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
-    const singleMenuVisible = await page.isVisible("text=Single.elm");
+    const singleVisible = await page.isVisible("text=Single.elm");
     const formVisible = await page.isVisible("text=Form.elm");
     const customMenuItemsVisible = await page.isVisible(
       "text=CustomMenuItems.elm"
     );
+    const singleMenuVisible = await page.isVisible("text=SingleMenu.elm");
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
-    expect(singleMenuVisible).toBeTruthy();
+    expect(singleVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
+    expect(singleMenuVisible).toBeTruthy();
+  });
+});
+
+describe("SingleMenu", () => {
+  it("renders the menu on input focus", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const menuListVisble = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisble).toBeTruthy();
+  });
+
+  it("closes the menu when mouse clicking outside of menu", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.waitForTimeout(100);
+    await page.mouse.click(10, 10);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("closes the menu when double clicking on container then clicking outside menu", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.waitForTimeout(100);
+    await page.locator("[data-test-id=selectContainer]").dblclick();
+    await page.waitForTimeout(100);
+    await page.mouse.click(10, 10);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("does not close the open menu when clicking on container", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("does not clear the input value when clicking on container", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    const selectInput = page.locator("[data-test-id=selectInput]");
+    await selectInput.type("pot");
+    await page.waitForTimeout(100);
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForTimeout(100);
+    const inputValue = await selectInput.evaluate((ele: HTMLInputElement) => {
+      return ele.value;
+    });
+
+    expect(inputValue).toEqual("pot");
+  });
+
+  it("closes the menu on Tab keydown", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("does not close the menu when tab focusing to clear button", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("does not close the menu when tab focusing to clear button then back to input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    await page.keyboard.press("Shift+Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("closes the menu when tabing past clear button", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Tab");
+    await page.waitForTimeout(100);
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeFalsy();
+  });
+
+  it("clears the input when clear button is pressed", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.click("[data-test-id=clear]");
+    const inputValue = await page.$eval(
+      "[data-test-id=selectInput]",
+      (el: HTMLInputElement) => el.value
+    );
+
+    expect(inputValue).toEqual("");
+  });
+
+  it("does not close the menu when clear button is clicked", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    await page.waitForTimeout(100);
+    await page.click("[data-test-id=clear]");
+    const menuListVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisible).toBeTruthy();
+  });
+
+  it("renders the clear button when there is input", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.type("[data-test-id=selectInput]", "pot");
+    const clearButtonVisible = await page.isVisible("[data-test-id=clear]");
+
+    expect(clearButtonVisible).toBeTruthy;
   });
 });
 
@@ -100,29 +290,6 @@ describe("Multi", () => {
     });
 
     expect(matches.includes(true)).toBeTruthy();
-  });
-
-  it("removes non filterable items when they have been selected", async () => {
-    const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/MultiFilterable.elm`);
-    await page.click("[data-test-id=selectContainer]");
-    await page.waitForSelector("[data-test-id=listBox]");
-
-    await page.type("[data-test-id=selectInput]", "sdsdsdsdsdsd");
-    await page.waitForSelector("[data-test-id=listBox]");
-    await page.keyboard.press("Enter");
-    await page.click("[data-test-id=selectContainer]");
-    await page.waitForSelector("[data-test-id=listBox]");
-    const rows = page.locator("ul li");
-    const texts = await rows.evaluateAll((list) =>
-      list.map((element) => element.textContent)
-    );
-
-    const matches = texts.map((it) => {
-      return new RegExp("Non Filterable").test(it as string);
-    });
-
-    expect(matches.includes(true)).toBeFalsy();
   });
 });
 
@@ -248,7 +415,7 @@ describe("NativeSingle", () => {
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
 
-    await page.selectOption("select#native-single-select-SingleSelectExample", {
+    await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
     await page.type("[data-test-id=nativeSingleSelect]", "e");
@@ -265,7 +432,7 @@ describe("NativeSingle", () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
-    await page.selectOption("select#native-single-select-SingleSelectExample", {
+    await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
 
@@ -282,12 +449,12 @@ describe("NativeSingle", () => {
     await browser.newContext();
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/NativeSingle.elm`);
-    await page.selectOption("select#native-single-select-SingleSelectExample", {
+    await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
 
     const isSelected: boolean = await page.$eval(
-      "#native-single-select-SingleSelectExample",
+      "#SingleSelectExample__elm-select",
       (el: HTMLSelectElement) => {
         const selectedIndex = el.selectedIndex;
         return el.options[selectedIndex].selected;
@@ -298,7 +465,7 @@ describe("NativeSingle", () => {
   });
 });
 
-describe("Async", () => {
+describe("MultiAsync", () => {
   it("renders a loading message when no items match input", async () => {
     await browser.newContext();
     const page = await browser.newPage();

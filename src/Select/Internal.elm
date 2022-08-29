@@ -1,4 +1,12 @@
-module Select.Internal exposing (BaseMenuItem, Direction(..), calculateNextActiveTarget, shouldQueryNextTargetElement, viewIf)
+module Select.Internal exposing
+    ( BaseMenuItem
+    , Direction(..)
+    , InitialMousedown(..)
+    , UiFocused(..)
+    , calculateNextActiveTarget
+    , shouldQueryNextTargetElement
+    , viewIf
+    )
 
 import Html.Styled as Styled
 
@@ -55,3 +63,15 @@ viewIf condition html =
 
 type alias BaseMenuItem comparable =
     { comparable | filterable : Bool }
+
+
+type UiFocused
+    = ControlInput
+    | Clearable
+
+
+type InitialMousedown
+    = MultiItemMousedown Int
+    | MenuItemMousedown Int
+    | ContainerMousedown
+    | NothingMousedown

@@ -29,7 +29,7 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { input1 =
-            { selectState = initState
+            { selectState = initState (selectIdentifier "SingleSelectExample")
             , items =
                 [ Select.basicMenuItem { item = "Elm", label = "Elm" }
                 , Select.basicMenuItem { item = "Is", label = "Is" }
@@ -39,7 +39,7 @@ init =
             , selectedItem = Nothing
             }
       , input2 =
-            { selectState = initState
+            { selectState = initState (selectIdentifier "MultiSelectExample")
             , items =
                 [ Select.basicMenuItem { item = "Can't", label = "Can't" }
                 , Select.basicMenuItem { item = "Get", label = "Get" }
@@ -144,14 +144,12 @@ view m =
                         |> Select.placeholder "Placeholder"
                         |> Select.searchable False
                     )
-                    (selectIdentifier "SingleSelectExample")
             ]
         , Styled.map SelectInput2Msg <|
             Select.view
-                (Select.multi Select.initMultiConfig input2SelectedItems
+                (Select.multi input2SelectedItems
                     |> Select.state m.input2.selectState
                     |> Select.menuItems m.input2.items
                     |> Select.placeholder "Placeholder"
                 )
-                (selectIdentifier "MultiSelectExample")
         ]

@@ -5,7 +5,6 @@ module Select.SelectInput exposing
     , default
     , defaultWidth
     , disabled
-    , inputId
     , inputSizing
     , onBlurMsg
     , onFocusMsg
@@ -23,7 +22,7 @@ module Select.SelectInput exposing
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
 import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaDescribedby, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
-import Html.Styled.Events exposing (on, onBlur, onFocus, preventDefaultOn)
+import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Select.Events as Events
@@ -46,11 +45,11 @@ type alias Configuration msg =
     { onInput : Maybe (String -> msg)
     , onBlur : Maybe msg
     , onFocus : Maybe msg
-    , onMousedown : Maybe msg
+    , onMousedown : Maybe ( msg, msg -> ( msg, Bool ) )
     , currentValue : Maybe String
     , disabled : Bool
     , minWidth : Int
-    , preventKeydownOn : List (Decode.Decoder msg)
+    , preventKeydownOn : ( List (Decode.Decoder msg), msg -> ( msg, Bool ) )
     , inputSizing : InputSizing
     , dataTestId : String
     , ariaActiveDescendant : Maybe String
@@ -74,7 +73,7 @@ defaults =
     , currentValue = Nothing
     , disabled = False
     , minWidth = defaultWidth
-    , preventKeydownOn = []
+    , preventKeydownOn = ( [], \msg -> ( msg, True ) )
     , inputSizing = Dynamic
     , dataTestId = "selectInput"
     , ariaActiveDescendant = Nothing
@@ -93,11 +92,6 @@ default =
 sizerId : String -> String
 sizerId sid =
     "kaizen-select-input-sizer-target-" ++ sid
-
-
-inputId : String -> String
-inputId iid =
-    "kaizen-select-input-target-" ++ iid
 
 
 
@@ -143,7 +137,7 @@ inputSizing width (Config config) =
     Config { config | inputSizing = width }
 
 
-preventKeydownOn : List (Decode.Decoder msg) -> Config msg -> Config msg
+preventKeydownOn : ( List (Decode.Decoder msg), msg -> ( msg, Bool ) ) -> Config msg -> Config msg
 preventKeydownOn decoders (Config config) =
     Config { config | preventKeydownOn = decoders }
 
@@ -163,7 +157,7 @@ onFocusMsg msg (Config config) =
     Config { config | onFocus = Just msg }
 
 
-onMousedown : msg -> Config msg -> Config msg
+onMousedown : ( msg, msg -> ( msg, Bool ) ) -> Config msg -> Config msg
 onMousedown msg (Config config) =
     Config { config | onMousedown = Just msg }
 
@@ -189,7 +183,7 @@ view (Config config) id_ =
             sizerId id_
 
         resolveInputId =
-            inputId id_
+            id_
 
         buildDynamicSelectInputProps =
             Encode.encode 0 <|
@@ -222,8 +216,9 @@ view (Config config) id_ =
         focus focusMsg =
             onFocus focusMsg
 
-        mousedown mousedownMsg =
-            on "mousedown" <| Decode.succeed mousedownMsg
+        mousedown ( msg, stopProp ) =
+            stopPropagationOn "mousedown" <|
+                Decode.map stopProp (Decode.succeed msg)
 
         inputValue =
             Maybe.withDefault "" config.currentValue
@@ -244,8 +239,8 @@ view (Config config) id_ =
         preventOn =
             preventDefaultOn "keydown" <|
                 Decode.map
-                    (\m -> ( m, True ))
-                    (Decode.oneOf config.preventKeydownOn)
+                    (Tuple.second config.preventKeydownOn)
+                    (Decode.oneOf (Tuple.first config.preventKeydownOn))
 
         withAriaActiveDescendant =
             case config.ariaActiveDescendant of

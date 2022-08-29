@@ -1,4 +1,14 @@
-module Select.Events exposing (isDownArrow, isEnter, isEscape, isSpace, isUpArrow, onInputAt, onInputAtInt)
+module Select.Events exposing
+    ( isDownArrow
+    , isEnter
+    , isEscape
+    , isSpace
+    , isTab
+    , isTabWithShift
+    , isUpArrow
+    , onInputAt
+    , onInputAtInt
+    )
 
 import Html.Styled exposing (Attribute)
 import Html.Styled.Events exposing (keyCode, on)
@@ -144,6 +154,21 @@ isSpace msg =
 isEscape : msg -> Decode.Decoder msg
 isEscape msg =
     keyCode |> Decode.andThen (isCode Escape msg)
+
+
+isTabWithShift : (Bool -> msg) -> Decode.Decoder msg
+isTabWithShift msg =
+    Decode.field "shiftKey" Decode.bool
+        |> Decode.map2
+            (\_ isShift ->
+                msg isShift
+            )
+            (keyCode |> Decode.andThen (isCode Tab (msg True)))
+
+
+isTab : msg -> Decode.Decoder msg
+isTab msg =
+    keyCode |> Decode.andThen (isCode Tab msg)
 
 
 isDownArrow : msg -> Decode.Decoder msg

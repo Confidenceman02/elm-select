@@ -20,7 +20,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectState = initState
+    ( { selectState = initState (selectIdentifier "SingleSelectExample")
       , items =
             [ Select.basicMenuItem { item = "Elm", label = "Elm" }
             , Select.basicMenuItem { item = "Is", label = "Is" }
@@ -92,5 +92,4 @@ view m =
                     |> Select.placeholder "Placeholder"
                     |> Select.clearable True
                 )
-                (selectIdentifier "SingleSelectExample")
         ]
