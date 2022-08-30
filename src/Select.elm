@@ -272,7 +272,6 @@ The `label` is the text representation that will be shown in the menu.
                     |> menuItems toolItems
                     |> state model.selectState
                 )
-                (selectIdentifier "SingleSelectExample")
 
 Combine this with [basicMenuItem](#basicMenuItem) to create a [MenuItem](#MenuItem)
 
@@ -970,7 +969,6 @@ devices.
           Html.map SelectMsg <|
               view
                   (singleNative Nothing |> menuItems countries)
-                  (selectIdentifier "1234")
 
 **Note**
 
