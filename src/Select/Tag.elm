@@ -114,6 +114,7 @@ view (Config config) value =
             , Css.boxSizing Css.borderBox
             , Css.backgroundColor (Styles.getControlMultiTagBackgroundColor config.controlStyles)
             , Css.height (Css.px 30)
+            , Css.lineHeight Css.initial
             ]
         , attribute "data-test-id" config.dataTestId
         ]

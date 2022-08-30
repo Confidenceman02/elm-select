@@ -1776,7 +1776,11 @@ viewCustomControl data =
                     let
                         resolveMultiValueStyles =
                             if 0 < List.length multiSelectedValues then
-                                [ StyledAttribs.css [ Css.marginRight (Css.rem 0.4375) ] ]
+                                [ StyledAttribs.css
+                                    [ Css.marginRight (Css.rem 0.4375)
+                                    , Css.lineHeight (Css.num 1.9)
+                                    ]
+                                ]
 
                             else
                                 []
