@@ -6,3 +6,6 @@ node_modules
 
 # Makefile pseudo target
 /*.INSTALLED
+
+# Elm book
+elm-book/dist-book
