@@ -2195,15 +2195,11 @@ viewWrapper data =
 
                         _ ->
                             case resolveContainerMsg of
-                                -- Preventing default means we only need to close or open the menu
-                                -- without focusing input. Should do for other variants also.
+                                -- We are only preventing default when the input is actually focused
+                                -- to avoid a blur event on the input.
+                                -- Should do for SearchableSelectContainerClicked also.
                                 UnsearchableSelectContainerClicked ->
-                                    case data.state.controlUiFocused of
-                                        Just Internal.ControlInput ->
-                                            True
-
-                                        _ ->
-                                            False
+                                    data.state.controlUiFocused == Just Internal.ControlInput
 
                                 _ ->
                                     False
@@ -2691,11 +2687,19 @@ viewDummyInput data =
 
                 _ ->
                     []
+
+        resolvePosition =
+            case data.variant of
+                SingleMenu _ ->
+                    style "position" "absolute"
+
+                _ ->
+                    style "position" "initial"
     in
     input
         ([ style "label" "dummyinput"
          , style "background" "0"
-         , style "position" "absolute"
+         , resolvePosition
          , style "border" "0"
          , style "font-size" "inherit"
          , style "outline" "0"

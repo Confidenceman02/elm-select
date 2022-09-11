@@ -313,6 +313,27 @@ describe("Form", () => {
   });
 });
 
+describe("Single", () => {
+  it("opens and closes then opens menu", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Single.elm`);
+
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForTimeout(100);
+    const listBoxVisible = await page.isVisible("[data-test-id=listBox]");
+
+    expect(listBoxVisible).toBeFalsy();
+
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForTimeout(100);
+    const listBoxVisibleAgain = await page.isVisible("[data-test-id=listBox]");
+
+    expect(listBoxVisibleAgain).toBeTruthy();
+  });
+});
+
 describe("SingleSearchable", () => {
   // LIST BOX
   it("list box visible after matching input", async () => {
