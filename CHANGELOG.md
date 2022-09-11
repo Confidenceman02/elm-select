@@ -1,3 +1,16 @@
+## [6.0.2] - 2022-09-11
+
+## Added
+- Prevent default on unsearchable container clicks when input is focused.
+This avoids a blur event on the input.
+- Conditionally focus input on unsearchable container click. Will only focus
+when the input is not currently focused. Reduces a DOM event.
+
+## Fixed
+- Placeholder not fully visible in unsearchable single variants.
+- Clicking multiple times on unsearchable single variant container not 
+opening and closing menu correctly.
+
 ## [6.0.1] - 2022-08-30
 
 ## Fixed
@@ -324,6 +337,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[6.0.2]: https://github.com/Confidenceman02/elm-select/compare/6.0.1...6.0.2
 [6.0.1]: https://github.com/Confidenceman02/elm-select/compare/6.0.0...6.0.1
 [6.0.0]: https://github.com/Confidenceman02/elm-select/compare/5.4.0...6.0.0
 [5.4.0]: https://github.com/Confidenceman02/elm-select/compare/5.3.2...5.4.0
