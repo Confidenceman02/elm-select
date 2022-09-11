@@ -1390,22 +1390,30 @@ update msg ((State state_) as wrappedState) =
 
         UnsearchableSelectContainerClicked ->
             let
-                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                ( _, State stateWithOpenMenu, _ ) =
                     update OpenMenu (State state_)
 
-                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                ( _, State stateWithClosedMenu, _ ) =
                     update CloseMenu (State state_)
 
-                ( updatedState, updatedCmd ) =
+                updatedState =
                     if state_.menuOpen then
-                        ( stateWithClosedMenu, cmdWithClosedMenu )
+                        stateWithClosedMenu
 
                     else
-                        ( stateWithOpenMenu, cmdWithOpenMenu )
+                        stateWithOpenMenu
+
+                focusCmd =
+                    case state_.controlUiFocused of
+                        Just Internal.ControlInput ->
+                            Cmd.none
+
+                        _ ->
+                            internalFocus idString OnInputFocused
             in
             ( Nothing
             , State { updatedState | controlUiFocused = Just Internal.ControlInput }
-            , Cmd.batch [ updatedCmd, internalFocus idString OnInputFocused ]
+            , focusCmd
             )
 
         ToggleMenuAtKey ->
@@ -2186,7 +2194,15 @@ viewWrapper data =
                             data.state.controlUiFocused == Just Internal.ControlInput
 
                         _ ->
-                            False
+                            case resolveContainerMsg of
+                                -- We are only preventing default when the input is actually focused
+                                -- to avoid a blur event on the input.
+                                -- Should do for SearchableSelectContainerClicked also.
+                                UnsearchableSelectContainerClicked ->
+                                    data.state.controlUiFocused == Just Internal.ControlInput
+
+                                _ ->
+                                    False
 
                 Internal.ContainerMousedown ->
                     True
@@ -2671,11 +2687,19 @@ viewDummyInput data =
 
                 _ ->
                     []
+
+        resolvePosition =
+            case data.variant of
+                SingleMenu _ ->
+                    style "position" "absolute"
+
+                _ ->
+                    style "position" "initial"
     in
     input
         ([ style "label" "dummyinput"
          , style "background" "0"
-         , style "position" "absolute"
+         , resolvePosition
          , style "border" "0"
          , style "font-size" "inherit"
          , style "outline" "0"
