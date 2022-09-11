@@ -1390,22 +1390,30 @@ update msg ((State state_) as wrappedState) =
 
         UnsearchableSelectContainerClicked ->
             let
-                ( _, State stateWithOpenMenu, cmdWithOpenMenu ) =
+                ( _, State stateWithOpenMenu, _ ) =
                     update OpenMenu (State state_)
 
-                ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
+                ( _, State stateWithClosedMenu, _ ) =
                     update CloseMenu (State state_)
 
-                ( updatedState, updatedCmd ) =
+                updatedState =
                     if state_.menuOpen then
-                        ( stateWithClosedMenu, cmdWithClosedMenu )
+                        stateWithClosedMenu
 
                     else
-                        ( stateWithOpenMenu, cmdWithOpenMenu )
+                        stateWithOpenMenu
+
+                focusCmd =
+                    case state_.controlUiFocused of
+                        Just Internal.ControlInput ->
+                            Cmd.none
+
+                        _ ->
+                            internalFocus idString OnInputFocused
             in
             ( Nothing
             , State { updatedState | controlUiFocused = Just Internal.ControlInput }
-            , Cmd.batch [ updatedCmd, internalFocus idString OnInputFocused ]
+            , focusCmd
             )
 
         ToggleMenuAtKey ->
@@ -2186,7 +2194,19 @@ viewWrapper data =
                             data.state.controlUiFocused == Just Internal.ControlInput
 
                         _ ->
-                            False
+                            case resolveContainerMsg of
+                                -- Preventing default means we only need to close or open the menu
+                                -- without focusing input. Should do for other variants also.
+                                UnsearchableSelectContainerClicked ->
+                                    case data.state.controlUiFocused of
+                                        Just Internal.ControlInput ->
+                                            True
+
+                                        _ ->
+                                            False
+
+                                _ ->
+                                    False
 
                 Internal.ContainerMousedown ->
                     True
