@@ -3356,7 +3356,7 @@ menuWrapperStyles menuStyles =
     , Css.boxSizing Css.borderBox
     , Css.top (Css.pct 100)
     , Css.backgroundColor (Styles.getMenuBackgroundColor menuStyles)
-    , Css.position Css.absolute
+    , Css.position (Styles.getMenuPosition menuStyles)
     , Css.width (Css.pct 100)
     , Css.boxSizing Css.borderBox
     , Css.borderRadius (Css.px (Styles.getMenuBorderRadius menuStyles))
