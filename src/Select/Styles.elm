@@ -606,6 +606,7 @@ setMenuControlSearchIndicatorColor color (MenuConfig config) =
         }
 
 
+{-| -}
 setMenuPosition : Css.Position {} -> MenuConfig -> MenuConfig
 setMenuPosition p (MenuConfig config) =
     MenuConfig { config | position = p }
@@ -1075,6 +1076,7 @@ getMenuControlSearchIndicatorColor (MenuConfig config) =
     mc.searchIndicatorColor
 
 
+{-| -}
 getMenuPosition : MenuConfig -> Css.Position {}
 getMenuPosition (MenuConfig config) =
     config.position
