@@ -1,5 +1,5 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
     , placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single
     , singleMenu, menu
@@ -14,7 +14,7 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
 @docs placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
@@ -224,6 +224,7 @@ type alias Configuration item =
 type alias SelectState =
     { inputValue : Maybe String
     , menuOpen : Bool
+    , keepOpen : Bool
     , initialMousedown : Internal.InitialMousedown
     , controlUiFocused : Maybe Internal.UiFocused
     , activeTargetIndex : Int
@@ -382,6 +383,7 @@ initState id_ =
     State
         { inputValue = Nothing
         , menuOpen = False
+        , keepOpen = False
         , initialMousedown = Internal.NothingMousedown
         , controlUiFocused = Nothing
 
@@ -394,6 +396,10 @@ initState id_ =
         , selectId = id_
         , headlessEvent = Nothing
         }
+
+
+
+-- STATE MODIFIERS
 
 
 defaults : Configuration item
@@ -727,6 +733,17 @@ ariaDescribedBy s (Config config) =
 
 
 -- STATE MODIFIERS
+
+
+{-| Keeps the menu open at all times.
+
+Use this with care as all actions that normally close the menu like
+selections, or escape, or clicking away will not close it.
+
+-}
+keepMenuOpen : Bool -> State -> State
+keepMenuOpen pred (State state_) =
+    State { state_ | menuOpen = True, keepOpen = pred }
 
 
 {-| Opt in to a Javascript optimization.
@@ -1343,7 +1360,13 @@ update msg ((State state_) as wrappedState) =
                             if state_.menuOpen then
                                 case variant of
                                     SingleMenu _ ->
-                                        ( { state_ | initialMousedown = Internal.ContainerMousedown }, Cmd.none )
+                                        if state_.keepOpen && state_.controlUiFocused == Nothing then
+                                            ( { state_ | initialMousedown = Internal.ContainerMousedown }
+                                            , internalFocus idString OnInputFocused
+                                            )
+
+                                        else
+                                            ( { state_ | initialMousedown = Internal.ContainerMousedown }, Cmd.none )
 
                                     _ ->
                                         ( { stateWithClosedMenu
@@ -1491,7 +1514,11 @@ update msg ((State state_) as wrappedState) =
 
         CloseMenu ->
             ( Nothing
-            , resetState (State state_)
+            , if state_.keepOpen then
+                State state_
+
+              else
+                resetState (State state_)
             , Cmd.none
             )
 
