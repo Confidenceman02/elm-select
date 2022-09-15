@@ -1,3 +1,11 @@
+## [6.1.0] - 2022-09-15
+
+## Added
+- Configurable position styles for menu.
+- Hover style resolution for variants that show a menu without
+control focus.
+- State modifier to keep menu open at all times.
+
 ## [6.0.2] - 2022-09-11
 
 ## Added
@@ -337,6 +345,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[6.1.0]: https://github.com/Confidenceman02/elm-select/compare/6.0.2...6.1.0
 [6.0.2]: https://github.com/Confidenceman02/elm-select/compare/6.0.1...6.0.2
 [6.0.1]: https://github.com/Confidenceman02/elm-select/compare/6.0.0...6.0.1
 [6.0.0]: https://github.com/Confidenceman02/elm-select/compare/5.4.0...6.0.0
