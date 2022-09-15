@@ -124,46 +124,6 @@ customMenuItem act label =
         }
 
 
-
--- ICONS
--- withButton : Maybe ( Action, Select.State ) -> Action -> List (Html Msg) -> Html Msg
--- withButton selectedAction action =
---     let
---         resolveBackgroundColor =
---             case selectedAction of
---                 Just ( act, st ) ->
---                     if Select.isFocused st && act == action then
---                         [ Css.backgroundColor (Css.hex "#D3D3D3"), Css.color (Css.hex "#8D8D8D") ]
---                     else
---                         [ Css.backgroundColor (Css.hex "#E4E4E4") ]
---                 _ ->
---                     [ Css.backgroundColor (Css.hex "#E4E4E4") ]
---         resolveDataTestId =
---             case action of
---                 Bold ->
---                     "bold"
---                 Italic ->
---                     "italic"
---                 Attachment ->
---                     "attachment"
---                 Dropdown ->
---                     "dropdown"
---     in
---     button
---         [ StyledAttribs.css
---             ([ Css.displayFlex
---              , Css.border (Css.px 0)
---              , Css.padding (Css.rem 0.5)
---              , Css.color (Css.hsla 0 0 0.68 1)
---              , Css.hover [ Css.backgroundColor (Css.hex "#D3D3D3"), Css.color (Css.hex "#8D8D8D") ]
---              ]
---                 ++ resolveBackgroundColor
---             )
---         , onClick (ActionClicked action)
---         , StyledAttribs.attribute "data-test-id" resolveDataTestId
---         ]
-
-
 bold : Html msg
 bold =
     Styled.span
