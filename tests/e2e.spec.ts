@@ -32,6 +32,7 @@ describe("examples", () => {
       "text=CustomMenuItems.elm"
     );
     const singleMenuVisible = await page.isVisible("text=SingleMenu.elm");
+    const singleMenuOpenVisible = await page.isVisible("text=SingleMenuOpen.elm");
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -42,8 +43,45 @@ describe("examples", () => {
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
+    expect(singleMenuOpenVisible).toBeTruthy();
   });
 });
+
+describe("SingleMenuOpen", () => {
+  it("renders the menu by default", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleMenuOpen.elm`);
+
+    const menuListVisble = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisble).toBeTruthy();
+  })
+
+  it("keeps the menu open after selection", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleMenuOpen.elm`);
+    await page.locator("#select-menu-item-1-somestate__elm-select").click();
+
+    const menuListVisble = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisble).toBeTruthy();
+  })
+
+  it("keeps the menu open when escaping whilst focused", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleMenuOpen.elm`);
+
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForTimeout(100);
+    await page.keyboard.press("Escape");
+    const menuListVisble = await page.isVisible("[data-test-id=listBox]");
+
+    expect(menuListVisble).toBeTruthy();
+  })
+})
 
 describe("SingleMenu", () => {
   it("renders the menu on input focus", async () => {
