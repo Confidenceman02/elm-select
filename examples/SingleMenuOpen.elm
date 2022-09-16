@@ -16,6 +16,7 @@ type Msg
 type alias Model =
     { items : List (MenuItem DropdownAction)
     , state : Select.State
+    , selected : Maybe DropdownAction
     }
 
 
@@ -35,6 +36,28 @@ type DropdownAction
     | AddToBlocks
 
 
+actionToString : DropdownAction -> String
+actionToString act =
+    case act of
+        HideSettings ->
+            "Hide settings"
+
+        Duplicate ->
+            "Duplicate"
+
+        InsertBefore ->
+            "Insert Before"
+
+        InsertAfter ->
+            "Insert After"
+
+        EditAsHTML ->
+            "Edit as HHTML"
+
+        AddToBlocks ->
+            "Add to Blocks"
+
+
 init : ( Model, Cmd Msg )
 init =
     ( { items =
@@ -48,6 +71,7 @@ init =
       , state =
             Select.initState (Select.selectIdentifier "somestate")
                 |> Select.keepMenuOpen True
+      , selected = Nothing
       }
     , Cmd.none
     )
@@ -68,17 +92,32 @@ update msg model =
     case msg of
         SelectMsg sm ->
             let
-                ( _, selectState, cmds ) =
+                ( maybeAction, selectState, cmds ) =
                     Select.update sm model.state
+
+                updatedSelected =
+                    case maybeAction of
+                        Just (Select.Select item) ->
+                            Just item
+
+                        _ ->
+                            model.selected
             in
-            ( { model | state = selectState }, Cmd.map SelectMsg cmds )
+            ( { model | state = selectState, selected = updatedSelected }, Cmd.map SelectMsg cmds )
 
 
 view : Model -> Html Msg
 view m =
     Styled.map SelectMsg <|
         Select.view
-            (Select.menu
+            (Select.singleMenu
+                (Maybe.map
+                    (\act ->
+                        Select.basicMenuItem
+                            { item = act, label = actionToString act }
+                    )
+                    m.selected
+                )
                 |> Select.state m.state
                 |> Select.menuItems m.items
                 |> Select.placeholder "Placeholder"
