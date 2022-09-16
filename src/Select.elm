@@ -2287,10 +2287,10 @@ viewMenuItemsWrapper data =
         resolveStyles =
             case data.variant of
                 SingleMenu _ ->
-                    menuListStyles
+                    menuListStyles data.menuStyles
 
                 _ ->
-                    menuWrapperStyles data.menuStyles ++ menuListStyles
+                    menuWrapperStyles data.menuStyles ++ menuListStyles data.menuStyles
     in
     Keyed.node "ul"
         ([ StyledAttribs.css resolveStyles
@@ -2363,7 +2363,7 @@ viewLoadingMenu data =
 
                 _ ->
                     menuWrapperStyles data.menuStyles
-                        ++ menuListStyles
+                        ++ menuListStyles data.menuStyles
     in
     div
         [ StyledAttribs.css
@@ -3422,10 +3422,10 @@ menuWrapperBorderStyle =
     ]
 
 
-menuListStyles : List Css.Style
-menuListStyles =
+menuListStyles : Styles.MenuConfig -> List Css.Style
+menuListStyles styles =
     menuWrapperBorderStyle
-        ++ [ Css.maxHeight (Css.px 215)
+        ++ [ Css.property "max-height" (Styles.getMenuMaxHeight styles)
            , Css.overflowY Css.auto
            , Css.paddingLeft (Css.px 0)
            , Css.marginBottom (Css.px 8)
