@@ -3142,6 +3142,26 @@ buildMenuItem data idx item =
                         [ Styled.map never ci.view ]
                     )
 
+                SingleMenu maybeSelectedItem ->
+                    ( getMenuItemLabel item
+                    , lazy2 viewMenuItem
+                        (ViewMenuItemData
+                            idx
+                            (isSelected item maybeSelectedItem)
+                            (isMenuItemClickFocused data.initialMousedown idx)
+                            (isTarget data.activeTargetIndex idx)
+                            data.selectId
+                            item
+                            data.menuNavigation
+                            data.initialMousedown
+                            data.variant
+                            data.menuItemStyles
+                            data.disabled
+                            data.controlUiFocused
+                        )
+                        [ text (getMenuItemLabel item) ]
+                    )
+
                 _ ->
                     ( getMenuItemLabel item
                     , lazy2 viewMenuItem
