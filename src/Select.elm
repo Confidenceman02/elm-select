@@ -3056,131 +3056,60 @@ buildMenuItem :
     -> MenuItem item
     -> ( String, Html (Msg item) )
 buildMenuItem data idx item =
+    let
+        resolveIsSelected =
+            (case data.variant of
+                Single maybeItem ->
+                    maybeItem
+
+                SingleMenu maybeItem ->
+                    maybeItem
+
+                _ ->
+                    Nothing
+            )
+                |> isSelected item
+    in
     case item of
         Basic _ ->
-            case data.variant of
-                Single maybeSelectedItem ->
-                    ( getMenuItemLabel item
-                    , lazy2 viewMenuItem
-                        (ViewMenuItemData
-                            idx
-                            (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused data.initialMousedown idx)
-                            (isTarget data.activeTargetIndex idx)
-                            data.selectId
-                            item
-                            data.menuNavigation
-                            data.initialMousedown
-                            data.variant
-                            data.menuItemStyles
-                            data.disabled
-                            data.controlUiFocused
-                        )
-                        [ text (getMenuItemLabel item) ]
-                    )
-
-                SingleMenu maybeSelectedItem ->
-                    ( getMenuItemLabel item
-                    , lazy2 viewMenuItem
-                        (ViewMenuItemData
-                            idx
-                            (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused data.initialMousedown idx)
-                            (isTarget data.activeTargetIndex idx)
-                            data.selectId
-                            item
-                            data.menuNavigation
-                            data.initialMousedown
-                            data.variant
-                            data.menuItemStyles
-                            data.disabled
-                            data.controlUiFocused
-                        )
-                        [ text (getMenuItemLabel item) ]
-                    )
-
-                -- We don't render selected multi select variant options
-                _ ->
-                    ( getMenuItemLabel item
-                    , lazy2 viewMenuItem
-                        (ViewMenuItemData
-                            idx
-                            False
-                            (isMenuItemClickFocused data.initialMousedown idx)
-                            (isTarget data.activeTargetIndex idx)
-                            data.selectId
-                            item
-                            data.menuNavigation
-                            data.initialMousedown
-                            data.variant
-                            data.menuItemStyles
-                            data.disabled
-                            data.controlUiFocused
-                        )
-                        [ text (getMenuItemLabel item) ]
-                    )
+            ( getMenuItemLabel item
+            , lazy2 viewMenuItem
+                (ViewMenuItemData
+                    idx
+                    resolveIsSelected
+                    (isMenuItemClickFocused data.initialMousedown idx)
+                    (isTarget data.activeTargetIndex idx)
+                    data.selectId
+                    item
+                    data.menuNavigation
+                    data.initialMousedown
+                    data.variant
+                    data.menuItemStyles
+                    data.disabled
+                    data.controlUiFocused
+                )
+                [ text (getMenuItemLabel item) ]
+            )
 
         Custom ci ->
-            case data.variant of
-                Single maybeSelectedItem ->
-                    ( getMenuItemLabel item
-                    , lazy2 viewMenuItem
-                        (ViewMenuItemData
-                            idx
-                            (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused data.initialMousedown idx)
-                            (isTarget data.activeTargetIndex idx)
-                            data.selectId
-                            item
-                            data.menuNavigation
-                            data.initialMousedown
-                            data.variant
-                            data.menuItemStyles
-                            data.disabled
-                            data.controlUiFocused
-                        )
-                        [ Styled.map never ci.view ]
-                    )
-
-                SingleMenu maybeSelectedItem ->
-                    ( getMenuItemLabel item
-                    , lazy2 viewMenuItem
-                        (ViewMenuItemData
-                            idx
-                            (isSelected item maybeSelectedItem)
-                            (isMenuItemClickFocused data.initialMousedown idx)
-                            (isTarget data.activeTargetIndex idx)
-                            data.selectId
-                            item
-                            data.menuNavigation
-                            data.initialMousedown
-                            data.variant
-                            data.menuItemStyles
-                            data.disabled
-                            data.controlUiFocused
-                        )
-                        [ text (getMenuItemLabel item) ]
-                    )
-
-                _ ->
-                    ( getMenuItemLabel item
-                    , lazy2 viewMenuItem
-                        (ViewMenuItemData
-                            idx
-                            False
-                            (isMenuItemClickFocused data.initialMousedown idx)
-                            (isTarget data.activeTargetIndex idx)
-                            data.selectId
-                            item
-                            data.menuNavigation
-                            data.initialMousedown
-                            data.variant
-                            data.menuItemStyles
-                            data.disabled
-                            data.controlUiFocused
-                        )
-                        [ Styled.map never ci.view ]
-                    )
+            ( getMenuItemLabel item
+            , lazy2 viewMenuItem
+                (ViewMenuItemData
+                    idx
+                    resolveIsSelected
+                    (isMenuItemClickFocused data.initialMousedown idx)
+                    (isTarget data.activeTargetIndex idx)
+                    data.selectId
+                    item
+                    data.menuNavigation
+                    data.initialMousedown
+                    data.variant
+                    data.menuItemStyles
+                    data.disabled
+                    data.controlUiFocused
+                )
+                [ Styled.map never ci.view ]
+            )
 
 
 filterMenuItem : String -> MenuItem item -> Bool
