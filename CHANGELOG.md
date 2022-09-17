@@ -1,3 +1,9 @@
+## [6.2.2] - 2022-09-17
+
+## Fixed
+- Active target not resetting on input blur.
+- `ContainerClicked` being dispatched on menu item elements.
+
 ## [6.2.1] - 2022-09-17
 
 ## Fixed
@@ -355,6 +361,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[6.2.2]: https://github.com/Confidenceman02/elm-select/compare/6.2.1...6.2.2
 [6.2.1]: https://github.com/Confidenceman02/elm-select/compare/6.2.0...6.2.1
 [6.2.0]: https://github.com/Confidenceman02/elm-select/compare/6.1.0...6.2.0
 [6.1.0]: https://github.com/Confidenceman02/elm-select/compare/6.0.2...6.1.0
