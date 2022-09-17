@@ -1260,6 +1260,7 @@ update msg ((State state_) as wrappedState) =
                                 | initialMousedown = Internal.NothingMousedown
                                 , controlUiFocused = Nothing
                                 , inputValue = Nothing
+                                , activeTargetIndex = 0
                               }
                             , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
                             , resolveAction
