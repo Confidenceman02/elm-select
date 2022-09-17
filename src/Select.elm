@@ -1260,6 +1260,7 @@ update msg ((State state_) as wrappedState) =
                                 | initialMousedown = Internal.NothingMousedown
                                 , controlUiFocused = Nothing
                                 , inputValue = Nothing
+                                , activeTargetIndex = 0
                               }
                             , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
                             , resolveAction
@@ -1641,6 +1642,7 @@ view (Config config) =
                                     (Styles.getControlConfig config.styles)
                                     (Styles.getMenuConfig config.styles)
                                     singleVariant
+                                    config.searchable
                                 )
                                 [ viewSearchIndicator (Styles.getMenuControlSearchIndicatorColor menuStyles)
                                 , viewInputWrapper config.disabled
@@ -1883,6 +1885,7 @@ viewCustomControl data =
             data.controlStyles
             menuStyles
             data.variant
+            data.searchable
         )
         [ viewInputWrapper data.disabled
             [ buildVariantInput
@@ -2062,6 +2065,7 @@ type alias ViewControlWrapperData item =
     , controlStyles : Styles.ControlConfig
     , menuStyles : Styles.MenuConfig
     , variant : CustomVariant item
+    , searchable : Bool
     }
 
 
@@ -2094,8 +2098,19 @@ viewControlWrapper data =
                     []
 
                 else
-                    [ attribute "data-test-id" "selectContainer"
-                    ]
+                    attribute "data-test-id" "selectContainer"
+                        :: (case data.variant of
+                                SingleMenu _ ->
+                                    containerClickedMsg
+                                        (ContainerClickedMsgData data.disabled
+                                            state_
+                                            data.variant
+                                            data.searchable
+                                        )
+
+                                _ ->
+                                    []
+                           )
                )
         )
 
@@ -2214,54 +2229,20 @@ type alias ViewWrapperData item =
 
 viewWrapper : ViewWrapperData item -> List (Html (Msg item)) -> Html (Msg item)
 viewWrapper data =
-    let
-        preventDefault =
-            case data.state.initialMousedown of
-                Internal.NothingMousedown ->
-                    case data.variant of
-                        SingleMenu _ ->
-                            data.state.controlUiFocused == Just Internal.ControlInput
-
-                        _ ->
-                            case resolveContainerMsg of
-                                -- We are only preventing default when the input is actually focused
-                                -- to avoid a blur event on the input.
-                                -- Should do for SearchableSelectContainerClicked also.
-                                UnsearchableSelectContainerClicked ->
-                                    data.state.controlUiFocused == Just Internal.ControlInput
-
-                                _ ->
-                                    False
-
-                Internal.ContainerMousedown ->
-                    True
-
-                _ ->
-                    True
-
-        resolveContainerMsg =
-            if data.searchable then
-                SearchableSelectContainerClicked data.variant
-
-            else
-                UnsearchableSelectContainerClicked
-    in
     div
         (StyledAttribs.css [ Css.position Css.relative, Css.boxSizing Css.borderBox ]
-            :: (if data.disabled then
-                    []
+            :: (case data.variant of
+                    -- viewInputWrapper handles ContainerClicked msg's
+                    SingleMenu _ ->
+                        []
 
-                else
-                    [ preventDefaultOn "mousedown" <|
-                        Decode.map
-                            (\msg ->
-                                ( msg
-                                , preventDefault
-                                )
+                    _ ->
+                        containerClickedMsg
+                            (ContainerClickedMsgData data.disabled
+                                data.state
+                                data.variant
+                                data.searchable
                             )
-                        <|
-                            Decode.succeed resolveContainerMsg
-                    ]
                )
         )
 
@@ -2894,6 +2875,64 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 
 
 -- UTILS
+
+
+type alias ContainerClickedMsgData item =
+    { disabled : Bool
+    , state : SelectState
+    , variant : CustomVariant item
+    , searchable : Bool
+    }
+
+
+containerClickedMsg : ContainerClickedMsgData item -> List (Styled.Attribute (Msg item))
+containerClickedMsg data =
+    let
+        preventDefault =
+            case data.state.initialMousedown of
+                Internal.NothingMousedown ->
+                    case data.variant of
+                        SingleMenu _ ->
+                            data.state.controlUiFocused == Just Internal.ControlInput
+
+                        _ ->
+                            case resolveContainerMsg of
+                                -- We are only preventing default when the input is actually focused
+                                -- to avoid a blur event on the input.
+                                -- Should do for SearchableSelectContainerClicked also.
+                                UnsearchableSelectContainerClicked ->
+                                    data.state.controlUiFocused == Just Internal.ControlInput
+
+                                _ ->
+                                    False
+
+                Internal.ContainerMousedown ->
+                    True
+
+                _ ->
+                    True
+
+        resolveContainerMsg =
+            if data.searchable then
+                SearchableSelectContainerClicked data.variant
+
+            else
+                UnsearchableSelectContainerClicked
+    in
+    if data.disabled then
+        []
+
+    else
+        [ preventDefaultOn "mousedown" <|
+            Decode.map
+                (\msg ->
+                    ( msg
+                    , preventDefault
+                    )
+                )
+            <|
+                Decode.succeed resolveContainerMsg
+        ]
 
 
 type alias BuildPlaceholderData item =

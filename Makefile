@@ -14,6 +14,11 @@ install: .yarn.INSTALLED .yarn.examples-optimized.INSTALLED
 elm-examples: install
 	cd examples && elm reactor & yarn --cwd examples-optimized start
 
+.PHONY: elm-reactor
+elm-reactor:
+	cd examples && elm reactor
+
+
 .PHONY: elm-tests
 elm-tests:
 	yarn elm-test

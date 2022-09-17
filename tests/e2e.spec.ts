@@ -32,7 +32,9 @@ describe("examples", () => {
       "text=CustomMenuItems.elm"
     );
     const singleMenuVisible = await page.isVisible("text=SingleMenu.elm");
-    const singleMenuOpenVisible = await page.isVisible("text=SingleMenuOpen.elm");
+    const singleMenuOpenVisible = await page.isVisible(
+      "text=SingleMenuOpen.elm"
+    );
 
     expect(singleExampleVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -56,7 +58,7 @@ describe("SingleMenuOpen", () => {
     const menuListVisble = await page.isVisible("[data-test-id=listBox]");
 
     expect(menuListVisble).toBeTruthy();
-  })
+  });
 
   it("keeps the menu open after selection", async () => {
     await browser.newContext();
@@ -67,7 +69,7 @@ describe("SingleMenuOpen", () => {
     const menuListVisble = await page.isVisible("[data-test-id=listBox]");
 
     expect(menuListVisble).toBeTruthy();
-  })
+  });
 
   it("keeps the menu open when escaping whilst focused", async () => {
     await browser.newContext();
@@ -80,8 +82,36 @@ describe("SingleMenuOpen", () => {
     const menuListVisble = await page.isVisible("[data-test-id=listBox]");
 
     expect(menuListVisble).toBeTruthy();
-  })
-})
+  });
+
+  it("focuses the input when clicking on the conatainer", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleMenuOpen.elm`);
+
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForTimeout(100);
+    const handle: HTMLElement = await page.evaluate(
+      "document.activeElement.tagName"
+    );
+
+    expect(handle).toEqual("INPUT");
+  });
+
+  it("does not focus the input when seelcting a menu item", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleMenuOpen.elm`);
+
+    await page.locator("#select-menu-item-4-somestate__elm-select").click();
+    await page.waitForTimeout(100);
+    const handle: HTMLElement = await page.evaluate(
+      "document.activeElement.tagName"
+    );
+
+    expect(handle).not.toEqual("INPUT");
+  });
+});
 
 describe("SingleMenu", () => {
   it("renders the menu on input focus", async () => {
