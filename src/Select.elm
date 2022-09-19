@@ -3404,15 +3404,15 @@ menuWrapperStyles menuStyles =
     ]
 
 
-menuWrapperBorderStyle : List Css.Style
-menuWrapperBorderStyle =
-    [ Css.border3 (Css.px listBoxBorder) Css.solid Css.transparent
+menuWrapperBorderStyle : Styles.MenuConfig -> List Css.Style
+menuWrapperBorderStyle menuConfig =
+    [ Css.border3 (Css.px (Styles.getMenuBorderWidth menuConfig)) Css.solid Css.transparent
     ]
 
 
 menuListStyles : Styles.MenuConfig -> List Css.Style
 menuListStyles styles =
-    menuWrapperBorderStyle
+    menuWrapperBorderStyle styles
         ++ [ Css.property "max-height" (Styles.getMenuMaxHeight styles)
            , Css.overflowY Css.auto
            , Css.paddingLeft (Css.px 0)
