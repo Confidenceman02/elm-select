@@ -1676,8 +1676,7 @@ view (Config config) =
                                             config.styles
                                         )
                                     , viewLoadingSpinner
-                                        (ViewLoadingSpinnerData
-                                            config.searchable
+                                        (ViewLoadingSpinnerData config.isLoading
                                             (Styles.getMenuControlLoadingIndicatorColor menuStyles)
                                         )
                                     ]
@@ -1960,6 +1959,14 @@ type alias ViewLoadingSpinnerData =
 
 viewLoadingSpinner : ViewLoadingSpinnerData -> Html msg
 viewLoadingSpinner data =
+    let
+        resolveLoadingSpinner =
+            if data.isLoading then
+                viewLoading
+
+            else
+                text ""
+    in
     div [ StyledAttribs.css indicatorContainerStyles ]
         [ span
             [ StyledAttribs.css
@@ -1969,7 +1976,7 @@ viewLoadingSpinner data =
                 , Css.alignItems Css.center
                 ]
             ]
-            [ viewLoading ]
+            [ resolveLoadingSpinner ]
         ]
 
 
