@@ -1350,12 +1350,18 @@ update msg ((State state_) as wrappedState) =
 
                 ( updatedState, updatedCmds ) =
                     case state_.initialMousedown of
-                        -- A mousedown on a multi tag dismissible icon has been registered. This will
-                        -- bubble and fire the the mousedown on the container div which toggles the menu.
-                        -- To avoid the annoyance of opening and closing the menu whenever a multi tag item is dismissed
-                        -- we just want to leave the menu open which it will be when it reaches here.
+                        -- The MultiItemMousedown will blur the input if it is focused. We want to return
+                        -- focus to the input. Might be better to experiment with preventDefault.
                         Internal.MultiItemMousedown _ ->
-                            ( state_, internalFocus idString OnInputFocused )
+                            case state_.controlUiFocused of
+                                Just Internal.ControlInput ->
+                                    ( state_, Cmd.none )
+
+                                Just Internal.Clearable ->
+                                    ( state_, Cmd.none )
+
+                                Nothing ->
+                                    ( state_, internalFocus idString OnInputFocused )
 
                         Internal.NothingMousedown ->
                             if state_.menuOpen then
