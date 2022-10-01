@@ -56,8 +56,8 @@ update msg model =
                         Just (Select.Select i) ->
                             model.selectedItems ++ [ i ]
 
-                        Just (Select.DeselectMulti item) ->
-                            List.filter (\i -> item /= i) model.selectedItems
+                        Just (Select.DeselectMulti deletedItems) ->
+                            List.filter (\i -> not (List.member i deletedItems)) model.selectedItems
 
                         _ ->
                             model.selectedItems

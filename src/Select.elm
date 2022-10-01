@@ -170,7 +170,7 @@ When they select a country from the menu, it will be reflected in the Select act
 type Action item
     = InputChange String
     | Select item
-    | DeselectMulti item
+    | DeselectMulti (List item)
     | ClearSingleSelectItem
     | FocusSet
     | MenuInputCleared
@@ -1170,7 +1170,7 @@ update msg ((State state_) as wrappedState) =
             )
 
         DeselectedMultiItem deselectedItem ->
-            ( Just (DeselectMulti deselectedItem)
+            ( Just (DeselectMulti [ deselectedItem ])
             , State { state_ | initialMousedown = Internal.NothingMousedown }
             , internalFocus idString OnInputFocused
             )

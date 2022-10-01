@@ -20,7 +20,7 @@ type Item
 
 
 type alias Model =
-    { selectState : Select.State 
+    { selectState : Select.State
     , items : List Item
     , selectedItems : List Item
     }
@@ -80,8 +80,8 @@ update msg model =
                                 _ ->
                                     { model | selectedItems = model.selectedItems ++ [ i ] }
 
-                        Just (Select.DeselectMulti item) ->
-                            { model | selectedItems = List.filter (\i -> item /= i) model.selectedItems }
+                        Just (Select.DeselectMulti deletedItems) ->
+                            { model | selectedItems = List.filter (\i -> not (List.member i deletedItems)) model.selectedItems }
 
                         _ ->
                             model
