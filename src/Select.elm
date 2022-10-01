@@ -108,7 +108,7 @@ type Msg item
     | OnMenuClearableShiftTabbed Bool
     | OnMenuClearableBlurred
     | MenuItemClickFocus Int
-    | MultiItemFocus Int
+    | MultiItemMousedown Int
     | InputMousedowned
     | InputEscape
     | ClearFocusedItem
@@ -1313,7 +1313,7 @@ update msg ((State state_) as wrappedState) =
         MenuItemClickFocus i ->
             ( Nothing, State { state_ | initialMousedown = Internal.MenuItemMousedown i }, Cmd.none )
 
-        MultiItemFocus index ->
+        MultiItemMousedown index ->
             ( Nothing, State { state_ | initialMousedown = Internal.MultiItemMousedown index }, Cmd.none )
 
         InputMousedowned ->
@@ -2773,7 +2773,7 @@ viewMultiValue mousedownedItem styles index menuItem =
     Tag.view
         (resolveVariant
             |> Tag.onDismiss (DeselectedMultiItem (getMenuItemItem menuItem))
-            |> Tag.onMousedown (MultiItemFocus index)
+            |> Tag.onMousedown (MultiItemMousedown index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
             |> Tag.setControlStyles styles
