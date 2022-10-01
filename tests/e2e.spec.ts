@@ -319,6 +319,21 @@ describe("CustomMenuItems", () => {
 });
 
 describe("Multi", () => {
+  it("renders multi select tag when selecting item", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/Multi.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+    const multiItemVisible = await page.isVisible(
+      "[data-test-id=multi-select-tag-0]"
+    );
+
+    expect(multiItemVisible).toBeTruthy();
+  });
+
   it("removes menu items from list when selected", async () => {
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/Multi.elm`);

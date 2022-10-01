@@ -172,6 +172,9 @@ viewClear config =
                 , Maybe.map mousedown config.onMousedown
                 , Maybe.map mouseleave config.onMouseleave
                 ]
+
+        dataAttrib =
+            [ attribute "data-test-id" (config.dataTestId ++ "-dismiss") ]
     in
     span
         -- dismissIcon
@@ -187,7 +190,7 @@ viewClear config =
             , Css.cursor Css.pointer
             , Css.hover [ Css.color (Css.hex "#4B4D68") ]
             ]
-            :: events
+            :: (events ++ dataAttrib)
         )
         [ span
             [ -- background

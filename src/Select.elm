@@ -2781,7 +2781,7 @@ viewMultiValue mousedownedItem styles index menuItem =
             |> Tag.onDismiss (DeselectedMultiItem (getMenuItemItem menuItem))
             |> Tag.onMousedown (MultiItemMousedown index)
             |> Tag.rightMargin True
-            |> Tag.dataTestId ("multiSelectTag" ++ String.fromInt index)
+            |> Tag.dataTestId ("multi-select-tag-" ++ String.fromInt index)
             |> Tag.setControlStyles styles
             |> resolveMouseleave
         )
