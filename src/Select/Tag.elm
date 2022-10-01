@@ -12,7 +12,7 @@ module Select.Tag exposing
 import Css
 import Html.Styled exposing (Html, div, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute)
-import Html.Styled.Events exposing (on, onClick)
+import Html.Styled.Events exposing (on, onClick, stopPropagationOn)
 import Json.Decode as Decode
 import Select.ClearIcon as ClearIcon
 import Select.Styles as Styles
@@ -158,7 +158,10 @@ viewClear config =
             onClick onDismissMsg
 
         mousedown onMousedownMsg =
-            on "mousedown" <| Decode.succeed onMousedownMsg
+            stopPropagationOn "mousedown"
+                (Decode.map (\msg -> ( msg, True ))
+                    (Decode.succeed onMousedownMsg)
+                )
 
         mouseleave onMouseleaveMsg =
             on "mouseleave" <| Decode.succeed onMouseleaveMsg
@@ -169,6 +172,9 @@ viewClear config =
                 , Maybe.map mousedown config.onMousedown
                 , Maybe.map mouseleave config.onMouseleave
                 ]
+
+        dataAttrib =
+            [ attribute "data-test-id" (config.dataTestId ++ "-dismiss") ]
     in
     span
         -- dismissIcon
@@ -184,7 +190,7 @@ viewClear config =
             , Css.cursor Css.pointer
             , Css.hover [ Css.color (Css.hex "#4B4D68") ]
             ]
-            :: events
+            :: (events ++ dataAttrib)
         )
         [ span
             [ -- background

@@ -85,5 +85,6 @@ view m =
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Placeholder"
+                    |> Select.searchable True
                 )
         ]
