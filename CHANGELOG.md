@@ -1,3 +1,25 @@
+## [7.0.0] - 2022-10-03
+
+## Added
+- Clearable functionality for multi select variants.
+- Keyed node on multi selected tags and input.
+
+## Breaking changes
+`DeselectMulti` `Action` now takes a `List` of multi items that have been deselected.
+
+previous
+```
+case action of
+    DeselectMulti item ->
+        List.filter (\i -> item /= i) model.selectedItems
+```
+current
+```
+case action of
+    DeselectMulti deselectedItems ->
+        List.filter (\i -> not (List.member i deselectedItems))
+```
+
 ## [6.3.2] - 2022-10-01
 
 ## Fixed
@@ -376,6 +398,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[7.0.0]: https://github.com/Confidenceman02/elm-select/compare/6.3.2...7.0.0
 [6.3.2]: https://github.com/Confidenceman02/elm-select/compare/6.3.1...6.3.2
 [6.3.1]: https://github.com/Confidenceman02/elm-select/compare/6.3.0...6.3.1
 [6.3.0]: https://github.com/Confidenceman02/elm-select/compare/6.2.2...6.3.0
