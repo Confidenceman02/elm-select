@@ -56,7 +56,7 @@ import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
-import Html.Styled.Lazy exposing (lazy, lazy2)
+import Html.Styled.Lazy exposing (lazy, lazy2, lazy4)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.ClearIcon as ClearIcon
@@ -1540,16 +1540,34 @@ update msg ((State state_) as wrappedState) =
                 SingleMenu _ ->
                     ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, Cmd.none )
 
+                Multi selectedItems ->
+                    ( Just (DeselectMulti (List.map unwrapItem selectedItems))
+                    , State state_
+                    , internalFocus idString OnInputFocused
+                    )
+
                 _ ->
                     ( Just ClearSingleSelectItem, State state_, Cmd.none )
 
         ClearButtonKeyDowned variant ->
             case variant of
                 SingleMenu _ ->
-                    ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, internalFocus idString OnInputFocused )
+                    ( Just MenuInputCleared
+                    , State { state_ | inputValue = Nothing }
+                    , internalFocus idString OnInputFocused
+                    )
+
+                Multi selectedItems ->
+                    ( Just (DeselectMulti (List.map unwrapItem selectedItems))
+                    , State { state_ | inputValue = Nothing }
+                    , internalFocus idString OnInputFocused
+                    )
 
                 _ ->
-                    ( Just ClearSingleSelectItem, State state_, internalFocus idString OnInputFocused )
+                    ( Just ClearSingleSelectItem
+                    , State state_
+                    , internalFocus idString OnInputFocused
+                    )
 
 
 {-| Render the select
@@ -1827,11 +1845,19 @@ viewCustomControl data =
                             else
                                 []
                     in
-                    div resolveMultiValueStyles <|
+                    Keyed.node "div" resolveMultiValueStyles <|
                         (List.indexedMap
-                            (viewMultiValue state_.initialMousedown data.controlStyles)
+                            (\ix i ->
+                                ( "selected-item-" ++ String.fromInt ix
+                                , lazy4 viewMultiValue
+                                    state_.initialMousedown
+                                    data.controlStyles
+                                    ix
+                                    i
+                                )
+                            )
                             multiSelectedValues
-                            ++ [ buildInput ]
+                            ++ [ ( "built-input", buildInput ) ]
                         )
 
                 Single _ ->
@@ -2880,6 +2906,16 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 -- UTILS
 
 
+unwrapItem : MenuItem item -> item
+unwrapItem mi =
+    case mi of
+        Custom i ->
+            i.item
+
+        Basic i ->
+            i.item
+
+
 type alias ContainerClickedMsgData item =
     { disabled : Bool
     , state : SelectState
@@ -3012,6 +3048,9 @@ showClearButton data =
 
                     _ ->
                         False
+
+            Multi (_ :: _) ->
+                True
 
             _ ->
                 False
