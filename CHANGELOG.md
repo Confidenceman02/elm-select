@@ -1,3 +1,8 @@
+## [7.0.1] - 2022-10-04
+
+## Fixed
+- Loading menu opacity.
+
 ## [7.0.0] - 2022-10-03
 
 ## Added
@@ -398,6 +403,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[7.0.1]: https://github.com/Confidenceman02/elm-select/compare/7.0.0...7.0.1
 [7.0.0]: https://github.com/Confidenceman02/elm-select/compare/6.3.2...7.0.0
 [6.3.2]: https://github.com/Confidenceman02/elm-select/compare/6.3.1...6.3.2
 [6.3.1]: https://github.com/Confidenceman02/elm-select/compare/6.3.0...6.3.1
