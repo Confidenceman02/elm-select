@@ -2377,7 +2377,7 @@ viewLoadingMenu data =
     in
     div
         [ StyledAttribs.css
-            [ Css.textAlign Css.center, Css.opacity (Css.num 0.5), Css.batch variantStyles ]
+            [ Css.textAlign Css.center, Css.color (Css.rgba 0 0 0 0.5), Css.batch variantStyles ]
         ]
         [ text data.loadingText
         ]
