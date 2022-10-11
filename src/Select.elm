@@ -1606,7 +1606,7 @@ view (Config config) =
     in
     case config.variant of
         Native variant ->
-            div []
+            div [ StyledAttribs.css [ Css.position Css.relative ] ]
                 [ viewNative
                     (ViewNativeData ctrlStyles
                         variant
