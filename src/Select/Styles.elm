@@ -2,7 +2,8 @@ module Select.Styles exposing
     ( Config, ControlConfig, MenuConfig, MenuControlConfig, MenuItemConfig, default
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-    , setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
+    , setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor
+    , setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBorderWidth, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
     , setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor, setMenuMaxHeightPx, setMenuMaxHeightVh, setMenuPosition
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected, setMenuItemInlinePadding
@@ -48,7 +49,8 @@ Set styles
 
 @docs setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
 @docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-@docs setControlLoadingIndicatorColor, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
+@docs setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor
+@docs setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
 # Menu
@@ -719,6 +721,12 @@ setControlDropdownIndicatorColorHover c (ControlConfig config) =
 setControlLoadingIndicatorColor : Css.Color -> ControlConfig -> ControlConfig
 setControlLoadingIndicatorColor c (ControlConfig config) =
     ControlConfig { config | loadingIndicatorColor = c }
+
+
+{-| -}
+setControlMinHeight : Float -> ControlConfig -> ControlConfig
+setControlMinHeight f (ControlConfig config) =
+    ControlConfig { config | minHeight = f }
 
 
 {-| -}
