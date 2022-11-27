@@ -1626,7 +1626,15 @@ view (Config config) =
                         , Css.pointerEvents Css.none
                         ]
                     ]
-                    [ dropdownIndicator ctrlStyles False ]
+                    [ viewIndicatorWrapper
+                        [ viewLoadingSpinner
+                            (ViewLoadingSpinnerData config.isLoading
+                                (Styles.getControlLoadingIndicatorColor ctrlStyles)
+                            )
+                        , indicatorSeparator ctrlStyles
+                        , viewDropdownIndicator (ViewDropdownIndicatorData False ctrlStyles)
+                        ]
+                    ]
                 ]
 
         CustomVariant ((SingleMenu _) as singleVariant) ->
