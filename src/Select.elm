@@ -1615,6 +1615,7 @@ view (Config config) =
                         config.labelledBy
                         config.ariaDescribedBy
                         config.placeholder
+                        config.disabled
                     )
                 , span
                     [ StyledAttribs.css
@@ -2160,6 +2161,7 @@ type alias ViewNativeData item =
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
     , placeholder : String
+    , disabled : Bool
     }
 
 
@@ -2227,6 +2229,7 @@ viewNative data =
                 ([ id selectId
                  , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
                  , StyledAttribs.name "SomeSelect"
+                 , StyledAttribs.disabled data.disabled
                  , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle data.menuItems hasCurrentSelection)
                  , onFocus (InputReceivedFocused (Native data.variant))
                  , onBlur (OnInputBlurred (Native data.variant))
@@ -2236,6 +2239,15 @@ viewNative data =
                     , controlRadius (Styles.getControlBorderRadius data.controlStyles)
                     , Css.backgroundColor (Styles.getControlBackgroundColor data.controlStyles)
                     , controlBorder (Styles.getControlBorderColor data.controlStyles)
+                    , if data.disabled then
+                        controlDisabled (Styles.getControlDisabledOpacity data.controlStyles)
+
+                      else
+                        controlHover
+                            (ControlHoverData
+                                (Styles.getControlBackgroundColorHover data.controlStyles)
+                                (Styles.getControlBorderColor data.controlStyles)
+                            )
                     , Css.padding2 (Css.px 2) (Css.px 8)
                     , Css.property "appearance" "none"
                     , Css.property "-webkit-appearance" "none"
@@ -2243,11 +2255,6 @@ viewNative data =
                     , Css.fontSize (Css.px 16)
                     , Css.focus
                         [ controlBorderFocused (Styles.getControlBorderColorFocus data.controlStyles), Css.outline Css.none ]
-                    , controlHover
-                        (ControlHoverData
-                            (Styles.getControlBackgroundColorHover data.controlStyles)
-                            (Styles.getControlBorderColor data.controlStyles)
-                        )
                     ]
                  ]
                     ++ withLabelledBy
