@@ -9,6 +9,7 @@ module Select.Internal exposing
     )
 
 import Html.Styled as Styled
+import Select.Styles exposing (MenuItemConfig)
 
 
 type Direction
@@ -62,7 +63,10 @@ viewIf condition html =
 
 
 type alias BaseMenuItem comparable =
-    { comparable | filterable : Bool }
+    { comparable
+        | filterable : Bool
+        , styles : Maybe MenuItemConfig
+    }
 
 
 type UiFocused

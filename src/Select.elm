@@ -1,5 +1,5 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
     , placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single
     , singleMenu, menu
@@ -14,7 +14,7 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
 @docs placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
@@ -450,6 +450,7 @@ basicMenuItem bscItem =
         { item = bscItem.item
         , label = bscItem.label
         , filterable = True
+        , styles = Nothing
         }
 
 
@@ -478,6 +479,7 @@ customMenuItem i =
         , label = i.label
         , view = i.view
         , filterable = True
+        , styles = Nothing
         }
 
 
@@ -514,6 +516,46 @@ filterableMenuItem pred mi =
 
         Custom obj ->
             Custom { obj | filterable = pred }
+
+
+{-| Set individual styles for a menu item.
+
+These styles will override any global menu item styles set via
+[setStyles](#setStyles).
+
+To set a global style for all menu items use [setStyles](#setStyles).
+
+        import Styles exposing (MenuItemConfig, default, getMenuItemConfig)
+        import Css
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        drillStyles : MenuItemConfig
+        drillStyles =
+            getMenuItemConfig default
+                |> setMenuItemColorHoverSelected (Css.hex "#EEEEEE")
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+            [ customMenuItem
+                { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+                |> stylesMenuItem drillStyles
+            ]
+
+-}
+stylesMenuItem : Styles.MenuItemConfig -> MenuItem item -> MenuItem item
+stylesMenuItem cfg mi =
+    case mi of
+        Basic obj ->
+            Basic { obj | styles = Just cfg }
+
+        Custom obj ->
+            Custom { obj | styles = Just cfg }
 
 
 
@@ -3165,6 +3207,14 @@ buildMenuItem data idx item =
                     Nothing
             )
                 |> isSelected item
+
+        maybeIndividualStyles =
+            case item of
+                Basic cfg ->
+                    cfg.styles
+
+                Custom cfg ->
+                    cfg.styles
     in
     case item of
         Basic _ ->
@@ -3180,7 +3230,7 @@ buildMenuItem data idx item =
                     data.menuNavigation
                     data.initialMousedown
                     data.variant
-                    data.menuItemStyles
+                    (Maybe.withDefault data.menuItemStyles maybeIndividualStyles)
                     data.disabled
                     data.controlUiFocused
                 )
@@ -3200,7 +3250,7 @@ buildMenuItem data idx item =
                     data.menuNavigation
                     data.initialMousedown
                     data.variant
-                    data.menuItemStyles
+                    (Maybe.withDefault data.menuItemStyles maybeIndividualStyles)
                     data.disabled
                     data.controlUiFocused
                 )

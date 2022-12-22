@@ -89,6 +89,10 @@ update msg model =
                         , Select.basicMenuItem { item = "Really", label = "Really" }
                         , Select.basicMenuItem { item = "Inspires", label = "Inspires" }
                         , Select.basicMenuItem { item = "Learning", label = "Learning" }
+                            |> Select.stylesMenuItem
+                                (Styles.getMenuItemConfig Styles.dracula
+                                    |> Styles.setMenuItemColorHoverNotSelected (Css.hex "#512DA8")
+                                )
                         ]
               }
             , Cmd.none
@@ -111,7 +115,7 @@ view m =
                 Loading ->
                     Select.loading True config
 
-                Loaded items ->
+                Loaded _ ->
                     Select.loading False config
 
         withItems config =
