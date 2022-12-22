@@ -1,3 +1,8 @@
+## [7.2.0] - 2022-12-22
+
+## Added
+- Styling for individual menu items.
+
 ## [7.1.2] - 2022-12-04
 
 ## Fixed
@@ -423,6 +428,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[7.2.0]: https://github.com/Confidenceman02/elm-select/compare/7.1.2...7.2.0
 [7.1.2]: https://github.com/Confidenceman02/elm-select/compare/7.1.1...7.1.2
 [7.1.1]: https://github.com/Confidenceman02/elm-select/compare/7.1.0...7.1.1
 [7.1.0]: https://github.com/Confidenceman02/elm-select/compare/7.0.2...7.1.0
