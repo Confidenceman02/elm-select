@@ -3207,6 +3207,14 @@ buildMenuItem data idx item =
                     Nothing
             )
                 |> isSelected item
+
+        maybeIndividualStyles =
+            case item of
+                Basic cfg ->
+                    cfg.styles
+
+                Custom cfg ->
+                    cfg.styles
     in
     case item of
         Basic _ ->
@@ -3222,7 +3230,7 @@ buildMenuItem data idx item =
                     data.menuNavigation
                     data.initialMousedown
                     data.variant
-                    data.menuItemStyles
+                    (Maybe.withDefault data.menuItemStyles maybeIndividualStyles)
                     data.disabled
                     data.controlUiFocused
                 )
@@ -3242,7 +3250,7 @@ buildMenuItem data idx item =
                     data.menuNavigation
                     data.initialMousedown
                     data.variant
-                    data.menuItemStyles
+                    (Maybe.withDefault data.menuItemStyles maybeIndividualStyles)
                     data.disabled
                     data.controlUiFocused
                 )

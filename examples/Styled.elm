@@ -111,7 +111,7 @@ view m =
                 Loading ->
                     Select.loading True config
 
-                Loaded items ->
+                Loaded _ ->
                     Select.loading False config
 
         withItems config =
