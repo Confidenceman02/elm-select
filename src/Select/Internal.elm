@@ -1,6 +1,7 @@
 module Select.Internal exposing
     ( BaseMenuItem
     , Direction(..)
+    , Group
     , InitialMousedown(..)
     , UiFocused(..)
     , calculateNextActiveTarget
@@ -9,7 +10,7 @@ module Select.Internal exposing
     )
 
 import Html.Styled as Styled
-import Select.Styles exposing (MenuItemConfig)
+import Select.Styles exposing (GroupConfig, MenuItemConfig)
 
 
 type Direction
@@ -66,6 +67,14 @@ type alias BaseMenuItem comparable =
     { comparable
         | filterable : Bool
         , styles : Maybe MenuItemConfig
+        , group : Maybe Group
+    }
+
+
+type alias Group =
+    { name : String
+    , styles : Maybe GroupConfig
+    , view : Maybe (Styled.Html Never)
     }
 
 

@@ -1,5 +1,5 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
     , placeholder, selectIdentifier, state, update, view, searchable, setStyles
     , single
     , singleMenu, menu
@@ -14,7 +14,7 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, filterableMenuItem, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
 @docs placeholder, selectIdentifier, state, update, view, searchable, setStyles
 
 
@@ -51,6 +51,7 @@ module Select exposing
 
 import Browser.Dom as Dom
 import Css
+import Dict
 import Html.Styled as Styled exposing (Html, button, div, input, li, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
@@ -248,6 +249,11 @@ type MenuItem item
     | Custom (Internal.BaseMenuItem (CustomMenuItem item))
 
 
+{-| -}
+type Group
+    = Group Internal.Group
+
+
 {-| A menu item that will be represented in the menu list.
 
 The `item` property is the type representation of the menu item that will be used in an [Action](#Action).
@@ -420,6 +426,103 @@ defaults =
 
 
 
+-- GROUP MODIFIERS
+
+
+{-| Create a [MenuItem](#MenuItem) group to provide visual organisation for
+your menu items.
+
+Use with [groupedMenuItem](#groupedMenuItem) to add a [MenuItem](#MenuItem)
+to a group.
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        toolGroup : Group
+        toolGroup =
+          group "tool"
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+          [ groupedMenuItem toolGroup
+                ( basicMenuItem { item = Screwdriver, label = "Screwdriver" } )
+          , groupedMenuItem toolGroup
+                ( basicMenuItem { item = Hammer, label = "Hammer" } )
+          , groupedMenuItem toolGroup
+                ( basicMenuItem { item = Drill, label = "Drill" } )
+          ]
+
+-}
+group : String -> Group
+group label =
+    Group
+        { name = label
+        , styles = Nothing
+        , view = Nothing
+        }
+
+
+{-| Create custom styling for a [Group](#Group).
+
+This will override global styles for this group when using
+[setMenuItemGroupStyles](/packages/Confidenceman02/elm-select/latest/Select-Styles#setMenuItemGroupStyles)
+
+        groupStyles : MenuItemGroupConfig
+        groupStyles =
+            getMenuItemGroupConfig default
+                |> setMenuItemGroupColor (Css.hex "#EEEEEE")
+
+        toolGroup : Group
+        toolGroup =
+          group "tool"
+              |> groupStyles groupStyles
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+          [ groupedMenuItem toolGroup
+                ( basicMenuItem { item = Screwdriver, label = "Screwdriver" } )
+          , groupedMenuItem toolGroup
+                ( basicMenuItem { item = Hammer, label = "Hammer" } )
+          , groupedMenuItem toolGroup
+                ( basicMenuItem { item = Drill, label = "Drill" } )
+          ]
+
+-}
+groupStyles : Styles.GroupConfig -> Group -> Group
+groupStyles styles (Group config) =
+    Group { config | styles = Just styles }
+
+
+{-| Create a custom view for a [Group](#Group).
+
+        customView : Html Never
+        customView =
+          text "My custom group"
+
+        customGroup : Group
+        customGroup =
+          group "tool"
+              |> groupView customView
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+          [ groupedMenuItem customGroup
+                ( basicMenuItem { item = Screwdriver, label = "Screwdriver" } )
+          , groupedMenuItem customGroup
+                ( basicMenuItem { item = Hammer, label = "Hammer" } )
+          , groupedMenuItem customGroup
+                ( basicMenuItem { item = Drill, label = "Drill" } )
+          ]
+
+-}
+groupView : Html Never -> Group -> Group
+groupView c (Group config) =
+    Group { config | view = Just c }
+
+
+
 -- MENU ITEM MODIFIERS
 
 
@@ -451,6 +554,7 @@ basicMenuItem bscItem =
         , label = bscItem.label
         , filterable = True
         , styles = Nothing
+        , group = Nothing
         }
 
 
@@ -480,7 +584,45 @@ customMenuItem i =
         , view = i.view
         , filterable = True
         , styles = Nothing
+        , group = Nothing
         }
+
+
+{-| Create a grouped [MenuItem](#MenuItem).
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        toolGroup : Group
+        toolGroup =
+          group "tool"
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+            [ groupedMenuItem toolGroup
+                  ( customMenuItem
+                        { item = Screwdriver
+                        , label = "Screwdriver"
+                        , view = text "Screwdriver"
+                        }
+                  )
+            , customMenuItem
+                { item = Hammer, label = "Hammer", view = text "Hammer" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+            ]
+
+-}
+groupedMenuItem : Group -> MenuItem item -> MenuItem item
+groupedMenuItem (Group grp) mi =
+    case mi of
+        Basic obj ->
+            Basic { obj | group = Just grp }
+
+        Custom obj ->
+            Custom { obj | group = Just grp }
 
 
 {-| Choose whether a menu item is filterable.
@@ -1628,11 +1770,11 @@ view (Config config) =
         selectId =
             state_.selectId
 
-        totalMenuItems =
+        totalMenuItemsCount =
             List.length viewableMenuItems
 
         viewableMenuItems =
-            buildViewableMenuItems
+            filterViewableMenuItems
                 (BuildViewableMenuItemsData
                     config.searchable
                     state_.inputValue
@@ -1698,7 +1840,7 @@ view (Config config) =
                                     (getSelectId config.state)
                                     singleVariant
                                     (enterSelectTargetItem state_ viewableMenuItems)
-                                    totalMenuItems
+                                    totalMenuItemsCount
                                     state_.menuOpen
                                     config.labelledBy
                                     config.ariaDescribedBy
@@ -1725,7 +1867,7 @@ view (Config config) =
                                         (lazy viewSelectInput
                                             (ViewSelectInputData
                                                 (enterSelectTargetItem state_ viewableMenuItems)
-                                                totalMenuItems
+                                                totalMenuItemsCount
                                                 singleVariant
                                                 config.labelledBy
                                                 config.ariaDescribedBy
@@ -1790,6 +1932,7 @@ view (Config config) =
                                     viewMenuItems
                                         (ViewMenuItemsData
                                             (Styles.getMenuItemConfig config.styles)
+                                            (Styles.getGroupConfig config.styles)
                                             selectId
                                             singleVariant
                                             state_.initialMousedown
@@ -1818,7 +1961,7 @@ view (Config config) =
                         ctrlStyles
                         config.styles
                         (enterSelectTargetItem state_ viewableMenuItems)
-                        totalMenuItems
+                        totalMenuItemsCount
                         variant
                         config.placeholder
                         config.disabled
@@ -1848,6 +1991,7 @@ view (Config config) =
                                 state_.menuNavigation
                                 (Styles.getMenuConfig config.styles)
                                 (Styles.getMenuItemConfig config.styles)
+                                (Styles.getGroupConfig config.styles)
                                 config.disabled
                                 state_.controlUiFocused
                             )
@@ -2384,6 +2528,7 @@ type alias ViewMenuData item =
     , menuNavigation : MenuNavigation
     , menuStyles : Styles.MenuConfig
     , menuItemStyles : Styles.MenuItemConfig
+    , menuItemGroupStyles : Styles.GroupConfig
     , disabled : Bool
     , controlUiFocused : Maybe Internal.UiFocused
     }
@@ -2401,6 +2546,7 @@ viewMenu data =
         (viewMenuItems
             (ViewMenuItemsData
                 data.menuItemStyles
+                data.menuItemGroupStyles
                 data.selectId
                 data.variant
                 data.initialMousedown
@@ -2442,6 +2588,7 @@ viewLoadingMenu data =
 
 type alias ViewMenuItemsData item =
     { menuItemStyles : Styles.MenuItemConfig
+    , menuItemGroupStyles : Styles.GroupConfig
     , selectId : SelectId
     , variant : CustomVariant item
     , initialMousedown : Internal.InitialMousedown
@@ -2455,19 +2602,146 @@ type alias ViewMenuItemsData item =
 
 viewMenuItems : ViewMenuItemsData item -> List ( String, Html (Msg item) )
 viewMenuItems data =
-    List.indexedMap
-        (buildMenuItem
-            (BuildMenuItemData data.menuItemStyles
-                data.selectId
-                data.variant
-                data.initialMousedown
-                data.activeTargetIndex
-                data.menuNavigation
-                data.disabled
-                data.controlUiFocused
+    let
+        updateGroupedItem :
+            Internal.Group
+            -> MenuItem item
+            -> Maybe ( List (MenuItem item), Internal.Group )
+            -> Maybe ( List (MenuItem item), Internal.Group )
+        updateGroupedItem g mi maybeItems =
+            case maybeItems of
+                Just items ->
+                    Just (Tuple.mapFirst (\acc -> acc ++ [ mi ]) items)
+
+                _ ->
+                    Just ( [ mi ], g )
+
+        buildGroupedViews :
+            ( String, ( List (MenuItem item), Internal.Group ) )
+            -> ( Int, List ( String, Html (Msg item) ) )
+            -> ( Int, List ( String, Html (Msg item) ) )
+        buildGroupedViews ( _, ( v, g ) ) ( idx, acc ) =
+            let
+                newIndex =
+                    idx + List.length v
+
+                resolveGroupStyles =
+                    case g.styles of
+                        Just styles ->
+                            styles
+
+                        _ ->
+                            data.menuItemGroupStyles
+            in
+            ( newIndex
+            , acc
+                ++ viewSectionLabel resolveGroupStyles g
+                :: List.map2 builder
+                    (List.range (idx + 1) (idx + List.length v))
+                    v
             )
-        )
-        data.viewableMenuItems
+
+        builder : Int -> MenuItem item -> ( String, Html (Msg item) )
+        builder =
+            buildMenuItem
+                (BuildMenuItemData data.menuItemStyles
+                    data.selectId
+                    data.variant
+                    data.initialMousedown
+                    data.activeTargetIndex
+                    data.menuNavigation
+                    data.disabled
+                    data.controlUiFocused
+                )
+
+        sort idx items acc =
+            case items of
+                [] ->
+                    acc
+
+                head :: [] ->
+                    case getGroup head of
+                        Just g ->
+                            Tuple.mapSecond
+                                (Dict.update g.name (updateGroupedItem g head))
+                                acc
+
+                        _ ->
+                            Tuple.mapFirst (\it -> it ++ [ head ]) acc
+
+                head :: rest ->
+                    case getGroup head of
+                        Just g ->
+                            sort
+                                (idx + 1)
+                                rest
+                                (Tuple.mapSecond
+                                    (Dict.update g.name (updateGroupedItem g head))
+                                    acc
+                                )
+
+                        _ ->
+                            sort
+                                (idx + 1)
+                                rest
+                                (Tuple.mapFirst (\it -> it ++ [ head ]) acc)
+
+        ( ungroupedViews, groupedItems ) =
+            sort 0 data.viewableMenuItems ( [], Dict.empty )
+
+        groupedViews =
+            List.foldl buildGroupedViews
+                ( List.length ungroupedViews - 1, [] )
+                (Dict.toList groupedItems)
+                |> Tuple.second
+    in
+    -- There is almost certainly a more performant way to do this.
+    List.indexedMap builder ungroupedViews
+        ++ groupedViews
+
+
+viewSectionLabel : Styles.GroupConfig -> Internal.Group -> ( String, Html msg )
+viewSectionLabel styles g =
+    ( g.name
+    , div
+        [ StyledAttribs.css
+            [ Css.property "text-transform"
+                (Styles.getGroupTextTransformationLabel styles)
+            , Css.property "font-size" (Styles.getGroupFontSizeLabel styles)
+            , Css.property "font-weight" (Styles.getGroupFontWeightLabel styles)
+            , Css.marginBottom (Css.em 0.25)
+            , Css.marginTop (Css.em 0.25)
+            , Css.paddingLeft (Css.px 8)
+            , Css.paddingRight (Css.px 8)
+            , Css.boxSizing Css.borderBox
+            , Css.color (Styles.getGroupColor styles)
+            ]
+        , attribute "data-test-id" "group"
+        ]
+        [ case g.view of
+            Just v ->
+                Styled.map never v
+
+            _ ->
+                text g.name
+        ]
+    )
+
+
+type alias ViewMenuItemData item =
+    { index : Int
+    , itemSelected : Bool
+    , isClickFocused : Bool
+    , menuItemIsTarget : Bool
+    , selectId : SelectId
+    , menuItem : MenuItem item
+    , menuNavigation : MenuNavigation
+    , initialMousedown : Internal.InitialMousedown
+    , variant : CustomVariant item
+    , menuItemStyles : Styles.MenuItemConfig
+    , disabled : Bool
+    , controlUiFocused : Maybe Internal.UiFocused
+    }
 
 
 viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
@@ -2963,6 +3237,16 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 -- UTILS
 
 
+getGroup : MenuItem item -> Maybe Internal.Group
+getGroup mi =
+    case mi of
+        Basic cfg ->
+            cfg.group
+
+        Custom cfg ->
+            cfg.group
+
+
 unwrapItem : MenuItem item -> item
 unwrapItem mi =
     case mi of
@@ -3146,9 +3430,14 @@ type alias BuildViewableMenuItemsData item =
     }
 
 
-buildViewableMenuItems : BuildViewableMenuItemsData item -> List (MenuItem item)
-buildViewableMenuItems data =
+filterViewableMenuItems : BuildViewableMenuItemsData item -> List (MenuItem item)
+filterViewableMenuItems data =
     let
+        filterMenuItem : String -> MenuItem item -> Bool
+        filterMenuItem query item =
+            String.contains (String.toLower query) (String.toLower (getMenuItemLabel item))
+                || not (isMenuItemFilterable item)
+
         filteredMenuItems =
             case ( data.searchable, data.inputValue ) of
                 ( True, Just value ) ->
@@ -3256,12 +3545,6 @@ buildMenuItem data idx item =
                 )
                 [ Styled.map never ci.view ]
             )
-
-
-filterMenuItem : String -> MenuItem item -> Bool
-filterMenuItem query item =
-    String.contains (String.toLower query) (String.toLower (getMenuItemLabel item))
-        || not (isMenuItemFilterable item)
 
 
 filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
@@ -3525,22 +3808,6 @@ menuListStyles styles =
            , Css.paddingLeft (Css.px 0)
            , Css.marginBottom (Css.px 8)
            ]
-
-
-type alias ViewMenuItemData item =
-    { index : Int
-    , itemSelected : Bool
-    , isClickFocused : Bool
-    , menuItemIsTarget : Bool
-    , selectId : SelectId
-    , menuItem : MenuItem item
-    , menuNavigation : MenuNavigation
-    , initialMousedown : Internal.InitialMousedown
-    , variant : CustomVariant item
-    , menuItemStyles : Styles.MenuItemConfig
-    , disabled : Bool
-    , controlUiFocused : Maybe Internal.UiFocused
-    }
 
 
 menuItemContainerStyles : ViewMenuItemData item -> List Css.Style

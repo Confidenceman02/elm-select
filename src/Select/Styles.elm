@@ -1,11 +1,12 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, MenuConfig, MenuControlConfig, MenuItemConfig, default
+    ( Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor
     , setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBorderWidth, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
     , setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor, setMenuMaxHeightPx, setMenuMaxHeightVh, setMenuPosition
+    , setGroupStyles, setGroupColor, setGroupFontSizeLabel, setGroupFontWeightLabel, setGroupTextTransformationLabel
     , setMenuItemStyles, setMenuItemBackgroundColorClicked, setMenuItemBackgroundColorSelected, setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColorNotSelected, setMenuItemColorHoverSelected, setMenuItemInlinePadding
     , setMenuItemColorHoverNotSelected, setMenuControlBorderColorFocus, setMenuControlBorderColorHover, setMenuControlBorderRadius, setMenuControlClearIndicatorColor
     , setMenuControlClearIndicatorColorHover, setMenuControlColor, setMenuControlDisabledOpacity, setMenuControlLoadingIndicatorColor, setMenuControlMinHeight, setMenuControlPlaceholderOpacity
@@ -18,6 +19,7 @@ module Select.Styles exposing
     , getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
     , getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
     , getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuPosition
+    , getGroupConfig, getGroupColor, getGroupFontSizeLabel, getGroupFontWeightLabel, getGroupTextTransformationLabel
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorClicked, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor, getMenuItemColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColorNotSelected
     , dracula
@@ -37,7 +39,7 @@ This means when you are setting styles to the [MenuConfig](#MenuConfig) you can 
 NOTE: The [native](/packages/Confidenceman02/elm-select/latest/Select#singleNative) Select variant
 only respects some of the styles.
 
-@docs Config, ControlConfig, MenuConfig, MenuControlConfig, MenuItemConfig, default
+@docs Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
 
 
 # Setters
@@ -57,6 +59,11 @@ Set styles
 
 @docs setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBorderWidth, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
 @docs setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor, setMenuMaxHeightPx, setMenuMaxHeightVh, setMenuPosition
+
+
+# Group
+
+@docs setGroupStyles, setGroupColor, setGroupFontSizeLabel, setGroupFontWeightLabel, setGroupTextTransformationLabel
 
 
 # Menu item
@@ -86,6 +93,11 @@ Get styles
 @docs getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
 @docs getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
 @docs getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuPosition
+
+
+# Group
+
+@docs getGroupConfig, getGroupColor, getGroupFontSizeLabel, getGroupFontWeightLabel, getGroupTextTransformationLabel
 
 
 # Menu item
@@ -120,6 +132,11 @@ type MenuConfig
 
 
 {-| -}
+type GroupConfig
+    = GroupConfig GroupConfiguration
+
+
+{-| -}
 type MenuItemConfig
     = MenuItemConfig MenuItemConfiguration
 
@@ -127,6 +144,14 @@ type MenuItemConfig
 {-| -}
 type MenuControlConfig compatible
     = MenuControlConfig (MenuControlConfiguration compatible)
+
+
+type alias GroupConfiguration =
+    { color : Css.Color
+    , fontSizeLabel : String
+    , fontWeightLabel : String
+    , textTransformationLabel : String
+    }
 
 
 type alias MenuItemConfiguration =
@@ -199,7 +224,17 @@ type alias ControlConfiguration compatible =
 type alias Configuration =
     { controlConfig : ControlConfig
     , menuConfig : MenuConfig
+    , menuItemGroup : GroupConfig
     , menuItemConfig : MenuItemConfig
+    }
+
+
+defaultsGroup : GroupConfiguration
+defaultsGroup =
+    { textTransformationLabel = Css.uppercase.value
+    , fontSizeLabel = (Css.px 14).value
+    , fontWeightLabel = (Css.int 500).value
+    , color = Css.hex "#9e9e9e"
     }
 
 
@@ -275,6 +310,11 @@ defaultsControl =
     }
 
 
+menuItemGroupDefault : GroupConfig
+menuItemGroupDefault =
+    GroupConfig defaultsGroup
+
+
 menuItemDefault : MenuItemConfig
 menuItemDefault =
     MenuItemConfig defaultsMenuItem
@@ -294,6 +334,7 @@ defaults : Configuration
 defaults =
     { controlConfig = controlDefault
     , menuConfig = menuDefault
+    , menuItemGroup = menuItemGroupDefault
     , menuItemConfig = menuItemDefault
     }
 
@@ -307,6 +348,34 @@ have been configured.
 default : Config
 default =
     Config defaults
+
+
+
+-- SETTERS GROUP
+
+
+{-| -}
+setGroupColor : Css.Color -> GroupConfig -> GroupConfig
+setGroupColor clr (GroupConfig config) =
+    GroupConfig { config | color = clr }
+
+
+{-| -}
+setGroupFontSizeLabel : Css.FontSize a -> GroupConfig -> GroupConfig
+setGroupFontSizeLabel fs (GroupConfig config) =
+    GroupConfig { config | fontSizeLabel = fs.value }
+
+
+{-| -}
+setGroupFontWeightLabel : Css.FontWeight a -> GroupConfig -> GroupConfig
+setGroupFontWeightLabel fs (GroupConfig config) =
+    GroupConfig { config | fontWeightLabel = fs.value }
+
+
+{-| -}
+setGroupTextTransformationLabel : Css.TextTransform a -> GroupConfig -> GroupConfig
+setGroupTextTransformationLabel fs (GroupConfig config) =
+    GroupConfig { config | textTransformationLabel = fs.value }
 
 
 
@@ -814,6 +883,25 @@ setMenuStyles menuConfig (Config config) =
     Config { config | menuConfig = menuConfig }
 
 
+{-| Set styles for Select menu item groups
+
+        groupBranding : GroupConfig
+        groupBranding =
+            getGroupConfig default
+                |> setGroupColor (Css.hex "#000000")
+
+
+        selectBranding : Config
+        selectBranding
+                default
+                    |> setGroupStyles groupBranding
+
+-}
+setGroupStyles : GroupConfig -> Config -> Config
+setGroupStyles groupConfig (Config config) =
+    Config { config | menuItemGroup = groupConfig }
+
+
 {-| Set styles for Select menu item
 
         menuItemBranding : MenuItemConfig
@@ -831,6 +919,51 @@ setMenuStyles menuConfig (Config config) =
 setMenuItemStyles : MenuItemConfig -> Config -> Config
 setMenuItemStyles menuItemConfig (Config config) =
     Config { config | menuItemConfig = menuItemConfig }
+
+
+
+-- GETTERS GROUP
+
+
+{-| Get the GroupConfig
+
+    baseStyles : Config
+    baseStyles =
+        default
+
+    baseGroupStyles : GroupConfig
+    baseGroupStyles =
+        getGroupConfig baseStyles
+            |> setGroupColor (Css.hex "#000000")
+
+-}
+getGroupConfig : Config -> GroupConfig
+getGroupConfig (Config config) =
+    config.menuItemGroup
+
+
+{-| -}
+getGroupColor : GroupConfig -> Css.Color
+getGroupColor (GroupConfig config) =
+    config.color
+
+
+{-| -}
+getGroupFontSizeLabel : GroupConfig -> String
+getGroupFontSizeLabel (GroupConfig config) =
+    config.fontSizeLabel
+
+
+{-| -}
+getGroupFontWeightLabel : GroupConfig -> String
+getGroupFontWeightLabel (GroupConfig config) =
+    config.fontWeightLabel
+
+
+{-| -}
+getGroupTextTransformationLabel : GroupConfig -> String
+getGroupTextTransformationLabel (GroupConfig config) =
+    config.textTransformationLabel
 
 
 
