@@ -17,7 +17,7 @@ describe("examples", () => {
     const page = await browser.newPage();
 
     await page.goto(BASE_URI);
-    const singleExampleVisible = await page.isVisible(
+    const singleSearchableVisible = await page.isVisible(
       "text=SingleSearchable.elm"
     );
     const nativeSingle = await page.isVisible("text=NativeSingle.elm");
@@ -27,6 +27,7 @@ describe("examples", () => {
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
     const singleVisible = await page.isVisible("text=Single.elm");
+    const singleGroupVisible = await page.isVisible("text=SingleGrouped.elm");
     const formVisible = await page.isVisible("text=Form.elm");
     const customMenuItemsVisible = await page.isVisible(
       "text=CustomMenuItems.elm"
@@ -36,16 +37,31 @@ describe("examples", () => {
       "text=SingleMenuOpen.elm"
     );
 
-    expect(singleExampleVisible).toBeTruthy();
+    expect(singleSearchableVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
     expect(singleVisible).toBeTruthy();
+    expect(singleGroupVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
     expect(singleMenuOpenVisible).toBeTruthy();
+  });
+});
+
+describe("SingleGrouped", () => {
+  it("renders groups", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleGrouped.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForTimeout(100);
+
+    const groupsVisible = await page.locator("[data-test-id=group]").count();
+
+    expect(groupsVisible).toEqual(2);
   });
 });
 
@@ -322,9 +338,9 @@ describe("Multi", () => {
   it("has input focus after clearing more than 1 multi tag", async () => {
     const page = await browser.newPage();
     await page.goto(`${BASE_URI}/Multi.elm`);
-    const input = page.locator("[data-test-id=selectInput]")
+    const input = page.locator("[data-test-id=selectInput]");
 
-    await input.focus()
+    await input.focus();
     await page.keyboard.press("ArrowDown");
     await page.waitForSelector("[data-test-id=listBox]");
     await page.keyboard.press("Enter");
@@ -335,13 +351,13 @@ describe("Multi", () => {
     await page.waitForSelector("[data-test-id=multi-select-tag-1]");
     await page.locator("[data-test-id=clear]").click();
     await page.waitForTimeout(100);
-    await page.keyboard.press("A")
+    await page.keyboard.press("A");
     const inputValue = await input.evaluate((el: HTMLInputElement) => {
-      return el.value
-    })
+      return el.value;
+    });
 
-    expect(inputValue).toEqual("A")
-  })
+    expect(inputValue).toEqual("A");
+  });
 
   it("renders multi select tag when selecting item", async () => {
     const page = await browser.newPage();
