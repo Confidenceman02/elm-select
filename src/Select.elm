@@ -467,12 +467,12 @@ group label =
 {-| Create custom styling for a [Group](#Group).
 
 This will override global styles for this group when using
-[setMenuItemGroupStyles](/packages/Confidenceman02/elm-select/latest/Select-Styles#setMenuItemGroupStyles)
+[setGroupStyles](/packages/Confidenceman02/elm-select/latest/Select-Styles#setGroupStyles)
 
-        groupStyles : MenuItemGroupConfig
+        groupStyles : GroupConfig
         groupStyles =
-            getMenuItemGroupConfig default
-                |> setMenuItemGroupColor (Css.hex "#EEEEEE")
+            getGroupConfig default
+                |> setGroupColor (Css.hex "#EEEEEE")
 
         toolGroup : Group
         toolGroup =
