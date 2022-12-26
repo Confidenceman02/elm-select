@@ -52,7 +52,7 @@ module Select exposing
 import Browser.Dom as Dom
 import Css
 import Dict
-import Html.Styled as Styled exposing (Html, button, div, input, li, option, select, span, text)
+import Html.Styled as Styled exposing (Html, button, div, input, li, optgroup, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
@@ -2356,17 +2356,18 @@ viewNative data =
     case data.variant of
         SingleNative maybeSelectedItem ->
             let
-                withSelectedOption item =
-                    case maybeSelectedItem of
-                        Just selectedItem ->
-                            if selectedItem == item then
-                                [ StyledAttribs.attribute "selected" "" ]
-
-                            else
-                                []
-
-                        _ ->
-                            []
+                buildGroupedViews :
+                    ( String, ( List (MenuItem item), Internal.Group ) )
+                    -> List (Html (Msg item))
+                    -> List (Html (Msg item))
+                buildGroupedViews ( _, ( v, g ) ) acc =
+                    acc
+                        ++ [ optgroup [ StyledAttribs.attribute "label" g.name ]
+                                (List.map
+                                    (buildMenuItemNative maybeSelectedItem)
+                                    v
+                                )
+                           ]
 
                 withPlaceholder =
                     case maybeSelectedItem of
@@ -2382,7 +2383,7 @@ viewNative data =
                                 [ text ("(" ++ data.placeholder ++ ")") ]
 
                 buildList menuItem =
-                    option (StyledAttribs.value (getMenuItemLabel menuItem) :: withSelectedOption menuItem) [ text (getMenuItemLabel menuItem) ]
+                    buildMenuItemNative maybeSelectedItem menuItem
 
                 (SelectId selectId) =
                     data.selectId
@@ -2410,6 +2411,14 @@ viewNative data =
 
                         _ ->
                             False
+
+                ( ungroupedViews, groupedItems ) =
+                    sortMenuItemsHelp 0 data.menuItems ( [], Dict.empty )
+
+                groupedViews =
+                    List.foldl buildGroupedViews
+                        []
+                        (Dict.toList groupedItems)
             in
             select
                 ([ id selectId
@@ -2446,7 +2455,11 @@ viewNative data =
                     ++ withLabelledBy
                     ++ withAriaDescribedBy
                 )
-                (withPlaceholder :: List.map buildList data.menuItems)
+                (withPlaceholder
+                    :: (List.map buildList ungroupedViews
+                            ++ groupedViews
+                       )
+                )
 
 
 type alias ViewWrapperData item =
@@ -2603,19 +2616,6 @@ type alias ViewMenuItemsData item =
 viewMenuItems : ViewMenuItemsData item -> List ( String, Html (Msg item) )
 viewMenuItems data =
     let
-        updateGroupedItem :
-            Internal.Group
-            -> MenuItem item
-            -> Maybe ( List (MenuItem item), Internal.Group )
-            -> Maybe ( List (MenuItem item), Internal.Group )
-        updateGroupedItem g mi maybeItems =
-            case maybeItems of
-                Just items ->
-                    Just (Tuple.mapFirst (\acc -> acc ++ [ mi ]) items)
-
-                _ ->
-                    Just ( [ mi ], g )
-
         buildGroupedViews :
             ( String, ( List (MenuItem item), Internal.Group ) )
             -> ( Int, List ( String, Html (Msg item) ) )
@@ -2654,40 +2654,8 @@ viewMenuItems data =
                     data.controlUiFocused
                 )
 
-        sort idx items acc =
-            case items of
-                [] ->
-                    acc
-
-                head :: [] ->
-                    case getGroup head of
-                        Just g ->
-                            Tuple.mapSecond
-                                (Dict.update g.name (updateGroupedItem g head))
-                                acc
-
-                        _ ->
-                            Tuple.mapFirst (\it -> it ++ [ head ]) acc
-
-                head :: rest ->
-                    case getGroup head of
-                        Just g ->
-                            sort
-                                (idx + 1)
-                                rest
-                                (Tuple.mapSecond
-                                    (Dict.update g.name (updateGroupedItem g head))
-                                    acc
-                                )
-
-                        _ ->
-                            sort
-                                (idx + 1)
-                                rest
-                                (Tuple.mapFirst (\it -> it ++ [ head ]) acc)
-
         ( ungroupedViews, groupedItems ) =
-            sort 0 data.viewableMenuItems ( [], Dict.empty )
+            sortMenuItemsHelp 0 data.viewableMenuItems ( [], Dict.empty )
 
         groupedViews =
             List.foldl buildGroupedViews
@@ -3237,6 +3205,67 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 -- UTILS
 
 
+sortMenuItemsHelp :
+    Int
+    -> List (MenuItem item)
+    ->
+        ( List (MenuItem item)
+        , Dict.Dict String ( List (MenuItem item), Internal.Group )
+        )
+    ->
+        ( List (MenuItem item)
+        , Dict.Dict String ( List (MenuItem item), Internal.Group )
+        )
+sortMenuItemsHelp =
+    let
+        updateGroupedItem :
+            Internal.Group
+            -> MenuItem item
+            -> Maybe ( List (MenuItem item), Internal.Group )
+            -> Maybe ( List (MenuItem item), Internal.Group )
+        updateGroupedItem g mi maybeItems =
+            case maybeItems of
+                Just i ->
+                    Just (Tuple.mapFirst (\acc -> acc ++ [ mi ]) i)
+
+                _ ->
+                    Just ( [ mi ], g )
+
+        sort idx items accum =
+            case items of
+                [] ->
+                    accum
+
+                head :: [] ->
+                    case getGroup head of
+                        Just g ->
+                            Tuple.mapSecond
+                                (Dict.update g.name (updateGroupedItem g head))
+                                accum
+
+                        _ ->
+                            Tuple.mapFirst (\it -> it ++ [ head ]) accum
+
+                head :: rest ->
+                    case getGroup head of
+                        Just g ->
+                            sort
+                                (idx + 1)
+                                rest
+                                (Tuple.mapSecond
+                                    (Dict.update g.name (updateGroupedItem g head))
+                                    accum
+                                )
+
+                        _ ->
+                            sort
+                                (idx + 1)
+                                rest
+                                (Tuple.mapFirst (\it -> it ++ [ head ]) accum)
+    in
+    sort
+
+
 getGroup : MenuItem item -> Maybe Internal.Group
 getGroup mi =
     case mi of
@@ -3475,6 +3504,28 @@ type alias BuildMenuItemData item =
     , disabled : Bool
     , controlUiFocused : Maybe Internal.UiFocused
     }
+
+
+buildMenuItemNative : Maybe (MenuItem item) -> MenuItem item -> Html (Msg item)
+buildMenuItemNative maybeSelectedItem menuItem =
+    let
+        withSelectedOption item =
+            case maybeSelectedItem of
+                Just selectedItem ->
+                    if selectedItem == item then
+                        [ StyledAttribs.attribute "selected" "" ]
+
+                    else
+                        []
+
+                _ ->
+                    []
+    in
+    option
+        (StyledAttribs.value (getMenuItemLabel menuItem)
+            :: withSelectedOption menuItem
+        )
+        [ text (getMenuItemLabel menuItem) ]
 
 
 buildMenuItem :

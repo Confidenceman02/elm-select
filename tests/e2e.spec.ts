@@ -538,6 +538,18 @@ describe("SingleSearchable", () => {
   });
 });
 
+describe("SingleNativeGrouped", () => {
+  it("Shows the optgroup node", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleNativeGrouped.elm`);
+
+    const groupsVisible = await page.locator("optgroup").count();
+
+    expect(groupsVisible).toEqual(1);
+  });
+});
+
 describe("NativeSingle", () => {
   it("Selects item by input when there is no selection", async () => {
     await browser.newContext();
