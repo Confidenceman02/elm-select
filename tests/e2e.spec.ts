@@ -548,6 +548,49 @@ describe("SingleNativeGrouped", () => {
 
     expect(groupsVisible).toEqual(1);
   });
+
+  it("Does not show clear indicator when there is no selection", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleNativeGrouped.elm`);
+
+    const clearVisible = await page.isVisible("[data-test-id=clear]");
+
+    expect(clearVisible).toBeFalsy();
+  });
+
+  it("Shows clear indicator when there is a selection", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleNativeGrouped.elm`);
+
+    await page.selectOption("select#SingleSelectExample__elm-select", {
+      label: "Great",
+    });
+    await page.waitForSelector("[data-test-id=clear]");
+    const clearVisible = await page.isVisible("[data-test-id=clear]");
+
+    expect(clearVisible).toBeTruthy();
+  });
+
+  it("Clears a selected option", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleNativeGrouped.elm`);
+
+    await page.selectOption("select#SingleSelectExample__elm-select", {
+      label: "Great",
+    });
+    await page.waitForSelector("[data-test-id=clear]");
+    await page.click("[data-test-id=clear]");
+    await page.waitForTimeout(200);
+    const selectedIndex: number = await page.$eval(
+      "[data-test-id=nativeSingleSelect]",
+      (el: HTMLSelectElement) => el.selectedIndex
+    );
+
+    expect(selectedIndex).toBe(0);
+  });
 });
 
 describe("NativeSingle", () => {
