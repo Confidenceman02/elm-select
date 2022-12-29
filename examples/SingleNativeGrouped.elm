@@ -61,6 +61,9 @@ update msg model =
                         Just (Select.Select i) ->
                             Just i
 
+                        Just Select.ClearSingleSelectItem ->
+                            Nothing
+
                         _ ->
                             model.selectedItem
             in
@@ -89,5 +92,6 @@ view m =
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Select something"
+                    |> Select.clearable True
                 )
         ]

@@ -2,7 +2,7 @@ module Select.Internal exposing
     ( BaseMenuItem
     , Direction(..)
     , Group
-    , InitialMousedown(..)
+    , InitialAction(..)
     , UiFocused(..)
     , calculateNextActiveTarget
     , shouldQueryNextTargetElement
@@ -83,7 +83,7 @@ type UiFocused
     | Clearable
 
 
-type InitialMousedown
+type InitialAction
     = MultiItemMousedown Int
     | MenuItemMousedown Int
     | ContainerMousedown
