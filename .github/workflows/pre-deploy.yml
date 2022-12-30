@@ -40,6 +40,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - uses: c-hive/gha-yarn-cache@v1
+
       - uses: jorelali/setup-elm@v3
         with:
           elm-version: 0.19.1
@@ -47,6 +49,6 @@ jobs:
       - name: Build elm-book
         run: make elm-book-build
 
-      - uses: actions/upload-pages-artifact
+      - uses: actions/upload-pages-artifact@v1
         with:
           path: 'docs'
