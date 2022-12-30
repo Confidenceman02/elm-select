@@ -49,4 +49,8 @@ preview-docs: install
 
 .PHONY: elm-book
 elm-book: install
-	${Y} --cwd=elm-book parcel --dist-dir=dist-book --open --port=8086 book.html
+	${Y} --cwd=elm-book parcel --dist-dir=dist-book --open --port=8086 index.html
+
+.PHONY: elm-book-build
+elm-book-build: install
+	${Y} --cwd=elm-book parcel build --dist-dir=dist index.html
