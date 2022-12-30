@@ -1,0 +1,1 @@
+{"mappings":"ACAA","sources":["index.91cabaa0.css","book.scss"],"sourcesContent":["body {\n  color: #2f2438;\n  font-family: Open Sans, sans-serif;\n}\n\n/*# sourceMappingURL=index.91cabaa0.css.map */\n","body {\n font-family: 'Open Sans', sans-serif;\n color: #2F2438;\n}\n"],"names":[],"version":3,"file":"index.91cabaa0.css.map"}
