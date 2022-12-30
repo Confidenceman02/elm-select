@@ -27,7 +27,7 @@ module Select.Styles exposing
 
 {-| Add custom styling to the Select control, menu and menu item.
 
-![elm-select](https://Confidenceman02.github.io/elm-select/StylesModules.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/StylesModules.png)
 
 
 # Set up
@@ -1416,7 +1416,7 @@ getControlDisabledOpacity (ControlConfig config) =
 
 {-| A fun dark theme
 
-![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/DraculaTheme.png)
 
 -}
 dracula : Config
