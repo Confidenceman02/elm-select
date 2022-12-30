@@ -3,27 +3,27 @@ Select things in style!
 
 **Single select** 
 
-![elm-select](https://Confidenceman02.github.io/elm-select/SingleClearable.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/SingleClearable.png)
 
 **Multi select**
 
-![elm-select](https://Confidenceman02.github.io/elm-select/Multi.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/Multi.png)
 
 **Single native**
 
-![elm-select](https://Confidenceman02.github.io/elm-select/NativeSingle.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/NativeSingle.png)
 
 **Menu select**
 
-![elm-select](https://Confidenceman02.github.io/elm-select/SingleMenu.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/SingleMenu.png)
 
 **Themeable**
 
-![elm-select](https://Confidenceman02.github.io/elm-select/DraculaTheme.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/DraculaTheme.png)
 
 **Custom views**
 
-![elm-select](https://Confidenceman02.github.io/elm-select/CustomMenuItems.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/CustomMenuItems.png)
 
 ## Accessibility
 - Keyboard accessible
@@ -202,7 +202,7 @@ as a resource to help you set up Elm programs with [elm-css]().
 When using a searchable Select, elm-select renders an input element that can accept keyboard input to 
 filter the menu down to a specific menu item.
 
-![elm-select](https://Confidenceman02.github.io/elm-select/SingleFilter.png)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/SingleFilter.png)
 
 In order for the input to be displayed inline with other UI elements, the input element dynamically adjusts its width to just accommodate the text.
 More info [here](https://github.com/Confidenceman02/elm-select/issues/88) about why this decision was made.
@@ -216,7 +216,7 @@ width of the input element to a value that relates to a characters average size.
 To allow for characters that are above average in size, elm-select exaggerates the size value to ensure no text outgrows 
 the dynamic input width, but there may exist some edge cases where this doesn't happen.
 
-![elm-select](https://Confidenceman02.github.io/elm-select/SingleSelectInputSize.gif)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/SingleSelectInputSize.gif)
 
 *Other pure Elm ways to achieve this involved querying DOM elements but it was found not to be a performant way to 
 dynamically size the input as someone types. This due to how slow DOM queries are compared to how fast someone can input text. 
@@ -229,7 +229,7 @@ text will never outgrow the input element width.
 
 **Optimized example**
 
-![elm-select](https://Confidenceman02.github.io/elm-select/SingleSelectOptimise.gif)
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/SingleSelectOptimise.gif)
 
 __Opting in to Javascript optimization__
 
