@@ -52,5 +52,5 @@ elm-book: install
 	${Y} --cwd=elm-book parcel --dist-dir=dist-book --open --port=8086 index.html
 
 .PHONY: elm-book-build
-elm-book-build: install
+elm-book-build: .yarn.elm-book.INSTALLED
 	${Y} --cwd=elm-book parcel build --dist-dir=../docs --public-url ./ index.html

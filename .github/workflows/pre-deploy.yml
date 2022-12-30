@@ -34,3 +34,20 @@ jobs:
 
       - name: elm-analyse
         run: make elm-analyse
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: jorelali/setup-elm@v3
+        with:
+          elm-version: 0.19.1
+
+      - name: Build elm-book
+        run: make elm-book-build
+
+      - name: Deploy elm-book
+        uses: actions/upload-pages-artifact
+        with:
+          path: 'docs'
