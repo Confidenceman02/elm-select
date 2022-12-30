@@ -13,6 +13,10 @@ Select things in style!
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/assets/NativeSingle.png)
 
+**Multi native**
+
+![elm-select](https://Confidenceman02.github.io/elm-select/assets/MultiNative.png)
+
 **Menu select**
 
 ![elm-select](https://Confidenceman02.github.io/elm-select/assets/SingleMenu.png)
@@ -122,17 +126,14 @@ update msg model =
                         Just (Select someCountry) ->
                             { model | selectedCountry = Just someCountry }
                         
-                        Just (ClearSingleSelectItem someCountry) -> 
+                        Just (Clear) -> 
                             -- handle cleared 
                        
-                        Just (DeselectMultiItem) -> 
+                        Just (Deselect deselectedCountries) ->
                             -- handle deselected 
                        
                         Just (InputChange value) -> 
                             -- handle InputChange
-
-                        Just (MenuInputCleared) ->
-                            -- handle menu input cleared
 
                         Just (FocusSet) ->
                             -- handle focus set

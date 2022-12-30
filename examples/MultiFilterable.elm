@@ -80,8 +80,11 @@ update msg model =
                                 _ ->
                                     { model | selectedItems = model.selectedItems ++ [ i ] }
 
-                        Just (Select.DeselectMulti deletedItems) ->
+                        Just (Select.Deselect deletedItems) ->
                             { model | selectedItems = List.filter (\i -> not (List.member i deletedItems)) model.selectedItems }
+
+                        Just Select.Clear ->
+                            { model | selectedItems = [] }
 
                         _ ->
                             model

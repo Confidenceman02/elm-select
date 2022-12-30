@@ -13,19 +13,20 @@ after(async () => {
 });
 
 describe("examples", () => {
-  it("has all examples", async () => {
+  it("has all tested examples", async () => {
     const page = await browser.newPage();
 
     await page.goto(BASE_URI);
     const singleSearchableVisible = await page.isVisible(
       "text=SingleSearchable.elm"
     );
-    const nativeSingle = await page.isVisible("text=NativeSingle.elm");
+    const nativeSingle = await page.isVisible("text=SingleNative.elm");
     const multiAsyncExampleVisible = await page.isVisible(
       "text=MultiAsync.elm"
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
+    const multiNativeVisible = await page.isVisible("text=MultiNative.elm");
     const singleVisible = await page.isVisible("text=Single.elm");
     const singleGroupVisible = await page.isVisible("text=SingleGrouped.elm");
     const formVisible = await page.isVisible("text=Form.elm");
@@ -42,6 +43,7 @@ describe("examples", () => {
     expect(multiAsyncExampleVisible).toBeTruthy();
     expect(multiFilterable).toBeTruthy();
     expect(multiExampleVisible).toBeTruthy();
+    expect(multiNativeVisible).toBeTruthy();
     expect(singleVisible).toBeTruthy();
     expect(singleGroupVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
@@ -167,6 +169,7 @@ describe("SingleMenu", () => {
     await page.locator("[data-test-id=selectContainer]").dblclick();
     await page.waitForTimeout(100);
     await page.mouse.click(10, 10);
+    await page.waitForTimeout(100);
     const menuListVisible = await page.isVisible("[data-test-id=listBox]");
 
     expect(menuListVisible).toBeFalsy();
@@ -416,6 +419,43 @@ describe("Multi", () => {
   });
 });
 
+describe("MultiNative", () => {
+  it("Selects an item by input when there is no selection", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/MultiNative.elm`);
+    const SUT = page.locator("[data-test-id=nativeMultiSelect]");
+
+    // maps to "Is"
+    await page.type("[data-test-id=nativeMultiSelect]", "i");
+    await page.waitForTimeout(100);
+    const selectedIndex: number = await SUT.evaluate(
+      (el: HTMLSelectElement) => el.selectedIndex
+    );
+
+    expect(selectedIndex).toBe(1);
+  });
+
+  it("Selects multiple items", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/MultiNative.elm`);
+    const SUT = page.locator("[data-test-id=nativeMultiSelect]");
+
+    // maps to "Is"
+    await page.type("[data-test-id=nativeMultiSelect]", "i");
+    await page.waitForTimeout(100);
+    await page.keyboard.down("Shift");
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(100);
+    const selectedOptions: number = await SUT.evaluate(
+      (el: HTMLSelectElement) => el.selectedOptions.length
+    );
+
+    expect(selectedOptions).toBe(2);
+  });
+});
+
 describe("Form", () => {
   it("it doesn't submit the form when clearing a selected item with Enter", async () => {
     const page = await browser.newPage();
@@ -573,6 +613,24 @@ describe("SingleNativeGrouped", () => {
     expect(clearVisible).toBeTruthy();
   });
 
+  it("Selects the correct option when it is in a group", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+    await page.goto(`${BASE_URI}/SingleNativeGrouped.elm`);
+    await page.type("[data-test-id=nativeSingleSelect]", "e");
+    await page.waitForTimeout(100);
+
+    const SUT = page.locator("[data-test-id=nativeSingleSelect]");
+    const selectedIndex = await SUT.evaluate(
+      (el: HTMLSelectElement) => el.selectedIndex
+    );
+    const selectedText = await SUT.evaluate(
+      (el: HTMLSelectElement) => el.selectedOptions[0].innerText
+    );
+
+    expect([selectedIndex, selectedText]).toEqual([4, "Elm"]);
+  });
+
   it("Clears a selected option", async () => {
     await browser.newContext();
     const page = await browser.newPage();
@@ -593,11 +651,11 @@ describe("SingleNativeGrouped", () => {
   });
 });
 
-describe("NativeSingle", () => {
+describe("SingleNative", () => {
   it("Selects item by input when there is no selection", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.goto(`${BASE_URI}/SingleNative.elm`);
     await page.type("[data-test-id=nativeSingleSelect]", "e");
     await page.waitForTimeout(100);
 
@@ -612,7 +670,7 @@ describe("NativeSingle", () => {
   it("Selects item by input when there is already a selection", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.goto(`${BASE_URI}/SingleNative.elm`);
 
     await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
@@ -630,7 +688,7 @@ describe("NativeSingle", () => {
   it("selects item by dropdown select", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.goto(`${BASE_URI}/SingleNative.elm`);
     await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });
@@ -647,7 +705,7 @@ describe("NativeSingle", () => {
   it("selected item has selected attribute", async () => {
     await browser.newContext();
     const page = await browser.newPage();
-    await page.goto(`${BASE_URI}/NativeSingle.elm`);
+    await page.goto(`${BASE_URI}/SingleNative.elm`);
     await page.selectOption("select#SingleSelectExample__elm-select", {
       label: "Great",
     });

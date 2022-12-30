@@ -1,4 +1,4 @@
-module SingleNativeGrouped exposing (..)
+module MultiNative exposing (..)
 
 import Browser
 import Css
@@ -14,29 +14,26 @@ type Msg
 type alias Model =
     { selectState : Select.State
     , items : List (MenuItem String)
-    , selectedItem : Maybe String
+    , selectedItems : List String
     }
-
-
-group : Select.Group
-group =
-    Select.group "Language"
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { selectState = initState (selectIdentifier "SingleSelectExample")
       , items =
-            [ Select.groupedMenuItem group (Select.basicMenuItem { item = "Elm", label = "Elm" })
-            , Select.groupedMenuItem group (Select.basicMenuItem { item = "Is", label = "Is" })
-            , Select.groupedMenuItem group (Select.basicMenuItem { item = "Really", label = "Really" })
-            , Select.groupedMenuItem group (Select.basicMenuItem { item = "Great", label = "Great" })
+            [ Select.basicMenuItem { item = "Elm", label = "Elm" }
+            , Select.basicMenuItem { item = "Is", label = "Is" }
+            , Select.basicMenuItem { item = "Really", label = "Really" }
+            , Select.basicMenuItem { item = "Great", label = "Great" }
             , Select.basicMenuItem { item = "And", label = "And" }
             , Select.basicMenuItem { item = "I", label = "I" }
             , Select.basicMenuItem { item = "Love", label = "Love" }
             , Select.basicMenuItem { item = "It", label = "It" }
+            , Select.basicMenuItem { item = "A", label = "A" }
+            , Select.basicMenuItem { item = "Lot", label = "Lot" }
             ]
-      , selectedItem = Nothing
+      , selectedItems = []
       }
     , Cmd.none
     )
@@ -60,35 +57,22 @@ update msg model =
                 ( maybeAction, selectState, cmds ) =
                     Select.update sm model.selectState
 
-                updatedSelectedItem =
+                updatedSelectedItems =
                     case maybeAction of
-                        Just (Select.Select i) ->
-                            Just i
-
-                        Just Select.Clear ->
-                            Nothing
+                        Just (Select.SelectBatch items) ->
+                            items
 
                         _ ->
-                            model.selectedItem
+                            model.selectedItems
             in
-            ( { model
-                | selectState = selectState
-                , selectedItem = updatedSelectedItem
-              }
-            , Cmd.map SelectMsg cmds
-            )
+            ( { model | selectState = selectState, selectedItems = updatedSelectedItems }, Cmd.map SelectMsg cmds )
 
 
 view : Model -> Html Msg
 view m =
     let
-        selectedItem =
-            case m.selectedItem of
-                Just it ->
-                    Just (Select.basicMenuItem { item = it, label = it })
-
-                _ ->
-                    Nothing
+        selectedItems it =
+            Select.basicMenuItem { item = it, label = it }
     in
     div
         [ StyledAttribs.css
@@ -97,10 +81,9 @@ view m =
         ]
         [ Styled.map SelectMsg <|
             Select.view
-                (Select.singleNative selectedItem
+                (Select.multiNative (List.map selectedItems m.selectedItems)
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Select something"
-                    |> Select.clearable True
                 )
         ]

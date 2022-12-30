@@ -1,4 +1,4 @@
-module NativeSingle exposing (..)
+module SingleNative exposing (..)
 
 import Browser
 import Css

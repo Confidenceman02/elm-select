@@ -8,6 +8,7 @@ module Select.Events exposing
     , isUpArrow
     , onInputAt
     , onInputAtInt
+    , onMultiSelect
     )
 
 import Html.Styled exposing (Attribute)
@@ -120,6 +121,142 @@ keyCodeToKey keyCode =
 
     else
         Other
+
+
+onMultiSelect : (List Int -> msg) -> Attribute msg
+onMultiSelect msg =
+    on "input"
+        (intAt [ "target", "selectedOptions", "length" ]
+            |> Decode.andThen (optionsAt msg)
+        )
+
+
+optionsAt : (List Int -> msg) -> Int -> Decode.Decoder msg
+optionsAt msg l =
+    let
+        map1 : List Int -> Int -> List Int
+        map1 acc v =
+            acc ++ [ v ]
+
+        map2 : List Int -> Int -> Int -> List Int
+        map2 acc v1 v2 =
+            acc ++ [ v1, v2 ]
+
+        map3 : List Int -> Int -> Int -> Int -> List Int
+        map3 acc v1 v2 v3 =
+            acc ++ [ v1, v2, v3 ]
+
+        map4 : List Int -> Int -> Int -> Int -> Int -> List Int
+        map4 acc v1 v2 v3 v4 =
+            acc ++ [ v1, v2, v3, v4 ]
+
+        map5 : List Int -> Int -> Int -> Int -> Int -> Int -> List Int
+        map5 acc v1 v2 v3 v4 v5 =
+            acc ++ [ v1, v2, v3, v4, v5 ]
+
+        map6 : List Int -> Int -> Int -> Int -> Int -> Int -> Int -> List Int
+        map6 acc v1 v2 v3 v4 v5 v6 =
+            acc ++ [ v1, v2, v3, v4, v5, v6 ]
+
+        map7 : List Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> List Int
+        map7 acc v1 v2 v3 v4 v5 v6 v7 =
+            acc ++ [ v1, v2, v3, v4, v5, v6, v7 ]
+
+        map8 : List Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> List Int
+        map8 acc v1 v2 v3 v4 v5 v6 v7 v8 =
+            acc ++ [ v1, v2, v3, v4, v5, v6, v7, v8 ]
+
+        mapOptions : Int -> Int -> List Int -> Decode.Decoder (List Int)
+        mapOptions total ix acc =
+            let
+                stringIndex offset =
+                    String.fromInt (ix + offset)
+
+                newTotal =
+                    total - 8
+
+                newIndex =
+                    ix + 8
+            in
+            case total of
+                1 ->
+                    Decode.map (map1 acc) (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+
+                2 ->
+                    Decode.map2 (map2 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+
+                3 ->
+                    Decode.map3 (map3 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+
+                4 ->
+                    Decode.map4 (map4 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 3, "index" ])
+
+                5 ->
+                    Decode.map5 (map5 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 3, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 4, "index" ])
+
+                6 ->
+                    Decode.map6 (map6 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 3, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 4, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 5, "index" ])
+
+                7 ->
+                    Decode.map7 (map7 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 3, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 4, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 5, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 6, "index" ])
+
+                8 ->
+                    Decode.map8 (map8 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 3, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 4, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 5, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 6, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 7, "index" ])
+
+                _ ->
+                    Decode.map8 (map8 acc)
+                        (intAt [ "target", "selectedOptions", stringIndex 0, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 1, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 2, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 3, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 4, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 5, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 6, "index" ])
+                        (intAt [ "target", "selectedOptions", stringIndex 7, "index" ])
+                        |> Decode.andThen
+                            (\x -> mapOptions newTotal newIndex x)
+    in
+    if l == 0 then
+        Decode.fail "No selected options"
+
+    else
+        mapOptions l 0 []
+            |> Decode.andThen (msg >> Decode.succeed)
 
 
 onInputAt : List String -> (String -> msg) -> Attribute msg

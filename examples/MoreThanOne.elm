@@ -98,8 +98,11 @@ update msg model =
                         Just (Select.Select i) ->
                             model.input2.selectedItems ++ [ i ]
 
-                        Just (Select.DeselectMulti deselectedItems) ->
+                        Just (Select.Deselect deselectedItems) ->
                             List.filter (\i -> not (List.member i deselectedItems)) model.input2.selectedItems
+
+                        Just Select.Clear ->
+                            []
 
                         _ ->
                             model.input2.selectedItems
