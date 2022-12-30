@@ -1,3 +1,8 @@
+## [7.3.4] - 2022-12-30
+
+## Fixed
+- Broken README images.
+
 ## [7.3.3] - 2022-12-29
 
 ## Added
@@ -448,6 +453,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[7.3.4]: https://github.com/Confidenceman02/elm-select/compare/7.3.3...7.3.4
 [7.3.3]: https://github.com/Confidenceman02/elm-select/compare/7.3.2...7.3.3
 [7.3.2]: https://github.com/Confidenceman02/elm-select/compare/7.3.1...7.3.2
 [7.3.1]: https://github.com/Confidenceman02/elm-select/compare/7.3.0...7.3.1
