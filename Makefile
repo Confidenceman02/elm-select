@@ -53,4 +53,4 @@ elm-book: install
 
 .PHONY: elm-book-build
 elm-book-build: install
-	${Y} --cwd=elm-book parcel build --dist-dir=../docs index.html
+	${Y} --cwd=elm-book parcel build --dist-dir=../docs --public-url ./ index.html
