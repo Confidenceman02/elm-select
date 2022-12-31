@@ -1,3 +1,8 @@
+## [8.0.1] - 2022-12-31
+
+## Fixed
+- Missing documentation
+
 ## [8.0.0] - 2022-12-31
 
 ## Breaking changes
@@ -499,6 +504,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[8.0.1]: https://github.com/Confidenceman02/elm-select/compare/8.0.0...8.0.1
 [8.0.0]: https://github.com/Confidenceman02/elm-select/compare/7.3.4...8.0.0
 [7.3.4]: https://github.com/Confidenceman02/elm-select/compare/7.3.3...7.3.4
 [7.3.3]: https://github.com/Confidenceman02/elm-select/compare/7.3.2...7.3.3
