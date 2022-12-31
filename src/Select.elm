@@ -5,6 +5,7 @@ module Select exposing
     , singleMenu, menu
     , multi
     , singleNative
+    , multiNative
     , disabled, labelledBy, ariaDescribedBy, loading, loadingMessage
     , jsOptimize
     )
@@ -36,6 +37,11 @@ module Select exposing
 # Native Single select
 
 @docs singleNative
+
+
+# Native Multi select
+
+@docs multiNative
 
 
 # Common
@@ -95,6 +101,7 @@ type HeadlessState
 type Msg item
     = InputChanged String
     | InputChangedNativeSingle (List (MenuItem item)) Bool Int
+    | InputChangedNativeMulti (List (MenuItem item)) (List Int)
     | InputReceivedFocused (Variant item)
     | SelectedItem item
     | SelectedItemMulti item
@@ -176,10 +183,10 @@ When they select a country from the menu, it will be reflected in the Select act
 type Action item
     = InputChange String
     | Select item
-    | DeselectMulti (List item)
-    | ClearSingleSelectItem
+    | SelectBatch (List item)
+    | Deselect (List item)
+    | Clear
     | FocusSet
-    | MenuInputCleared
 
 
 {-| -}
@@ -345,16 +352,6 @@ getMenuItemLabel item =
 
         Custom config ->
             config.label
-
-
-getMenuItemItem : MenuItem item -> item
-getMenuItemItem item =
-    case item of
-        Basic config ->
-            config.item
-
-        Custom config ->
-            config.item
 
 
 
@@ -1060,7 +1057,7 @@ internalFocus id msg =
 
 type Variant item
     = CustomVariant (CustomVariant item)
-    | Native (NativeVariant item)
+    | NativeVariant (NativeVariant item)
 
 
 type CustomVariant item
@@ -1071,6 +1068,7 @@ type CustomVariant item
 
 type NativeVariant item
     = SingleNative (Maybe (MenuItem item))
+    | MultiNative (List (MenuItem item))
 
 
 {-| Select a single item.
@@ -1186,7 +1184,39 @@ devices.
 -}
 singleNative : Maybe (MenuItem item) -> Config item
 singleNative mi =
-    Config { defaults | variant = Native (SingleNative mi) }
+    Config { defaults | variant = NativeVariant (SingleNative mi) }
+
+
+{-| Select multiple items with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
+
+Useful for when you want to give a native select experience such as on touch
+devices.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ basicMenuItem
+              { item = Australia, label = "Australia" }
+          , basicMenuItem
+              { item = Taiwan, label = "Taiwan"
+          -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              view
+                  (multiNative [] |> menuItems countries)
+
+**Note**
+
+  - The only [Action](#Action) event that will be fired from the native multi select is
+    the `SelectBatch` [Action](#Action). The other actions are not currently supported.
+
+  - Some [Config](#Config) values will not take effect when using the multi native variant
+
+-}
+multiNative : List (MenuItem item) -> Config item
+multiNative mis =
+    Config { defaults | variant = NativeVariant (MultiNative mis) }
 
 
 {-| Select multiple items.
@@ -1247,7 +1277,7 @@ update msg ((State state_) as wrappedState) =
             in
             ( Nothing, updatedState, internalFocus idString OnInputFocused )
 
-        InputChangedNativeSingle allMenuItems hasCurrentSelection selectedOptionIndex ->
+        InputChangedNativeSingle orderedItems hasCurrentSelection selectedOptionIndex ->
             let
                 resolveIndex =
                     if hasCurrentSelection then
@@ -1257,19 +1287,37 @@ update msg ((State state_) as wrappedState) =
                         -- Account for the placeholder item
                         selectedOptionIndex - 1
             in
-            case ListExtra.getAt resolveIndex allMenuItems of
+            case ListExtra.getAt resolveIndex orderedItems of
                 Nothing ->
                     ( Nothing, State state_, Cmd.none )
 
                 Just mi ->
-                    ( Just <| Select (getMenuItemItem mi), State state_, Cmd.none )
+                    ( Just <| Select (unwrapItem mi), State state_, Cmd.none )
+
+        InputChangedNativeMulti orderedItems selectedIndices ->
+            let
+                getItem ix acc =
+                    acc
+                        ++ (case ListExtra.getAt ix orderedItems of
+                                Just i ->
+                                    [ Just (unwrapItem i) ]
+
+                                _ ->
+                                    [ Nothing ]
+                           )
+
+                allSelected =
+                    List.filterMap identity <|
+                        List.foldl getItem [] selectedIndices
+            in
+            ( Just (SelectBatch allSelected), State state_, Cmd.none )
 
         EnterSelect menuItem ->
             let
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
-            ( Just (Select (getMenuItemItem menuItem))
+            ( Just (Select (unwrapItem menuItem))
             , State
                 { stateWithClosedMenu
                     | initialAction = Internal.NothingMousedown
@@ -1283,7 +1331,7 @@ update msg ((State state_) as wrappedState) =
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
             in
-            ( Just (Select (getMenuItemItem menuItem))
+            ( Just (Select (unwrapItem menuItem))
             , State
                 { stateWithClosedMenu
                     | initialAction = Internal.NothingMousedown
@@ -1359,7 +1407,7 @@ update msg ((State state_) as wrappedState) =
             )
 
         DeselectedMultiItem deselectedItem ->
-            ( Just (DeselectMulti [ deselectedItem ])
+            ( Just (Deselect [ deselectedItem ])
             , State { state_ | initialAction = Internal.NothingMousedown }
             , internalFocus idString OnInputFocused
             )
@@ -1727,33 +1775,33 @@ update msg ((State state_) as wrappedState) =
         ClearButtonMouseDowned variant ->
             case variant of
                 CustomVariant (SingleMenu _) ->
-                    ( Just MenuInputCleared, State { state_ | inputValue = Nothing }, Cmd.none )
+                    ( Just Clear, State { state_ | inputValue = Nothing }, Cmd.none )
 
-                CustomVariant (Multi selectedItems) ->
-                    ( Just (DeselectMulti (List.map unwrapItem selectedItems))
+                CustomVariant (Multi _) ->
+                    ( Just Clear
                     , State state_
                     , internalFocus idString OnInputFocused
                     )
 
                 _ ->
-                    ( Just ClearSingleSelectItem, State state_, Cmd.none )
+                    ( Just Clear, State state_, Cmd.none )
 
         ClearButtonKeyDowned variant ->
             case variant of
                 CustomVariant (SingleMenu _) ->
-                    ( Just MenuInputCleared
+                    ( Just Clear
                     , State { state_ | inputValue = Nothing }
                     , internalFocus idString OnInputFocused
                     )
 
                 CustomVariant (Multi selectedItems) ->
-                    ( Just (DeselectMulti (List.map unwrapItem selectedItems))
+                    ( Just (Deselect (List.map unwrapItem selectedItems))
                     , State { state_ | inputValue = Nothing }
                     , internalFocus idString OnInputFocused
                     )
 
                 _ ->
-                    ( Just ClearSingleSelectItem
+                    ( Just Clear
                     , State state_
                     , internalFocus idString OnInputFocused
                     )
@@ -1794,7 +1842,7 @@ view (Config config) =
             Styles.getMenuConfig config.styles
     in
     case config.variant of
-        Native variant ->
+        NativeVariant variant ->
             div [ StyledAttribs.css [ Css.position Css.relative ] ]
                 [ viewNative
                     (ViewNativeData ctrlStyles
@@ -2372,23 +2420,53 @@ type alias ViewNativeData item =
 
 viewNative : ViewNativeData item -> Html (Msg item)
 viewNative data =
-    case data.variant of
-        SingleNative maybeSelectedItem ->
-            let
-                buildGroupedViews :
-                    ( String, ( List (MenuItem item), Internal.Group ) )
-                    -> List (Html (Msg item))
-                    -> List (Html (Msg item))
-                buildGroupedViews ( _, ( v, g ) ) acc =
-                    acc
-                        ++ [ optgroup [ StyledAttribs.attribute "label" g.name ]
-                                (List.map
-                                    (buildMenuItemNative maybeSelectedItem)
-                                    v
-                                )
-                           ]
+    let
+        (SelectId selectId) =
+            data.selectId
 
-                withPlaceholder =
+        withAriaDescribedBy =
+            case data.ariaDescribedBy of
+                Just s ->
+                    [ Aria.ariaDescribedby s ]
+
+                _ ->
+                    []
+
+        withLabelledBy =
+            case data.labelledBy of
+                Just s ->
+                    [ Aria.ariaLabelledby s ]
+
+                _ ->
+                    []
+
+        buildGroupedViews :
+            ( String, ( List (MenuItem item), Internal.Group ) )
+            -> List (Html (Msg item))
+            -> List (Html (Msg item))
+        buildGroupedViews ( _, ( v, g ) ) acc =
+            acc
+                ++ [ optgroup [ StyledAttribs.attribute "label" g.name ]
+                        (List.map
+                            buildList
+                            v
+                        )
+                   ]
+
+        buildList menuItem =
+            case data.variant of
+                SingleNative (Just selectedItem) ->
+                    buildMenuItemNative [ selectedItem ] menuItem
+
+                SingleNative _ ->
+                    buildMenuItemNative [] menuItem
+
+                MultiNative selectedItems ->
+                    buildMenuItemNative selectedItems menuItem
+
+        withPlaceholder =
+            case data.variant of
+                SingleNative maybeSelectedItem ->
                     case maybeSelectedItem of
                         Just _ ->
                             text ""
@@ -2401,84 +2479,89 @@ viewNative data =
                                 ]
                                 [ text ("(" ++ data.placeholder ++ ")") ]
 
-                buildList menuItem =
-                    buildMenuItemNative maybeSelectedItem menuItem
+                MultiNative _ ->
+                    text ""
 
-                (SelectId selectId) =
-                    data.selectId
+        ( ungroupedItems, groupedItems ) =
+            sortMenuItemsHelp 0 data.menuItems ( [], Dict.empty )
 
-                withLabelledBy =
-                    case data.labelledBy of
-                        Just s ->
-                            [ Aria.ariaLabelledby s ]
+        itemsInOrder =
+            ungroupedItems
+                ++ List.concatMap (Tuple.second >> Tuple.first) (Dict.toList groupedItems)
 
-                        _ ->
-                            []
+        groupedViews =
+            List.foldl buildGroupedViews
+                []
+                (Dict.toList groupedItems)
 
-                withAriaDescribedBy =
-                    case data.ariaDescribedBy of
-                        Just s ->
-                            [ Aria.ariaDescribedby s ]
+        resolveOnInputMsg =
+            case data.variant of
+                SingleNative (Just _) ->
+                    Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle itemsInOrder True)
 
-                        _ ->
-                            []
+                SingleNative Nothing ->
+                    Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle itemsInOrder False)
 
-                hasCurrentSelection =
-                    case maybeSelectedItem of
-                        Just _ ->
-                            True
+                _ ->
+                    Events.onMultiSelect (InputChangedNativeMulti itemsInOrder)
 
-                        _ ->
-                            False
+        resolveTestId =
+            case data.variant of
+                SingleNative _ ->
+                    "nativeSingleSelect"
 
-                ( ungroupedViews, groupedItems ) =
-                    sortMenuItemsHelp 0 data.menuItems ( [], Dict.empty )
+                MultiNative _ ->
+                    "nativeMultiSelect"
 
-                groupedViews =
-                    List.foldl buildGroupedViews
-                        []
-                        (Dict.toList groupedItems)
-            in
-            select
-                ([ id selectId
-                 , StyledAttribs.attribute "data-test-id" "nativeSingleSelect"
-                 , StyledAttribs.name "SomeSelect"
-                 , StyledAttribs.disabled data.disabled
-                 , Events.onInputAtInt [ "target", "selectedIndex" ] (InputChangedNativeSingle data.menuItems hasCurrentSelection)
-                 , onFocus (InputReceivedFocused (Native data.variant))
-                 , onBlur (OnInputBlurred (Native data.variant))
-                 , StyledAttribs.css
-                    [ Css.width (Css.pct 100)
-                    , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
-                    , controlRadius (Styles.getControlBorderRadius data.controlStyles)
-                    , Css.backgroundColor (Styles.getControlBackgroundColor data.controlStyles)
-                    , controlBorder (Styles.getControlBorderColor data.controlStyles)
-                    , if data.disabled then
-                        controlDisabled (Styles.getControlDisabledOpacity data.controlStyles)
+        onMultiple =
+            case data.variant of
+                MultiNative _ ->
+                    [ StyledAttribs.multiple True ]
 
-                      else
-                        controlHover
-                            (ControlHoverData
-                                (Styles.getControlBackgroundColorHover data.controlStyles)
-                                (Styles.getControlBorderColor data.controlStyles)
-                            )
-                    , Css.padding2 (Css.px 2) (Css.px 8)
-                    , Css.property "appearance" "none"
-                    , Css.property "-webkit-appearance" "none"
-                    , Css.color (Styles.getControlColor data.controlStyles)
-                    , Css.fontSize (Css.px 16)
-                    , Css.focus
-                        [ controlBorderFocused (Styles.getControlBorderColorFocus data.controlStyles), Css.outline Css.none ]
-                    ]
-                 ]
-                    ++ withLabelledBy
-                    ++ withAriaDescribedBy
-                )
-                (withPlaceholder
-                    :: (List.map buildList ungroupedViews
-                            ++ groupedViews
-                       )
-                )
+                _ ->
+                    []
+    in
+    select
+        ([ id selectId
+         , StyledAttribs.attribute "data-test-id" resolveTestId
+         , StyledAttribs.name "SomeSelect"
+         , StyledAttribs.disabled data.disabled
+         , resolveOnInputMsg
+         , onFocus (InputReceivedFocused (NativeVariant data.variant))
+         , onBlur (OnInputBlurred (NativeVariant data.variant))
+         , StyledAttribs.css
+            [ Css.width (Css.pct 100)
+            , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
+            , controlRadius (Styles.getControlBorderRadius data.controlStyles)
+            , Css.backgroundColor (Styles.getControlBackgroundColor data.controlStyles)
+            , controlBorder (Styles.getControlBorderColor data.controlStyles)
+            , if data.disabled then
+                controlDisabled (Styles.getControlDisabledOpacity data.controlStyles)
+
+              else
+                controlHover
+                    (ControlHoverData
+                        (Styles.getControlBackgroundColorHover data.controlStyles)
+                        (Styles.getControlBorderColor data.controlStyles)
+                    )
+            , Css.padding2 (Css.px 2) (Css.px 8)
+            , Css.property "appearance" "none"
+            , Css.property "-webkit-appearance" "none"
+            , Css.color (Styles.getControlColor data.controlStyles)
+            , Css.fontSize (Css.px 16)
+            , Css.focus
+                [ controlBorderFocused (Styles.getControlBorderColorFocus data.controlStyles), Css.outline Css.none ]
+            ]
+         ]
+            ++ withLabelledBy
+            ++ withAriaDescribedBy
+            ++ onMultiple
+        )
+        (withPlaceholder
+            :: (List.map buildList ungroupedItems
+                    ++ groupedViews
+               )
+        )
 
 
 type alias ViewWrapperData item =
@@ -2744,10 +2827,10 @@ viewMenuItem data content =
         resolveMouseUpMsg =
             case data.variant of
                 Multi _ ->
-                    SelectedItemMulti (getMenuItemItem data.menuItem)
+                    SelectedItemMulti (unwrapItem data.menuItem)
 
                 _ ->
-                    SelectedItem (getMenuItemItem data.menuItem)
+                    SelectedItem (unwrapItem data.menuItem)
 
         resolveMouseUp =
             case data.initialAction of
@@ -3122,7 +3205,7 @@ viewMultiValue mousedownedItem styles index menuItem =
     in
     Tag.view
         (resolveVariant
-            |> Tag.onDismiss (DeselectedMultiItem (getMenuItemItem menuItem))
+            |> Tag.onDismiss (DeselectedMultiItem (unwrapItem menuItem))
             |> Tag.onMousedown (MultiItemMousedown index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multi-select-tag-" ++ String.fromInt index)
@@ -3169,7 +3252,7 @@ isSelected : MenuItem item -> Maybe (MenuItem item) -> Bool
 isSelected menuItem maybeSelectedItem =
     case maybeSelectedItem of
         Just item ->
-            getMenuItemItem item == getMenuItemItem menuItem
+            unwrapItem item == unwrapItem menuItem
 
         Nothing ->
             False
@@ -3441,7 +3524,7 @@ showClearButton data =
             CustomVariant (Multi (_ :: _)) ->
                 True
 
-            Native (SingleNative (Just _)) ->
+            NativeVariant (SingleNative (Just _)) ->
                 True
 
             _ ->
@@ -3528,20 +3611,15 @@ type alias BuildMenuItemData item =
     }
 
 
-buildMenuItemNative : Maybe (MenuItem item) -> MenuItem item -> Html (Msg item)
-buildMenuItemNative maybeSelectedItem menuItem =
+buildMenuItemNative : List (MenuItem item) -> MenuItem item -> Html (Msg item)
+buildMenuItemNative selectedItems menuItem =
     let
         withSelectedOption item =
-            case maybeSelectedItem of
-                Just selectedItem ->
-                    if selectedItem == item then
-                        [ StyledAttribs.attribute "selected" "" ]
+            if List.any (\i -> unwrapItem i == unwrapItem item) selectedItems then
+                [ StyledAttribs.attribute "selected" "" ]
 
-                    else
-                        []
-
-                _ ->
-                    []
+            else
+                []
     in
     option
         (StyledAttribs.value (getMenuItemLabel menuItem)
@@ -3629,7 +3707,7 @@ filterMultiSelectedItems selectedItems currentMenuItems =
         List.filter
             (\i ->
                 not
-                    (List.any (\si -> getMenuItemItem i == getMenuItemItem si) selectedItems)
+                    (List.any (\si -> unwrapItem i == unwrapItem si) selectedItems)
             )
             currentMenuItems
 
