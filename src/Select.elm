@@ -179,6 +179,8 @@ When they select a country from the menu, it will be reflected in the Select act
                 in
                 -- (model, cmd)
 
+NOTE: Multi native variants use the `SelectBatch` action to determine selections.
+
 -}
 type Action item
     = InputChange String

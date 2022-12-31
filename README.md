@@ -125,6 +125,9 @@ update msg model =
                         
                         Just (Select someCountry) ->
                             { model | selectedCountry = Just someCountry }
+
+                        Just (SelectBatch someCountries) ->
+                            -- handle multiple selected
                         
                         Just (Clear) -> 
                             -- handle cleared 
