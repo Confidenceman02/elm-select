@@ -297,7 +297,7 @@ update msg model =
                         Just (Select.Select clr) ->
                             Just clr
 
-                        Just Select.ClearSingleSelectItem ->
+                        Just Select.Clear ->
                             Nothing
 
                         _ ->
@@ -329,7 +329,7 @@ update msg model =
                         Just (Select.Select clr) ->
                             Just clr
 
-                        Just Select.ClearSingleSelectItem ->
+                        Just Select.Clear ->
                             Nothing
 
                         _ ->
@@ -361,7 +361,7 @@ update msg model =
                         Just (Select.Select clr) ->
                             Just clr
 
-                        Just Select.ClearSingleSelectItem ->
+                        Just Select.Clear ->
                             Nothing
 
                         _ ->
@@ -396,8 +396,11 @@ update msg model =
                         Just (Select.Select clr) ->
                             model.multi.selected ++ [ clr ]
 
-                        Just (Select.DeselectMulti deselectedItems) ->
+                        Just (Select.Deselect deselectedItems) ->
                             List.filter (\c -> not (List.member c deselectedItems)) model.multi.selected
+
+                        Just Select.Clear ->
+                            []
 
                         _ ->
                             model.multi.selected
