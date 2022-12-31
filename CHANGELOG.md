@@ -1,3 +1,49 @@
+## [8.0.0] - 2022-12-31
+
+## Breaking changes
+- The `Action` type has been simplified and has an additional action.
+
+previous
+```elm
+type Action item
+  = InputChange String
+  | Select item
+  | DeselectMulti (List item)
+  | ClearSingleSelectItem
+  | FocusSet
+  | MenuInputCleared
+```
+
+current
+```elm
+type Action item
+    = InputChange String
+    | Select item
+    | SelectBatch (List item)
+    | Deselect (List item)
+    | Clear
+    | FocusSet
+```
+
+- All Custom variants should have a branch to handle the `Clear` `Action`.
+
+```elm
+case action of
+    Just Clear ->
+        -- The clear button has been pressed
+
+    -- Other actions
+```
+
+- The multi native variant will solely use the `SelectBatch` action
+to determine the selected itmes. The multi select html node surfaces
+the selected items all together, so `SelectBatch` maps this behaviour.
+
+It is not necessary to use the `Deselect` action for multi native variants.
+
+## Added
+- multi native variant
+
 ## [7.3.4] - 2022-12-30
 
 ## Fixed
@@ -453,6 +499,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[8.0.0]: https://github.com/Confidenceman02/elm-select/compare/7.3.4...8.0.0
 [7.3.4]: https://github.com/Confidenceman02/elm-select/compare/7.3.3...7.3.4
 [7.3.3]: https://github.com/Confidenceman02/elm-select/compare/7.3.2...7.3.3
 [7.3.2]: https://github.com/Confidenceman02/elm-select/compare/7.3.1...7.3.2
