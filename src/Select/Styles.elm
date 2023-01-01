@@ -2,7 +2,7 @@ module Select.Styles exposing
     ( Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-    , setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor
+    , setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagColor, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagDismissibleBackgroundColorHover
     , setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBorderWidth, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
     , setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor, setMenuMaxHeightPx, setMenuMaxHeightVh, setMenuPosition
@@ -13,7 +13,7 @@ module Select.Styles exposing
     , setMenuControlSearchIndicatorColor
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
     , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-    , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
+    , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagColor, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagDismissibleBackgroundColorHover, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBorderWidth, getMenuBoxShadowColor
     , getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor, getMenuDividerColor
     , getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
@@ -51,7 +51,7 @@ Set styles
 
 @docs setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
 @docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
-@docs setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagDismissibleBackgroundColor
+@docs setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagColor, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagDismissibleBackgroundColorHover
 @docs setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
 
@@ -83,7 +83,7 @@ Get styles
 
 @docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover, getControlBorderRadius, getControlClearIndicatorColor
 @docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
-@docs getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
+@docs getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagColor, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagDismissibleBackgroundColorHover, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
 
 
 # Menu
@@ -214,7 +214,9 @@ type alias ControlConfiguration compatible =
         , dropdownIndicatorColorHover : Css.Color
         , multiTagBackgroundColor : Css.Color
         , multiTagBorderRadius : Float
+        , multiTagColor : Css.Color
         , multiTagDismissibleBackgroundColor : Css.Color
+        , multiTagDismissibleBackgroundColorHover : Css.Color
         , multiTagTruncationWidth : Maybe Float
         , selectedColor : Css.Color
         , separatorColor : Css.Color
@@ -302,7 +304,9 @@ defaultsControl =
     , minHeight = 48
     , multiTagBackgroundColor = Css.hex "#E1E2EA"
     , multiTagBorderRadius = 16
+    , multiTagColor = Css.hex "#35374A"
     , multiTagDismissibleBackgroundColor = Css.hex "#6B6E94"
+    , multiTagDismissibleBackgroundColorHover = Css.hex "#4B4D68"
     , multiTagTruncationWidth = Nothing
     , placeholderOpacity = 0.5
     , selectedColor = Css.hex "#35374A"
@@ -811,9 +815,21 @@ setControlMultiTagBorderRadius rad (ControlConfig config) =
 
 
 {-| -}
+setControlMultiTagColor : Css.Color -> ControlConfig -> ControlConfig
+setControlMultiTagColor c (ControlConfig config) =
+    ControlConfig { config | multiTagColor = c }
+
+
+{-| -}
 setControlMultiTagDismissibleBackgroundColor : Css.Color -> ControlConfig -> ControlConfig
 setControlMultiTagDismissibleBackgroundColor c (ControlConfig config) =
     ControlConfig { config | multiTagDismissibleBackgroundColor = c }
+
+
+{-| -}
+setControlMultiTagDismissibleBackgroundColorHover : Css.Color -> ControlConfig -> ControlConfig
+setControlMultiTagDismissibleBackgroundColorHover c (ControlConfig config) =
+    ControlConfig { config | multiTagDismissibleBackgroundColorHover = c }
 
 
 {-| -}
@@ -1355,9 +1371,21 @@ getControlMultiTagBorderRadius (ControlConfig config) =
 
 
 {-| -}
+getControlMultiTagColor : ControlConfig -> Css.Color
+getControlMultiTagColor (ControlConfig config) =
+    config.multiTagColor
+
+
+{-| -}
 getControlMultiTagDismissibleBackgroundColor : ControlConfig -> Css.Color
 getControlMultiTagDismissibleBackgroundColor (ControlConfig config) =
     config.multiTagDismissibleBackgroundColor
+
+
+{-| -}
+getControlMultiTagDismissibleBackgroundColorHover : ControlConfig -> Css.Color
+getControlMultiTagDismissibleBackgroundColorHover (ControlConfig config) =
+    config.multiTagDismissibleBackgroundColorHover
 
 
 {-| -}
