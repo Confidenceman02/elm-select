@@ -106,7 +106,7 @@ view (Config config) value =
             [ Css.fontSize (Css.rem 0.875)
             , Css.fontWeight (Css.int 400)
             , Css.marginRight resolveRightMargin
-            , Css.color (Css.hex "#35374A")
+            , Css.color (Styles.getControlMultiTagColor config.controlStyles)
             , Css.display Css.inlineBlock
             , Css.border3 (Css.px 2) Css.solid Css.transparent
             , Css.borderRadius (Css.px (Styles.getControlMultiTagBorderRadius config.controlStyles))
@@ -186,9 +186,17 @@ viewClear config =
             , Css.padding2 (Css.px 0) (Css.rem 0.375)
             , Css.marginRight (Css.rem -0.6625)
             , Css.marginLeft (Css.rem -0.225)
-            , Css.color (Styles.getControlMultiTagDismissibleBackgroundColor config.controlStyles)
+            , Css.color
+                (Styles.getControlMultiTagDismissibleBackgroundColor
+                    config.controlStyles
+                )
             , Css.cursor Css.pointer
-            , Css.hover [ Css.color (Css.hex "#4B4D68") ]
+            , Css.hover
+                [ Css.color
+                    (Styles.getControlMultiTagDismissibleBackgroundColorHover
+                        config.controlStyles
+                    )
+                ]
             ]
             :: (events ++ dataAttrib)
         )
