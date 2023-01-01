@@ -1,3 +1,8 @@
+## [8.1.0] - 2023-01-01
+
+## Added
+- More configurable styles for Multi tags
+
 ## [8.0.1] - 2022-12-31
 
 ## Fixed
@@ -504,6 +509,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[8.1.0]: https://github.com/Confidenceman02/elm-select/compare/8.0.1...8.1.0
 [8.0.1]: https://github.com/Confidenceman02/elm-select/compare/8.0.0...8.0.1
 [8.0.0]: https://github.com/Confidenceman02/elm-select/compare/7.3.4...8.0.0
 [7.3.4]: https://github.com/Confidenceman02/elm-select/compare/7.3.3...7.3.4
