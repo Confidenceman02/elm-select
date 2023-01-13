@@ -84,5 +84,6 @@ view m =
                     |> Select.state m.selectState
                     |> Select.menuItems m.items
                     |> Select.placeholder "Select something"
+                    |> Select.name "Something selector"
                 )
         ]
