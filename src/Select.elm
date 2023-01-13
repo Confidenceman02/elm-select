@@ -1,6 +1,6 @@
 module Select exposing
     ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
-    , placeholder, selectIdentifier, state, update, view, searchable, setStyles
+    , placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
     , single
     , singleMenu, menu
     , multi
@@ -16,7 +16,7 @@ module Select exposing
 # Set up
 
 @docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
-@docs placeholder, selectIdentifier, state, update, view, searchable, setStyles
+@docs placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
 
 
 # Single select
@@ -233,6 +233,7 @@ type alias Configuration item =
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
     , styles : Styles.Config
+    , name : Maybe String
     }
 
 
@@ -426,6 +427,7 @@ defaults =
     , labelledBy = Nothing
     , ariaDescribedBy = Nothing
     , styles = Styles.default
+    , name = Nothing
     }
 
 
@@ -917,6 +919,27 @@ labelledBy s (Config config) =
 ariaDescribedBy : String -> Config item -> Config item
 ariaDescribedBy s (Config config) =
     Config { config | labelledBy = Just s }
+
+
+{-| The name attribute of a native select variant
+
+A form will need this attribute to know how to label the data.
+
+    yourView model =
+        label
+            [ id "selectLabelId" ]
+            [ text "Select your country"
+            , Html.map SelectMsg <|
+                view
+                    (singleNative Nothing
+                        |> name "country"
+                    )
+            ]
+
+-}
+name : String -> Config item -> Config item
+name n (Config config) =
+    Config { config | name = Just n }
 
 
 
@@ -1855,6 +1878,7 @@ view (Config config) =
                         config.ariaDescribedBy
                         config.placeholder
                         config.disabled
+                        config.name
                     )
                 , span
                     [ StyledAttribs.css
@@ -2417,6 +2441,7 @@ type alias ViewNativeData item =
     , ariaDescribedBy : Maybe String
     , placeholder : String
     , disabled : Bool
+    , name : Maybe String
     }
 
 
@@ -2522,11 +2547,18 @@ viewNative data =
 
                 _ ->
                     []
+
+        resolveName =
+            case data.name of
+                Just n ->
+                    [ StyledAttribs.name n ]
+
+                _ ->
+                    []
     in
     select
         ([ id selectId
          , StyledAttribs.attribute "data-test-id" resolveTestId
-         , StyledAttribs.name "SomeSelect"
          , StyledAttribs.disabled data.disabled
          , resolveOnInputMsg
          , onFocus (InputReceivedFocused (NativeVariant data.variant))
@@ -2558,6 +2590,7 @@ viewNative data =
             ++ withLabelledBy
             ++ withAriaDescribedBy
             ++ onMultiple
+            ++ resolveName
         )
         (withPlaceholder
             :: (List.map buildList ungroupedItems
