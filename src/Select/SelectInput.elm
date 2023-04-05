@@ -21,11 +21,11 @@ module Select.SelectInput exposing
 
 import Html.Styled exposing (Html, div, input, text)
 import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
-import Html.Styled.Attributes.Aria exposing (ariaActiveDescendant, ariaControls, ariaDescribedby, ariaExpanded, ariaHasPopup, ariaLabelledby, role)
 import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Select.Events as Events
+import Select.Internal as Internal
 
 
 type Config msg
@@ -245,7 +245,7 @@ view (Config config) id_ =
         withAriaActiveDescendant =
             case config.ariaActiveDescendant of
                 Just s ->
-                    [ ariaActiveDescendant s ]
+                    [ Internal.ariaActiveDescendant s ]
 
                 _ ->
                     []
@@ -253,7 +253,7 @@ view (Config config) id_ =
         withAriaControls =
             case config.ariaControls of
                 Just s ->
-                    [ ariaControls s ]
+                    [ Internal.ariaControls s ]
 
                 _ ->
                     []
@@ -261,7 +261,7 @@ view (Config config) id_ =
         withAriaLabelledBy =
             case config.ariaLabelledBy of
                 Just s ->
-                    [ ariaLabelledby s ]
+                    [ Internal.ariaLabelledby s ]
 
                 _ ->
                     []
@@ -269,7 +269,7 @@ view (Config config) id_ =
         withAriaDescribedBy =
             case config.ariaDescribedBy of
                 Just s ->
-                    [ ariaDescribedby s ]
+                    [ Internal.ariaDescribedby s ]
 
                 _ ->
                     []
@@ -306,8 +306,8 @@ view (Config config) id_ =
             , style "box-sizing" "border-box"
             , style "margin" "2px"
             , style "display" "inline"
-            , role "combobox"
-            , ariaHasPopup "listbox"
+            , Internal.role "combobox"
+            , Internal.ariaHasPopup "listbox"
             ]
 
         withAriaOwns =
@@ -320,17 +320,17 @@ view (Config config) id_ =
 
         withAriaExpanded =
             if config.ariaExpanded then
-                [ ariaExpanded "true" ]
+                [ Internal.ariaExpanded "true" ]
 
             else
-                [ ariaExpanded "false" ]
+                [ Internal.ariaExpanded "false" ]
     in
     div (autoSizeInputContainerStyles ++ withAriaOwns ++ withAriaExpanded)
         [ input
             ([ id resolveInputId
              , value inputValue
              , type_ "text"
-             , role "textbox"
+             , Internal.role "textbox"
              , attribute "aria-multiline" "false"
              , attribute "aria-autocomplete" "list"
              , attribute "autocomplete" "off"
