@@ -60,7 +60,6 @@ import Css
 import Dict
 import Html.Styled as Styled exposing (Html, button, div, input, li, optgroup, option, select, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
-import Html.Styled.Attributes.Aria as Aria exposing (ariaSelected, role)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy, lazy2, lazy4)
@@ -2454,7 +2453,7 @@ viewNative data =
         withAriaDescribedBy =
             case data.ariaDescribedBy of
                 Just s ->
-                    [ Aria.ariaDescribedby s ]
+                    [ Internal.ariaDescribedby s ]
 
                 _ ->
                     []
@@ -2462,7 +2461,7 @@ viewNative data =
         withLabelledBy =
             case data.labelledBy of
                 Just s ->
-                    [ Aria.ariaLabelledby s ]
+                    [ Internal.ariaLabelledby s ]
 
                 _ ->
                     []
@@ -2657,7 +2656,7 @@ viewMenuItemsWrapper data =
         ([ StyledAttribs.css resolveStyles
          , id (menuListId data.selectId)
          , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
-         , role "listbox"
+         , Internal.role "listbox"
          , custom "mousedown"
             (Decode.map
                 (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
@@ -2884,10 +2883,10 @@ viewMenuItem data content =
 
         resolveSelectedAriaAttribs =
             if data.itemSelected then
-                [ ariaSelected "true" ]
+                [ Internal.ariaSelected "true" ]
 
             else
-                [ ariaSelected "false" ]
+                [ Internal.ariaSelected "false" ]
 
         resolvePosinsetAriaAttrib =
             [ attribute "aria-posinset" (String.fromInt <| data.index + 1) ]
@@ -2911,7 +2910,7 @@ viewMenuItem data content =
                     ++ resolveMouseover
     in
     li
-        ([ role "option"
+        ([ Internal.role "option"
          , tabindex -1
          , id (menuItemId data.selectId data.index)
          , StyledAttribs.css
@@ -3161,7 +3160,7 @@ viewDummyInput data =
         withLabelledBy =
             case data.labelledBy of
                 Just s ->
-                    [ Aria.ariaLabelledby s ]
+                    [ Internal.ariaLabelledby s ]
 
                 _ ->
                     []
@@ -3169,7 +3168,7 @@ viewDummyInput data =
         withAriaDescribedBy =
             case data.ariaDescribedBy of
                 Just s ->
-                    [ Aria.ariaDescribedby s ]
+                    [ Internal.ariaDescribedby s ]
 
                 _ ->
                     []
