@@ -62,7 +62,7 @@ import Html.Styled as Styled exposing (Html, button, div, input, li, optgroup, o
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
-import Html.Styled.Lazy exposing (lazy, lazy2, lazy4)
+import Html.Styled.Lazy exposing (lazy, lazy4)
 import Json.Decode as Decode
 import List.Extra as ListExtra
 import Select.ClearIcon as ClearIcon
@@ -1985,17 +1985,6 @@ view (Config config) =
                                     ]
                                 ]
                             )
-
-                        -- , ( "divider"
-                        --   , div
-                        --         [ StyledAttribs.css
-                        --             [ Css.height (Css.px 0)
-                        --             , Css.marginTop (Css.rem 1.5)
-                        --             , Css.border3 (Css.px 1) Css.solid (Styles.getMenuDividerColor menuStyles)
-                        --             ]
-                        --         ]
-                        --         []
-                        --   )
                         , ( "menu-list"
                           , viewMenuItemsWrapper
                                 (ViewMenuItemsWrapperData
@@ -2652,7 +2641,7 @@ viewMenuItemsWrapper data =
                 _ ->
                     menuWrapperStyles data.menuStyles ++ menuListStyles data.menuStyles
     in
-    Keyed.node "ul"
+    Keyed.lazyNode "ul"
         ([ StyledAttribs.css resolveStyles
          , id (menuListId data.selectId)
          , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
@@ -2666,6 +2655,7 @@ viewMenuItemsWrapper data =
          ]
             ++ resolveAttributes
         )
+        identity
 
 
 type alias ViewMenuData item =
@@ -2848,7 +2838,7 @@ type alias ViewMenuItemData item =
     }
 
 
-viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> Html (Msg item)
+viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> ( String, Html (Msg item) )
 viewMenuItem data content =
     let
         resolveMouseLeave =
@@ -2909,10 +2899,10 @@ viewMenuItem data content =
                     ++ resolveMouseUp
                     ++ resolveMouseover
     in
-    li
+    ( menuItemId data.selectId data.index
+    , li
         ([ Internal.role "option"
          , tabindex -1
-         , id (menuItemId data.selectId data.index)
          , StyledAttribs.css
             (menuItemContainerStyles data)
          ]
@@ -2922,6 +2912,7 @@ viewMenuItem data content =
             ++ allEvents
         )
         content
+    )
 
 
 type alias ViewPlaceholderData =
@@ -3692,8 +3683,7 @@ buildMenuItem data idx item =
     in
     case item of
         Basic _ ->
-            ( getMenuItemLabel item
-            , lazy2 viewMenuItem
+            viewMenuItem
                 (ViewMenuItemData
                     idx
                     resolveIsSelected
@@ -3709,11 +3699,9 @@ buildMenuItem data idx item =
                     data.controlUiFocused
                 )
                 [ text (getMenuItemLabel item) ]
-            )
 
         Custom ci ->
-            ( getMenuItemLabel item
-            , lazy2 viewMenuItem
+            viewMenuItem
                 (ViewMenuItemData
                     idx
                     resolveIsSelected
@@ -3729,7 +3717,6 @@ buildMenuItem data idx item =
                     data.controlUiFocused
                 )
                 [ Styled.map never ci.view ]
-            )
 
 
 filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
