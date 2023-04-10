@@ -1,3 +1,9 @@
+## [8.2.1] - 2023-04-10
+
+## Added
+- Updated elm-css.
+- Using `nodeLazy` for performance boost on huge lists.
+
 ## [8.2.0] - 2023-01-13
 
 ## Fixed
@@ -514,6 +520,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[8.2.1]: https://github.com/Confidenceman02/elm-select/compare/8.2.0...8.2.1
 [8.2.0]: https://github.com/Confidenceman02/elm-select/compare/8.1.0...8.2.0
 [8.1.0]: https://github.com/Confidenceman02/elm-select/compare/8.0.1...8.1.0
 [8.0.1]: https://github.com/Confidenceman02/elm-select/compare/8.0.0...8.0.1
