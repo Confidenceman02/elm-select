@@ -40,9 +40,7 @@ jobs:
       - name: elm-analyse
         run: make elm-analyse
 
-  if_merged:
-    if: github.event.pull_request.merged == true
-    name: 'Deploy'
+  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
