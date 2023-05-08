@@ -3989,8 +3989,8 @@ menuItemContainerStyles data =
             case data.controlUiFocused of
                 Just _ ->
                     if data.menuItemIsTarget && not data.itemSelected then
-                        [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
-                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
+                        [ Css.color (Styles.getMenuItemColorHover data.menuItemStyles)
+                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorHover data.menuItemStyles)
                         ]
 
                     else
@@ -3998,14 +3998,14 @@ menuItemContainerStyles data =
 
                 _ ->
                     [ Css.hover
-                        [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
-                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
+                        [ Css.color (Styles.getMenuItemColorHover data.menuItemStyles)
+                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorHover data.menuItemStyles)
                         ]
                     ]
 
         withIsClickedStyles =
             if data.isClickFocused then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked data.menuItemStyles) ]
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorMouseDown data.menuItemStyles) ]
 
             else
                 []
@@ -4024,9 +4024,11 @@ menuItemContainerStyles data =
                 [ controlDisabled 0.3 ]
 
             else
-                withTargetStyles
-                    ++ withIsClickedStyles
-                    ++ withIsSelectedStyles
+                (Maybe.map (\s -> [ Css.backgroundColor s ]) (Styles.getMenuItemBackgroundColor data.menuItemStyles) |> Maybe.withDefault [])
+                    ++ (withTargetStyles
+                            ++ withIsClickedStyles
+                            ++ withIsSelectedStyles
+                       )
     in
     [ Css.cursor Css.default
     , Css.display Css.block

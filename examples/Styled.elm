@@ -91,7 +91,8 @@ update msg model =
                         , Select.basicMenuItem { item = "Learning", label = "Learning" }
                             |> Select.stylesMenuItem
                                 (Styles.getMenuItemConfig Styles.dracula
-                                    |> Styles.setMenuItemColorHoverNotSelected (Css.hex "#512DA8")
+                                    |> Styles.setMenuItemColorHover (Css.hex "#512DA8")
+                                    |> Styles.setMenuItemBackgroundColor (Css.hex "#512DA8")
                                 )
                         ]
               }
