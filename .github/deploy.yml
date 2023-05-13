@@ -1,11 +1,10 @@
 name: Deploy
 on:
-  push:
+  release:
     branches:
       - main
 jobs:
   ui:
-    if: contains(github.ref, 'refs/tags/')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
