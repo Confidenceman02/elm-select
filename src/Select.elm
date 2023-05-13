@@ -2564,7 +2564,7 @@ viewNative data =
                 controlHover
                     (ControlHoverData
                         (Styles.getControlBackgroundColorHover data.controlStyles)
-                        (Styles.getControlBorderColor data.controlStyles)
+                        (Styles.getControlBorderColorHover data.controlStyles)
                     )
             , Css.padding2 (Css.px 2) (Css.px 8)
             , Css.property "appearance" "none"
@@ -3989,8 +3989,8 @@ menuItemContainerStyles data =
             case data.controlUiFocused of
                 Just _ ->
                     if data.menuItemIsTarget && not data.itemSelected then
-                        [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
-                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
+                        [ Css.color (Styles.getMenuItemColorHover data.menuItemStyles)
+                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorHover data.menuItemStyles)
                         ]
 
                     else
@@ -3998,14 +3998,14 @@ menuItemContainerStyles data =
 
                 _ ->
                     [ Css.hover
-                        [ Css.color (Styles.getMenuItemColorHoverNotSelected data.menuItemStyles)
-                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorNotSelected data.menuItemStyles)
+                        [ Css.color (Styles.getMenuItemColorHover data.menuItemStyles)
+                        , Css.backgroundColor (Styles.getMenuItemBackgroundColorHover data.menuItemStyles)
                         ]
                     ]
 
         withIsClickedStyles =
             if data.isClickFocused then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorClicked data.menuItemStyles) ]
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorMouseDown data.menuItemStyles) ]
 
             else
                 []
@@ -4024,9 +4024,11 @@ menuItemContainerStyles data =
                 [ controlDisabled 0.3 ]
 
             else
-                withTargetStyles
-                    ++ withIsClickedStyles
-                    ++ withIsSelectedStyles
+                (Maybe.map (\s -> [ Css.backgroundColor s ]) (Styles.getMenuItemBackgroundColor data.menuItemStyles) |> Maybe.withDefault [])
+                    ++ (withTargetStyles
+                            ++ withIsClickedStyles
+                            ++ withIsSelectedStyles
+                       )
     in
     [ Css.cursor Css.default
     , Css.display Css.block
@@ -4110,7 +4112,11 @@ menuControlStyles styles state_ dsb =
         controlDisabled (Styles.getMenuControlDisabledOpacity styles)
 
       else
-        controlHover (ControlHoverData (Styles.getMenuControlBackgroundColor styles) (Styles.getMenuControlBorderColor styles))
+        controlHover
+            (ControlHoverData
+                (Styles.getMenuControlBackgroundColor styles)
+                (Styles.getMenuControlBorderColorHover styles)
+            )
     ]
         ++ controlFocusedStyles
 
@@ -4146,7 +4152,7 @@ controlStyles styles state_ dsb =
         controlHover
             (ControlHoverData
                 (Styles.getControlBackgroundColorHover styles)
-                (Styles.getControlBorderColor styles)
+                (Styles.getControlBorderColorHover styles)
             )
     ]
         ++ controlFocusedStyles
@@ -4174,7 +4180,7 @@ controlDisabled dsbOpac =
 
 type alias ControlHoverData =
     { backgroundColorHover : Css.Color
-    , borderColor : Css.Color
+    , borderColorHover : Css.Color
     }
 
 
@@ -4182,5 +4188,5 @@ controlHover : ControlHoverData -> Css.Style
 controlHover styles =
     Css.hover
         [ Css.backgroundColor styles.backgroundColorHover
-        , Css.borderColor styles.borderColor
+        , Css.borderColor styles.borderColorHover
         ]

@@ -70,7 +70,7 @@ update msg model =
                             , Cmd.none
                             )
 
-                        Just (Select.InputChange i) ->
+                        Just (Select.InputChange _) ->
                             ( { model | items = Loading, selectState = selectState }
                             , Task.perform (\_ -> FetchedItems)
                                 (Process.sleep 1000)
@@ -91,7 +91,8 @@ update msg model =
                         , Select.basicMenuItem { item = "Learning", label = "Learning" }
                             |> Select.stylesMenuItem
                                 (Styles.getMenuItemConfig Styles.dracula
-                                    |> Styles.setMenuItemColorHoverNotSelected (Css.hex "#512DA8")
+                                    |> Styles.setMenuItemColorHover (Css.hex "#512DA8")
+                                    |> Styles.setMenuItemBackgroundColor (Css.hex "#512DA8")
                                 )
                         ]
               }
