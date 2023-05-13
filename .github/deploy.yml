@@ -3,7 +3,18 @@ on:
   release:
     types: [published]
 jobs:
+  publish:
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v2
+
+      - uses: jorelali/setup-elm@v3
+        with:
+          elm-version: 0.19.1
+
+      - name: Publish elm version
+        run: make publish
   ui:
+    needs: publish
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

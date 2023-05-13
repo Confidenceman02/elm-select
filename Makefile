@@ -54,3 +54,7 @@ elm-book: install
 .PHONY: elm-book-build
 elm-book-build: .yarn.elm-book.INSTALLED
 	${Y} --cwd=elm-book parcel build --dist-dir=../docs --public-url ./ index.html
+
+.PHONY: publish
+publish:
+	elm publish
