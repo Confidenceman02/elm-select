@@ -39,29 +39,3 @@ jobs:
 
       - name: elm-analyse
         run: make elm-analyse
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: c-hive/gha-yarn-cache@v1
-
-      - uses: jorelali/setup-elm@v3
-        with:
-          elm-version: 0.19.1
-
-      - name: Build elm-book
-        run: make elm-book-build
-
-      - uses: actions/upload-pages-artifact@v1
-        with:
-          path: 'docs'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
