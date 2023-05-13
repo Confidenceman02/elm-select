@@ -2564,7 +2564,7 @@ viewNative data =
                 controlHover
                     (ControlHoverData
                         (Styles.getControlBackgroundColorHover data.controlStyles)
-                        (Styles.getControlBorderColor data.controlStyles)
+                        (Styles.getControlBorderColorHover data.controlStyles)
                     )
             , Css.padding2 (Css.px 2) (Css.px 8)
             , Css.property "appearance" "none"
@@ -4112,7 +4112,11 @@ menuControlStyles styles state_ dsb =
         controlDisabled (Styles.getMenuControlDisabledOpacity styles)
 
       else
-        controlHover (ControlHoverData (Styles.getMenuControlBackgroundColor styles) (Styles.getMenuControlBorderColor styles))
+        controlHover
+            (ControlHoverData
+                (Styles.getMenuControlBackgroundColor styles)
+                (Styles.getMenuControlBorderColorHover styles)
+            )
     ]
         ++ controlFocusedStyles
 
@@ -4148,7 +4152,7 @@ controlStyles styles state_ dsb =
         controlHover
             (ControlHoverData
                 (Styles.getControlBackgroundColorHover styles)
-                (Styles.getControlBorderColor styles)
+                (Styles.getControlBorderColorHover styles)
             )
     ]
         ++ controlFocusedStyles
@@ -4176,7 +4180,7 @@ controlDisabled dsbOpac =
 
 type alias ControlHoverData =
     { backgroundColorHover : Css.Color
-    , borderColor : Css.Color
+    , borderColorHover : Css.Color
     }
 
 
@@ -4184,5 +4188,5 @@ controlHover : ControlHoverData -> Css.Style
 controlHover styles =
     Css.hover
         [ Css.backgroundColor styles.backgroundColorHover
-        , Css.borderColor styles.borderColor
+        , Css.borderColor styles.borderColorHover
         ]

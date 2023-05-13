@@ -23,10 +23,9 @@ module Select.Styles exposing
     , getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuPosition
     , getGroupConfig, getGroupColor, getGroupFontSizeLabel, getGroupFontWeightLabel, getGroupTextTransformationLabel
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor
-    , getMenuItemColorHoverSelected, getMenuItemBackgroundColorHoverSelected, getMenuItemInlinePadding
+    , getMenuItemColorHover, getMenuItemColorHoverSelected, getMenuItemBackgroundColorHoverSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColor
     , dracula
-    , getMenuItemColorHover
     )
 
 {-| Add custom styling to the Select control, menu and menu item.
@@ -109,7 +108,7 @@ Get styles
 # Menu item
 
 @docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor
-@docs getMenuItemColorHoverSelected, getMenuItemBackgroundColorHoverSelected, getMenuItemColorHoverNotSelected, getMenuItemInlinePadding
+@docs getMenuItemColorHover, getMenuItemColorHoverSelected, getMenuItemBackgroundColorHoverSelected, getMenuItemInlinePadding
 
 @docs getMenuItemBackgroundColor
 

@@ -70,7 +70,7 @@ update msg model =
                             , Cmd.none
                             )
 
-                        Just (Select.InputChange i) ->
+                        Just (Select.InputChange _) ->
                             ( { model | items = Loading, selectState = selectState }
                             , Task.perform (\_ -> FetchedItems)
                                 (Process.sleep 1000)
