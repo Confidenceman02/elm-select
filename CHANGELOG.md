@@ -1,3 +1,21 @@
+## [9.0.0] - 2023-05-13
+
+## Added
+- Auto publish for tagged releases.
+- Added getMenuItemBackgroundColorHoverSelected & setMenuItemBackgroundColorHoverSelected to Styles config.
+
+## Breaking changes
+- Styles renamed to make more sense
+
+```elm
+    setMenuItemBackgroundColorClicked -> setMenuItemBackgroundColorMouseDown
+    getMenuItemBackgroundColorClicked -> getMenuItemBackgroundColorMouseDown
+    setMenuItemBackgroundColorNotSelected -> setMenuItemBackgroundColor
+    getMenuItemBackgroundColorNotSelected -> getMenuItemBackgroundColor
+    setMenuItemColorHoverNotSelected -> setMenuItemColorHover
+    getMenuItemColorHoverNotSelected -> getMenuItemColorHover
+```
+
 ## [8.2.1] - 2023-04-10
 
 ## Added
@@ -520,6 +538,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[9.0.0]: https://github.com/Confidenceman02/elm-select/compare/8.2.1...9.0.0
 [8.2.1]: https://github.com/Confidenceman02/elm-select/compare/8.2.0...8.2.1
 [8.2.0]: https://github.com/Confidenceman02/elm-select/compare/8.1.0...8.2.0
 [8.1.0]: https://github.com/Confidenceman02/elm-select/compare/8.0.1...8.1.0
