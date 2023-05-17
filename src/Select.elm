@@ -1265,6 +1265,8 @@ multi selectedItems =
 NOTE: It is important that the ID's of all selects that exist on
 a page remain unique.
 
+White spaces will be removed from the string you provde.
+
     init : State
     init =
         initState (selectIdentifier "someUniqueId")
@@ -1272,7 +1274,7 @@ a page remain unique.
 -}
 selectIdentifier : String -> SelectId
 selectIdentifier id_ =
-    SelectId (id_ ++ "__elm-select")
+    SelectId ((String.split " " id_ |> String.concat) ++ "__elm-select")
 
 
 
