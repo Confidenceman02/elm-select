@@ -1,3 +1,8 @@
+## [9.0.1] - 2023-05-13
+
+## Fixed
+- Breaking styles from id string that contains whitespace.
+
 ## [9.0.0] - 2023-05-13
 
 ## Added
@@ -538,6 +543,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[9.0.1]: https://github.com/Confidenceman02/elm-select/compare/9.0.0...9.0.1
 [9.0.0]: https://github.com/Confidenceman02/elm-select/compare/8.2.1...9.0.0
 [8.2.1]: https://github.com/Confidenceman02/elm-select/compare/8.2.0...8.2.1
 [8.2.0]: https://github.com/Confidenceman02/elm-select/compare/8.1.0...8.2.0
