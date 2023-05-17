@@ -1,7 +1,10 @@
 name: Deploy
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
 jobs:
   publish:
     runs-on: ubuntu-latest
