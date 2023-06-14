@@ -1265,7 +1265,7 @@ multi selectedItems =
 NOTE: It is important that the ID's of all selects that exist on
 a page remain unique.
 
-White spaces will be removed from the string you provde.
+' ' and '/' will be removed from the string you provde.
 
     init : State
     init =
@@ -1273,9 +1273,19 @@ White spaces will be removed from the string you provde.
 
 -}
 selectIdentifier : String -> SelectId
-selectIdentifier id_ =
-    SelectId ((String.split " " id_ |> String.concat) ++ "__elm-select")
+selectIdentifier =
+    String.toList
+        >> List.foldl
+            (\a b ->
+                if a == ' ' || a == '/' then
+                    b
 
+                else
+                    b ++ [ a ]
+            )
+            []
+        >> String.fromList
+        >> (\id_ -> SelectId (id_ ++ "__elm-select"))
 
 
 -- UPDATE
