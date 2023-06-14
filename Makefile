@@ -33,7 +33,7 @@ ts-tests: install
 
 .PHONY: ci-e2e-test
 ci-e2e-test: 
-	yarn start-server-and-test  'make elm-examples' '8000|1234' 'make ts-tests'
+	make elm-examples & make ts-tests
 
 .PHONY: elm-live
 elm-live: install
