@@ -7,7 +7,7 @@ install: .yarn.INSTALLED .yarn.examples-optimized.INSTALLED .yarn.elm-book.INSTA
 	@touch $@
 
 .yarn.examples-optimized.INSTALLED: ./examples-optimized/package.json ./examples-optimized/yarn.lock
-	yarn --cwd examples-optimized install
+	yarn --cwd=examples-optimized install
 	@touch $@
 
 .yarn.elm-book.INSTALLED: ./elm-book/package.json ./elm-book/yarn.lock
@@ -21,7 +21,6 @@ elm-examples: install
 .PHONY: elm-reactor
 elm-reactor:
 	cd examples && elm reactor
-
 
 .PHONY: elm-tests
 elm-tests:
