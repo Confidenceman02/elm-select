@@ -6,7 +6,7 @@
     "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
-            "Confidenceman02/elm-select": "9.0.2",
+            "Confidenceman02/elm-select": "9.0.3",
             "dtwrks/elm-book": "1.4.2",
             "dtwrks/elm-book-interop-elm-css": "1.0.1",
             "elm/browser": "1.0.2",
