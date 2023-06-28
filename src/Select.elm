@@ -4178,12 +4178,20 @@ controlRadius rad =
 
 controlBorder : Css.Color -> Css.Style
 controlBorder cb =
-    Css.border3 (Css.px 2) Css.solid cb
+    Css.property "box-shadow"
+        ("rgb(255, 255, 255) 0px 0px 0px 0px inset,"
+            ++ cb.value
+            ++ " 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px"
+        )
 
 
 controlBorderFocused : Css.Color -> Css.Style
 controlBorderFocused bcf =
-    Css.borderColor bcf
+    Css.property "box-shadow"
+        ("rgb(255, 255, 255) 0px 0px 0px 0px inset,"
+            ++ bcf.value
+            ++ " 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px"
+        )
 
 
 controlDisabled : Float -> Css.Style
