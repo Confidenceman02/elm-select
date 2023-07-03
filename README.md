@@ -139,7 +139,13 @@ update msg model =
                             -- handle InputChange
 
                         Just (FocusSet) ->
-                            -- handle focus set
+                            -- handle programatic focus
+
+                        Just (Focus) ->
+                            -- handle focused input
+
+                        Just (Blur) ->
+                            -- handle input blur
                         
                         Nothing ->
                             model
