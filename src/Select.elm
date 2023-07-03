@@ -188,6 +188,8 @@ type Action item
     | Deselect (List item)
     | Clear
     | FocusSet
+    | Focus
+    | Blur
 
 
 {-| -}
@@ -1403,8 +1405,11 @@ update msg ((State state_) as wrappedState) =
                                       }
                                     )
 
-                                _ ->
+                                Just FocusingClearableH ->
                                     ( Nothing, { state_ | controlUiFocused = Just Internal.ControlInput } )
+
+                                Nothing ->
+                                    ( Just Focus, { state_ | controlUiFocused = Just Internal.ControlInput } )
 
                         _ ->
                             ( Nothing, { state_ | controlUiFocused = Just Internal.ControlInput } )
@@ -1528,6 +1533,17 @@ update msg ((State state_) as wrappedState) =
 
                         Internal.MultiItemMousedown _ ->
                             ( state_, Cmd.none, Nothing )
+
+                        Internal.NothingMousedown ->
+                            ( { stateWithClosedMenu
+                                | initialAction = Internal.NothingMousedown
+                                , controlUiFocused = Nothing
+                                , inputValue = Nothing
+                                , activeTargetIndex = 0
+                              }
+                            , Cmd.batch [ cmdWithClosedMenu, Cmd.none ]
+                            , Just Blur
+                            )
 
                         _ ->
                             ( { stateWithClosedMenu
