@@ -1278,12 +1278,27 @@ selectIdentifier : String -> SelectId
 selectIdentifier =
     String.toList
         >> List.foldl
-            (\a b ->
-                if a == ' ' || a == '/' then
+            (\c b ->
+                if
+                    c
+                        == ' '
+                        || c
+                        == '/'
+                        || c
+                        == '\\'
+                        || c
+                        == '?'
+                        || c
+                        == '\t'
+                        || c
+                        == '\n'
+                        || c
+                        == '\u{000D}'
+                then
                     b
 
                 else
-                    b ++ [ a ]
+                    b ++ [ c ]
             )
             []
         >> String.fromList
