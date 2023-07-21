@@ -1,3 +1,8 @@
+## [10.0.1] - 2023-07-21
+
+## Fix
+- Illegal characters in css classes
+
 ## [10.0.0] - 2023-07-03
 
 ## Breaking changes
@@ -558,6 +563,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[10.0.1]: https://github.com/Confidenceman02/elm-select/compare/10.0.0...10.0.1
 [10.0.0]: https://github.com/Confidenceman02/elm-select/compare/9.0.2...10.0.0
 [9.0.3]: https://github.com/Confidenceman02/elm-select/compare/9.0.2...9.0.3
 [9.0.2]: https://github.com/Confidenceman02/elm-select/compare/9.0.1...9.0.2
