@@ -155,6 +155,7 @@ ariaActiveDescendant =
 type alias BaseMenuItem comparable =
     { comparable
         | filterable : Bool
+        , dismissible : Bool
         , styles : Maybe MenuItemConfig
         , group : Maybe Group
     }

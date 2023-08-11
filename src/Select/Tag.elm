@@ -10,8 +10,8 @@ module Select.Tag exposing
     )
 
 import Css
-import Html.Styled exposing (Html, div, span, text)
-import Html.Styled.Attributes as StyledAttribs exposing (attribute)
+import Html.Styled exposing (Html, button, div, span, text)
+import Html.Styled.Attributes as StyledAttribs exposing (attribute, type_)
 import Html.Styled.Events exposing (on, onClick, stopPropagationOn)
 import Json.Decode as Decode
 import Select.ClearIcon as ClearIcon
@@ -176,50 +176,65 @@ viewClear config =
         dataAttrib =
             [ attribute "data-test-id" (config.dataTestId ++ "-dismiss") ]
     in
-    span
-        -- dismissIcon
-        (StyledAttribs.css
-            [ Css.position Css.relative
-            , Css.displayFlex
-            , Css.height (Css.pct 100)
-            , Css.alignItems Css.center
-            , Css.padding2 (Css.px 0) (Css.rem 0.375)
-            , Css.marginRight (Css.rem -0.6625)
-            , Css.marginLeft (Css.rem -0.225)
-            , Css.color
-                (Styles.getControlMultiTagDismissibleBackgroundColor
-                    config.controlStyles
+    case config.onDismiss of
+        Just _ ->
+            span
+                -- dismissIcon
+                (StyledAttribs.css
+                    [ Css.position Css.relative
+                    , Css.displayFlex
+                    , Css.height (Css.pct 100)
+                    , Css.alignItems Css.center
+                    , Css.padding2 (Css.px 0) (Css.rem 0.375)
+                    , Css.marginRight (Css.rem -0.6625)
+                    , Css.marginLeft (Css.rem -0.225)
+                    , Css.color
+                        (Styles.getControlMultiTagDismissibleBackgroundColor
+                            config.controlStyles
+                        )
+                    , Css.hover
+                        [ Css.color
+                            (Styles.getControlMultiTagDismissibleBackgroundColorHover
+                                config.controlStyles
+                            )
+                        ]
+                    ]
+                    :: (events ++ dataAttrib)
                 )
-            , Css.cursor Css.pointer
-            , Css.hover
-                [ Css.color
-                    (Styles.getControlMultiTagDismissibleBackgroundColorHover
-                        config.controlStyles
-                    )
+                [ span
+                    [ -- background
+                      StyledAttribs.css
+                        [ Css.position Css.absolute
+                        , Css.display Css.inlineBlock
+                        , Css.width (Css.px 8)
+                        , Css.height (Css.px 8)
+                        , Css.backgroundColor (Css.hex "#FFFFFF")
+                        , Css.left (Css.px 10)
+                        , Css.top (Css.px 9)
+                        ]
+                    ]
+                    []
+                , button
+                    [ StyledAttribs.css
+                        [ Css.height (Css.px 16)
+                        , Css.width (Css.px 16)
+                        , Css.zIndex (Css.int 1)
+                        , Css.displayFlex
+                        , Css.color Css.inherit
+                        , Css.padding (Css.px 0)
+                        , Css.backgroundColor Css.transparent
+                        , Css.borderColor (Css.rgba 0 0 0 0)
+                        , Css.borderWidth (Css.px 1)
+                        , Css.justifyContent Css.center
+                        , Css.cursor Css.pointer
+                        , Css.alignItems Css.center
+                        , Css.focus [ Css.borderColor Css.inherit ]
+                        , Css.borderRadius (Css.px 999)
+                        ]
+                    , type_ "button"
+                    ]
+                    [ span [ StyledAttribs.css [ Css.displayFlex ] ] [ ClearIcon.view ] ]
                 ]
-            ]
-            :: (events ++ dataAttrib)
-        )
-        [ span
-            [ -- background
-              StyledAttribs.css
-                [ Css.position Css.absolute
-                , Css.display Css.inlineBlock
-                , Css.width (Css.px 8)
-                , Css.height (Css.px 8)
-                , Css.backgroundColor (Css.hex "#FFFFFF")
-                , Css.left (Css.px 10)
-                , Css.top (Css.px 9)
-                ]
-            ]
-            []
-        , div
-            [ StyledAttribs.css
-                [ Css.height (Css.px 16)
-                , Css.width (Css.px 16)
-                , Css.zIndex (Css.int 1)
-                , Css.displayFlex
-                ]
-            ]
-            [ ClearIcon.view ]
-        ]
+
+        _ ->
+            text ""
