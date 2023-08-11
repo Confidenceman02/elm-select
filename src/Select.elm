@@ -1,5 +1,6 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
+    , menuItems, clearable
     , placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
     , single
     , singleMenu, menu
@@ -15,7 +16,8 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg, menuItems, clearable
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
+@docs menuItems, clearable
 @docs placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
 
 
@@ -358,6 +360,16 @@ getMenuItemLabel item =
             config.label
 
 
+isMenuItemDismissible : MenuItem item -> Bool
+isMenuItemDismissible item =
+    case item of
+        Basic config ->
+            config.dismissible
+
+        Custom config ->
+            config.dismissible
+
+
 
 -- DEFAULTS
 
@@ -560,6 +572,7 @@ basicMenuItem bscItem =
         { item = bscItem.item
         , label = bscItem.label
         , filterable = True
+        , dismissible = True
         , styles = Nothing
         , group = Nothing
         }
@@ -590,6 +603,7 @@ customMenuItem i =
         , label = i.label
         , view = i.view
         , filterable = True
+        , dismissible = True
         , styles = Nothing
         , group = Nothing
         }
@@ -665,6 +679,42 @@ filterableMenuItem pred mi =
 
         Custom obj ->
             Custom { obj | filterable = pred }
+
+
+{-| Choose whether a selected menu item tag can produce a `Deselect` action.
+
+This affects the [multi](#multi) Variant and is useful for when
+you want a selected tag to not be individually dismissible.
+
+The tag will not render a dismiss button if `False`.
+
+**default:** `True`
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        menuItems : List (MenuItem Tool)
+        menuItems =
+            [ customMenuItem
+                { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+            , customMenuItem
+                { item = Hammer, label = "Hammer", view = text "Hammer" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+                |> dismissibleMenuItemTag False
+            ]
+
+-}
+dismissibleMenuItemTag : Bool -> MenuItem item -> MenuItem item
+dismissibleMenuItemTag pred mi =
+    case mi of
+        Basic obj ->
+            Basic { obj | dismissible = pred }
+
+        Custom obj ->
+            Custom { obj | dismissible = pred }
 
 
 {-| Set individual styles for a menu item.
@@ -3271,10 +3321,17 @@ viewMultiValue mousedownedItem styles index menuItem =
 
         resolveVariant =
             Tag.default
+
+        resolveDismiss cfg =
+            if isMenuItemDismissible menuItem then
+                Tag.onDismiss (DeselectedMultiItem (unwrapItem menuItem)) cfg
+
+            else
+                cfg
     in
     Tag.view
         (resolveVariant
-            |> Tag.onDismiss (DeselectedMultiItem (unwrapItem menuItem))
+            |> resolveDismiss
             |> Tag.onMousedown (MultiItemMousedown index)
             |> Tag.rightMargin True
             |> Tag.dataTestId ("multi-select-tag-" ++ String.fromInt index)
