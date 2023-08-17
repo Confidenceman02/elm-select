@@ -1343,6 +1343,10 @@ selectIdentifier =
                         || c
                         == '\n'
                         || c
+                        == '('
+                        || c
+                        == ')'
+                        || c
                         == '\u{000D}'
                 then
                     b
