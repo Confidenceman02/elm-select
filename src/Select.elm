@@ -1317,7 +1317,7 @@ multi selectedItems =
 NOTE: It is important that the ID's of all selects that exist on
 a page remain unique.
 
-' ' and '/' will be removed from the string you provde.
+Illegal id characters "' '/\\?\\t\\n\\u{000D}%" will be replaced with "\_".
 
     init : State
     init =
@@ -1326,36 +1326,7 @@ a page remain unique.
 -}
 selectIdentifier : String -> SelectId
 selectIdentifier =
-    String.toList
-        >> List.foldl
-            (\c b ->
-                if
-                    c
-                        == ' '
-                        || c
-                        == '/'
-                        || c
-                        == '\\'
-                        || c
-                        == '?'
-                        || c
-                        == '\t'
-                        || c
-                        == '\n'
-                        || c
-                        == '('
-                        || c
-                        == ')'
-                        || c
-                        == '\u{000D}'
-                then
-                    b
-
-                else
-                    b ++ [ c ]
-            )
-            []
-        >> String.fromList
+    Internal.removeIllegalChars
         >> (\id_ -> SelectId (id_ ++ "__elm-select"))
 
 
