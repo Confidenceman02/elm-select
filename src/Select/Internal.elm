@@ -12,6 +12,8 @@ module Select.Internal exposing
     , ariaLabelledby
     , ariaSelected
     , calculateNextActiveTarget
+    , illegalChars
+    , removeIllegalChars
     , role
     , shouldQueryNextTargetElement
     , viewIf
@@ -25,6 +27,34 @@ import Select.Styles exposing (GroupConfig, MenuItemConfig)
 type Direction
     = Up
     | Down
+
+
+illegalChars : String
+illegalChars =
+    "' '/\\?\t\n\u{000D}%"
+
+
+removeIllegalChars : String -> String
+removeIllegalChars =
+    let
+        withEmpty x =
+            if List.isEmpty x then
+                [ '_' ]
+
+            else
+                x
+    in
+    String.toList
+        >> withEmpty
+        >> List.foldr
+            (\s acc ->
+                if String.contains (String.fromChar s) illegalChars then
+                    String.cons '_' acc
+
+                else
+                    String.cons s acc
+            )
+            ""
 
 
 calculateNextActiveTarget : Int -> Int -> Direction -> Int
