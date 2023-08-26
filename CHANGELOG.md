@@ -1,3 +1,8 @@
+## [10.1.2] - 2023-08-26
+
+## Added
+- Illegal characters in identifier are replaced with "_"
+
 ## [10.1.1] - 2023-08-18
 
 ## Fix
@@ -576,6 +581,7 @@ It's not a solid fix but it fails much less.
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
 
+[10.1.2]: https://github.com/Confidenceman02/elm-select/compare/10.1.1...10.1.2
 [10.1.1]: https://github.com/Confidenceman02/elm-select/compare/10.1.0...10.1.1
 [10.1.0]: https://github.com/Confidenceman02/elm-select/compare/10.0.1...10.1.0
 [10.0.1]: https://github.com/Confidenceman02/elm-select/compare/10.0.0...10.0.1
