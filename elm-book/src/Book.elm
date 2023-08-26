@@ -1,8 +1,8 @@
 module Book exposing (..)
 
+
 import Chapters.Welcome as Welcome
-import ElmBook exposing (withChapters, withStatefulOptions)
-import ElmBook.ElmCSS exposing (Book, book)
+import ElmBook exposing (Book, book, withChapters, withStatefulOptions)
 import ElmBook.StatefulOptions
 
 

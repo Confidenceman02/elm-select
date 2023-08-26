@@ -2,8 +2,8 @@ module Chapters.Welcome exposing (Model, init, welcomeChapter)
 
 import Css
 import ElmBook.Actions exposing (mapUpdateWithCmd)
-import ElmBook.Chapter exposing (chapter, render, withStatefulComponentList)
-import ElmBook.ElmCSS exposing (Chapter)
+import ElmBook.Chapter exposing (Chapter, chapter, render, withStatefulComponentList)
+import Html
 import Html.Styled as Styled exposing (Html, div, input, label, text)
 import Html.Styled.Attributes as Attribs exposing (type_)
 import Html.Styled.Events exposing (onCheck)
@@ -154,15 +154,6 @@ colors =
     , Forrest
     , Slate
     , Silver
-    ]
-
-
-flavours : List Flavour
-flavours =
-    [ Vanilla
-    , Chocolate
-    , Strawberry
-    , SaltedCaramel
     ]
 
 
@@ -568,30 +559,30 @@ welcomeChapter =
         |> withStatefulComponentList
             [ ( "Single"
               , \{ welcomeState } ->
-                    singleExample welcomeState.single
-                        |> Styled.map
+                    Styled.toUnstyled (singleExample welcomeState.single)
+                        |> Html.map
                             (mapUpdateWithCmd
                                 bookUpdate
                             )
               )
             , ( "Single grouped"
               , \{ welcomeState } ->
-                    singleGroupedExample welcomeState.singleGrouped
-                        |> Styled.map
+                    Styled.toUnstyled (singleGroupedExample welcomeState.singleGrouped)
+                        |> Html.map
                             (mapUpdateWithCmd
                                 bookUpdate
                             )
               )
             , ( "Multi"
               , \{ welcomeState } ->
-                    multiExample welcomeState.multi
-                        |> Styled.map
+                    Styled.toUnstyled (multiExample welcomeState.multi)
+                        |> Html.map
                             (mapUpdateWithCmd bookUpdate)
               )
             , ( "Native (Single)"
               , \{ welcomeState } ->
-                    nativeExample welcomeState.singleNative
-                        |> Styled.map
+                    Styled.toUnstyled (nativeExample welcomeState.singleNative)
+                        |> Html.map
                             (mapUpdateWithCmd bookUpdate)
               )
             ]
