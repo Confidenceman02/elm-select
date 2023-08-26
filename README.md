@@ -37,6 +37,9 @@ Select things in style!
 In the case your program is not using [elm-css]() already, an extra step will be required to make everything work. 
 You can see how to do that in the [Unstyling elm-css](#-unstyling-elm-css-) section.
 
+## Live examples
+Check out the elm-select [elm-book](https://confidenceman02.github.io/elm-select/).
+
 # Usage
 __Set an initial state in your model__.
 
