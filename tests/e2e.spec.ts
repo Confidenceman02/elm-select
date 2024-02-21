@@ -963,7 +963,7 @@ describe("JsOptimized", () => {
     expect(dynamicAttribsVisibleBeforeFocus).toBeFalsy();
 
     await page.focus("[data-test-id=selectInput]");
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(15);
     const dynamicAttribsVisibleAfterFocus = await page.isVisible(
       `[data-es-dynamic-select-input]`
     );
