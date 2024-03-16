@@ -77,7 +77,7 @@ view m =
         selectedItem =
             case m.selectedItem of
                 Just i ->
-                    Just (Select.basicMenuItem { item = i, label = i })
+                    Just (Select.basicMenuItem { item = i, label = i } |> Select.valueMenuItem "23")
 
                 _ ->
                     Nothing
@@ -101,6 +101,7 @@ view m =
                         |> Select.menuItems m.items
                         |> Select.placeholder "Placeholder"
                         |> Select.clearable True
+                        |> Select.name "something"
                     )
             ]
         ]
