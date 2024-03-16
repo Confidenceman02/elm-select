@@ -188,6 +188,7 @@ type alias BaseMenuItem comparable =
         , dismissible : Bool
         , styles : Maybe MenuItemConfig
         , group : Maybe Group
+        , value : Maybe String
     }
 
 

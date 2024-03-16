@@ -1,5 +1,6 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem
+    , Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
     , menuItems, clearable
     , placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
     , single
@@ -16,7 +17,8 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem
+@docs Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
 @docs menuItems, clearable
 @docs placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
 
@@ -360,6 +362,16 @@ getMenuItemLabel item =
             config.label
 
 
+getMenuItemValue : MenuItem item -> Maybe String
+getMenuItemValue item =
+    case item of
+        Basic config ->
+            config.value
+
+        Custom config ->
+            config.value
+
+
 isMenuItemDismissible : MenuItem item -> Bool
 isMenuItemDismissible item =
     case item of
@@ -575,6 +587,7 @@ basicMenuItem bscItem =
         , dismissible = True
         , styles = Nothing
         , group = Nothing
+        , value = Nothing
         }
 
 
@@ -606,6 +619,7 @@ customMenuItem i =
         , dismissible = True
         , styles = Nothing
         , group = Nothing
+        , value = Nothing
         }
 
 
@@ -755,6 +769,51 @@ stylesMenuItem cfg mi =
 
         Custom obj ->
             Custom { obj | styles = Just cfg }
+
+
+{-| Explicitly set the value attribute for the input form control.
+
+This is handy for when you are submitting a form and your server is expecting a `value` that is different
+from the label, like a database id.
+
+Take the following selection
+
+      <option value="2" selected>Pagani BC</option>
+
+When a form is submitted the server will see:
+
+      something: "2"
+
+instead of:
+
+      something: "Pagani BC"
+
+By default, the value attribute will be populated with the `MenuItem` label.
+
+      type Tool
+          = Screwdriver
+          | Hammer
+          | Drill
+
+      menuItems : List (MenuItem Tool)
+      menuItems =
+          [ customMenuItem
+              { item = Hammer, label = "Hammer", view = text "Hammer" }
+              |> valueMenuItem "2"
+          , customMenuItem
+              { item = Drill, label = "Drill", view = text "Drill" }
+              |> valueMenuItem "3"
+          ]
+
+-}
+valueMenuItem : String -> MenuItem item -> MenuItem item
+valueMenuItem v mi =
+    case mi of
+        Basic obj ->
+            Basic { obj | value = Just v }
+
+        Custom obj ->
+            Custom { obj | value = Just v }
 
 
 
@@ -2140,6 +2199,7 @@ view (Config config) =
                                 state_.controlUiFocused
                             )
                     )
+                , viewHiddenFormControl variant config.name
                 ]
 
 
@@ -2158,6 +2218,24 @@ type alias ViewCustomControlData item =
     , clearable : Bool
     , loading : Bool
     }
+
+
+viewHiddenFormControl : CustomVariant item -> Maybe String -> Html msg
+viewHiddenFormControl variant maybeName =
+    -- This renders an input for a custom Single variant so that form submissions include the given selection.
+    -- Without this, the selections made will not be included in the submitted form.
+    -- It's basically just how forms work!
+    case ( variant, maybeName ) of
+        ( Single (Just mi), Just n ) ->
+            Styled.input
+                [ StyledAttribs.type_ "hidden"
+                , StyledAttribs.name n
+                , StyledAttribs.value (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi))
+                ]
+                []
+
+        _ ->
+            text ""
 
 
 viewCustomControl : ViewCustomControlData item -> Html (Msg item)
@@ -3723,7 +3801,8 @@ buildMenuItemNative selectedItems menuItem =
                 []
     in
     option
-        (StyledAttribs.value (getMenuItemLabel menuItem)
+        (StyledAttribs.value
+            (Maybe.withDefault (getMenuItemLabel menuItem) (getMenuItemValue menuItem))
             :: withSelectedOption menuItem
         )
         [ text (getMenuItemLabel menuItem) ]
