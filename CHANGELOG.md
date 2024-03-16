@@ -1,53 +1,71 @@
+## [10.2.0] - 2024-03-16
+
+## Added
+
+- Custom Single variant works in native forms (Requires `name` function)
+- Ability to explicitly set a value attribute on a form submitted menu item
+
 ## [10.1.2] - 2023-08-26
 
 ## Added
-- Illegal characters in identifier are replaced with "_"
+
+- Illegal characters in identifier are replaced with "\_"
 
 ## [10.1.1] - 2023-08-18
 
 ## Fix
+
 - Illegal characters in identifier
 
 ## [10.1.0] - 2023-08-11
 
 ## Added
+
 - Conditionally dismissible tags
 
 ## Fix
+
 - Illegal characters in css classes
 
 ## [10.0.1] - 2023-07-21
 
 ## Fix
+
 - Illegal characters in css classes
 
 ## [10.0.0] - 2023-07-03
 
 ## Breaking changes
+
 - `Focus` and `Blur` added to `Action` type.
 
 ## [9.0.3] - 2023-06-28
 
 ## Added
+
 - Tailwind style border styles
 
 ## [9.0.2] - 2023-05-13
 
 ## Fixed
+
 - Breaking styles from id string that contains forward slashes.
 
 ## [9.0.1] - 2023-05-13
 
 ## Fixed
+
 - Breaking styles from id string that contains whitespace.
 
 ## [9.0.0] - 2023-05-13
 
 ## Added
+
 - Auto publish for tagged releases.
 - Added getMenuItemBackgroundColorHoverSelected & setMenuItemBackgroundColorHoverSelected to Styles config.
 
 ## Breaking changes
+
 - Styles renamed to make more sense
 
 ```elm
@@ -62,30 +80,36 @@
 ## [8.2.1] - 2023-04-10
 
 ## Added
+
 - Updated elm-css.
 - Using `nodeLazy` for performance boost on huge lists.
 
 ## [8.2.0] - 2023-01-13
 
 ## Fixed
+
 - Hard coded name attribute on native select.
 
 ## [8.1.0] - 2023-01-01
 
 ## Added
+
 - More configurable styles for Multi tags
 
 ## [8.0.1] - 2022-12-31
 
 ## Fixed
+
 - Missing documentation
 
 ## [8.0.0] - 2022-12-31
 
 ## Breaking changes
+
 - The `Action` type has been simplified and has an additional action.
 
 previous
+
 ```elm
 type Action item
   = InputChange String
@@ -97,6 +121,7 @@ type Action item
 ```
 
 current
+
 ```elm
 type Action item
     = InputChange String
@@ -118,85 +143,102 @@ case action of
 ```
 
 - The multi native variant will solely use the `SelectBatch` action
-to determine the selected itmes. The multi select html node surfaces
-the selected items all together, so `SelectBatch` maps this behaviour.
+  to determine the selected itmes. The multi select html node surfaces
+  the selected items all together, so `SelectBatch` maps this behaviour.
 
 It is not necessary to use the `Deselect` action for multi native variants.
 
 ## Added
+
 - multi native variant
 
 ## [7.3.4] - 2022-12-30
 
 ## Fixed
+
 - Broken README images.
 
 ## [7.3.3] - 2022-12-29
 
 ## Added
+
 - Native clear action.
 
 ## [7.3.2] - 2022-12-27
 
 ## Added
+
 - Native variant groups.
 
 ## [7.3.1] - 2022-12-25
 
 ## Fixed
+
 - Documentation errors
 
 ## [7.3.0] - 2022-12-25
 
 ## Added
+
 - Menu item groups.
 
 ## [7.2.0] - 2022-12-22
 
 ## Added
+
 - Styling for individual menu items.
 
 ## [7.1.2] - 2022-12-04
 
 ## Fixed
+
 - Disabled flag on native variant not working.
 
 ## [7.1.1] - 2022-11-27
 
 ## Added
+
 - Loading spinner to Native variant.
 
 ## [7.1.0] - 2022-10-12
 
 ## Added
+
 - Setter for setting the control `minHeight` property.
 
 ## [7.0.2] - 2022-10-12
 
 ## Fixed
+
 - Dropdown icon not correctly centered on Native variant.
 
 ## [7.0.1] - 2022-10-04
 
 ## Fixed
+
 - Loading menu opacity.
 
 ## [7.0.0] - 2022-10-03
 
 ## Added
+
 - Clearable functionality for multi select variants.
 - Keyed node on multi selected tags and input.
 
 ## Breaking changes
+
 `DeselectMulti` `Action` now takes a `List` of multi items that have been deselected.
 
 previous
+
 ```
 case action of
     DeselectMulti item ->
         List.filter (\i -> item /= i) model.selectedItems
 ```
+
 current
+
 ```
 case action of
     DeselectMulti deselectedItems ->
@@ -206,63 +248,74 @@ case action of
 ## [6.3.2] - 2022-10-01
 
 ## Fixed
+
 - Menu flickering open when dismissing multi select item on non-searchable variant.
 
 ## [6.3.1] - 2022-09-30
 
 ## Fixed
+
 - Loading indicator not rendering when `searchable True` in config.
 
 ## [6.3.0] - 2022-09-19
 
 ## Added
+
 - Configurable styles for menu border width.
 
 ## [6.2.2] - 2022-09-17
 
 ## Fixed
+
 - Active target not resetting on input blur.
 - `ContainerClicked` being dispatched on menu item elements.
 
 ## [6.2.1] - 2022-09-17
 
 ## Fixed
+
 - Selected custom items not visually selected in menu variant list.
 
 ## [6.2.0] - 2022-09-16
 
 ## Added
+
 - Configurable max height styles for menu.
 
 ## [6.1.0] - 2022-09-15
 
 ## Added
+
 - Configurable position styles for menu.
 - Hover style resolution for variants that show a menu without
-control focus.
+  control focus.
 - State modifier to keep menu open at all times.
 
 ## [6.0.2] - 2022-09-11
 
 ## Added
+
 - Prevent default on unsearchable container clicks when input is focused.
-This avoids a blur event on the input.
+  This avoids a blur event on the input.
 - Conditionally focus input on unsearchable container click. Will only focus
-when the input is not currently focused. Reduces a DOM event.
+  when the input is not currently focused. Reduces a DOM event.
 
 ## Fixed
+
 - Placeholder not fully visible in unsearchable single variants.
-- Clicking multiple times on unsearchable single variant container not 
-opening and closing menu correctly.
+- Clicking multiple times on unsearchable single variant container not
+  opening and closing menu correctly.
 
 ## [6.0.1] - 2022-08-30
 
 ## Fixed
+
 - Line height on tags when wrapping
 
 ## [6.0.0] - 2022-08-29
 
 ## Added
+
 - Make menu variants.
 - Add helper function isFocused, isMenuOpen.
 - Add `Action`'s `FocusSet` and `MenuInputCleared`.
@@ -270,14 +323,18 @@ opening and closing menu correctly.
 - Improve docs around jsOptimize
 
 ## Breaking changes
+
 Setting the `SelectId` now happens on `initState` instead
 of the `view` function. This makes the `focus` function possible.
 
 previous
+
 ```
 view (single Nothing) (selectIndentifier "1234")
 ```
+
 current
+
 ```
 initState (selectIdentifier "1234")
 ```
@@ -285,51 +342,63 @@ initState (selectIdentifier "1234")
 ## [5.4.0] - 2022-08-10
 
 ## Added
+
 - Make multi tag dismiss icon background color configurable
 
 ## [5.3.2] - 2022-08-04
 
 ## Added
+
 - Calling InputChange action with empty string on InputEscape and OnInputBlurrred
 
 ## [5.3.1] - 2022-08-03
 
 ## Fixed
+
 - Center alignment for icons when document has large line-height set.
 
 ## [5.3.0] - 2022-08-03
 
 ## Added
+
 - Exposing `Config` type
 
 ## [5.2.1] - 2022-08-03
 
 ## Added
+
 - Relaxed elm/core lib
 
 ## [5.2.0] - 2022-08-02
 
 ## Added
+
 - Menu item can be non filterable when component is searchable.
 
 ## [5.1.0] - 2022-08-01
 
 ## Added
+
 - Multi tag border radius configurable
 
 ## [5.0.0] - 2022-07-28
 
 ## Added
+
 - Multi variant tag styles to Styles module
 
 ## Breaking changes
-`initMultiConfig` no longer required when using the `multi` builder. 
+
+`initMultiConfig` no longer required when using the `multi` builder.
 
 previous
+
 ```
 multi initMultiConfig selectedItems
 ```
+
 current
+
 ```
 multi selectedItems
 ```
@@ -337,6 +406,7 @@ multi selectedItems
 Setting the multi tag color and truncation properties can be done via the `Styles` setters.
 
 previous
+
 ```
 multi
   (initMultiConfig
@@ -347,6 +417,7 @@ multi
 ```
 
 current
+
 ```
 let
   controlStyles =
@@ -364,21 +435,25 @@ multi []
 ## [4.1.2] - 2022-07-18
 
 ## Fixed
+
 - Doubled up arrow events on dummy input.
 - Focus ring on multi select tag.
 - Center alignment of multi select tag value and close button.
 
 ## Added
+
 - Latest elm-css version
 
 ## [4.1.1] - 2022-06-05
 
 ## Fixed
+
 - [ Issue #67 ](https://github.com/Confidenceman02/elm-select/issues/67) [Kevin Lufkin ](https://github.com/klufkin)
 
 ## [4.1.0] - 2022-04-01
 
 ## Added
+
 - customMenuItem builder
 - All CI scripts added to Makefile
 - Custom menu item example
@@ -387,14 +462,17 @@ multi []
 ## [4.0.0] - 2022-04-23
 
 ## Added
+
 - MenuItem opaque types
 - Builder function for MenuItem
 
 ## Breaking changes
+
 The MenuItem type is now an opaque type that can be built with the `basicMenuItem` function.
 The `basicMenuItem` function will take the previous `MenuItem` structure and wrap it.
 
 previous
+
 ```
 menuItem : MenuItem String
 menuItem =
@@ -402,6 +480,7 @@ menuItem =
 ```
 
 current
+
 ```
 menuItem : MenuItem String
 menuItem =
@@ -411,12 +490,14 @@ menuItem =
 ## [3.2.2] - 2022-01-18
 
 ## Added
+
 - Type attribute to clear indicator button set to "button".
 
 ## Fixed
+
 - Issue #53
 - Form submitting when interacting with clear button with 'Enter' key
-when select is in form element.
+  when select is in form element.
 
 ## [3.2.1] - 2022-01-10
 
@@ -431,62 +512,75 @@ https://github.com/rtfeldman/elm-css/issues/543
 ## [3.2.0] - 2022-01-09
 
 ## Added
+
 - Configurable styles for control and menu item border radius.
 
 ## [3.1.1] - 2021-12-30
 
 ## Added
+
 - Placeholder option for native select variant.
 
 ## [3.1.0] - 2021-12-23
 
-## Added 
+## Added
+
 - loadingMessage modifier for setting loading message when there are no
-matching items.
+  matching items.
 
 ## [3.0.2] - 2021-12-19
 
-## Fixed 
+## Fixed
+
 - CHANGELOG.md
 
 ## [3.0.1] - 2021-12-19
 
 ## Added
+
 - CHANGELOG.md file
 
 ## [3.0.0] - 2021-12-13
 
 ## Added
+
 - Configurable styles for menu item variant.
 - Create dracula dark theme styles.
 
-## Fixed 
+## Fixed
+
 - Loading message styles.
 
 ## [2.0.2] - 2021-12-07
 
 ## Added
+
 - Updated dependencies.
 
 ## [2.0.1] - 2021-12-07
 
 ## Fixed
+
 - Broken/missing dependency `matken11235/html-styled-extra`.
 
 ## [2.0.0] - 2021-12-01
 
 ## Added
+
 - Configurable styles for menu.
 
 ## Breaking changes
+
 - Default style configs now must be extracted from a base config.
-Previously you could use a default config for the control, menu or menu items.
+  Previously you could use a default config for the control, menu or menu items.
+
 ```
 seectBranding =
     Styles.controlDefault
         |> Styles.setControlBorderColor (Css.hex "#C93B55")
         |> Styles.setControlStyles Styles.default
 ```
+
 Now these configs can only be extracted from a default `Config`.
 
 ```
@@ -502,37 +596,43 @@ controlBranding
 ## [1.5.1] - 2021-11-30
 
 ## Fixed
+
 - Example error in README.md documentation.
 
 ## [1.5.0] - 2021-11-24
 
 ## Added
+
 - Modifier for ariaDescribedBy for all variants.
 
 ## [1.4.0] - 2021-11-23
 
-## Added 
+## Added
+
 - Configurable background color for control styles.
 
 ## [1.3.0] - 2021-11-22
 
-## Added 
+## Added
+
 - Styles configuration for select variants to determine basic styles.
 - Example for setting custom styles.
 
 ## Changed
+
 - Internal modules to live in the `Select` directory.
 
 ## Fixed
+
 - Flaky CI test. Bumped the wait time incase the palywritght runtime was too eager.
-It's not a solid fix but it fails much less.
+  It's not a solid fix but it fails much less.
 - ClearIcon.elm color issues by adding a fill attribute and setting to currentColor.
 - DotLoadingIcon.elm color issues by adding a fill attribute and setting to currentColor.
 - DropDownIcon.elm color issues by adding a fill attribute and setting to currentColor.
 
 ## [1.2.0] - 2021-11-19
 
-## Added 
+## Added
 
 - Expose searcheable modifier to make menu items searchable.
 - Add tests for non searchable variant.
@@ -546,7 +646,7 @@ It's not a solid fix but it fails much less.
 
 ## [1.0.3] - 2021-08-08
 
-## Added 
+## Added
 
 - Confidenceman02/elm-select:1.0.2 to examples.
 - README.md for examples.
@@ -579,8 +679,9 @@ It's not a solid fix but it fails much less.
 
 ### Added
 
-- Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/) 
+- Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[10.2.0]: https://github.com/Confidenceman02/elm-select/compare/10.1.1...10.2.0
 [10.1.2]: https://github.com/Confidenceman02/elm-select/compare/10.1.1...10.1.2
 [10.1.1]: https://github.com/Confidenceman02/elm-select/compare/10.1.0...10.1.1
 [10.1.0]: https://github.com/Confidenceman02/elm-select/compare/10.0.1...10.1.0
