@@ -1,3 +1,10 @@
+## [10.3.0] - 2024-03-17
+
+## Added
+
+- Bootstrap4 theme style pack
+- mousedown and selected menu item color styles
+
 ## [10.2.0] - 2024-03-16
 
 ## Added
@@ -681,6 +688,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[10.3.0]: https://github.com/Confidenceman02/elm-select/compare/10.2.0...10.3.0
 [10.2.0]: https://github.com/Confidenceman02/elm-select/compare/10.1.1...10.2.0
 [10.1.2]: https://github.com/Confidenceman02/elm-select/compare/10.1.1...10.1.2
 [10.1.1]: https://github.com/Confidenceman02/elm-select/compare/10.1.0...10.1.1
