@@ -4160,7 +4160,9 @@ menuItemContainerStyles data =
 
         withIsClickedStyles =
             if data.isClickFocused then
-                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorMouseDown data.menuItemStyles) ]
+                [ Css.backgroundColor (Styles.getMenuItemBackgroundColorMouseDown data.menuItemStyles)
+                , Css.color (Styles.getMenuItemColorMouseDown data.menuItemStyles)
+                ]
 
             else
                 []
@@ -4168,6 +4170,7 @@ menuItemContainerStyles data =
         withIsSelectedStyles =
             if data.itemSelected then
                 [ Css.backgroundColor (Styles.getMenuItemBackgroundColorSelected data.menuItemStyles)
+                , Css.color (Styles.getMenuItemColorSelected data.menuItemStyles)
                 , Css.hover [ Css.color (Styles.getMenuItemColorHoverSelected data.menuItemStyles) ]
                 ]
 
