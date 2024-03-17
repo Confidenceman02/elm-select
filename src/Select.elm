@@ -2,7 +2,7 @@ module Select exposing
     ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem
     , Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
     , menuItems, clearable
-    , placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
+    , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, searchable, setStyles, name
     , single
     , singleMenu, menu
     , multi
@@ -20,7 +20,7 @@ module Select exposing
 @docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem
 @docs Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
 @docs menuItems, clearable
-@docs placeholder, selectIdentifier, state, update, view, searchable, setStyles, name
+@docs placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, searchable, setStyles, name
 
 
 # Single select
@@ -1374,9 +1374,12 @@ multi selectedItems =
 {-| The ID for the rendered Select input
 
 NOTE: It is important that the ID's of all selects that exist on
-a page remain unique.
+a page remain unique so I add some extra stuff at the end of the String
+you provide to help out.
 
-Illegal id characters "' '/\\?\\t\\n\\u{000D}%" will be replaced with "\_".
+If you don't want this see [staticSelectIdentifier](#staticSelectIdentifier).
+
+Illegal id characters will be replaced with "\_".
 
     init : State
     init =
@@ -1387,6 +1390,28 @@ selectIdentifier : String -> SelectId
 selectIdentifier =
     Internal.removeIllegalChars
         >> (\id_ -> SelectId (id_ ++ "__elm-select"))
+
+
+{-| A static ID for the rendered Select input
+
+The exact string you pass will be the ID used internally.
+
+This is handy when you want a label tags `for` attribute to match the variant id
+without needing to remember to add the extra stuff.
+
+See also [selectIdentifier](#selectIdentifier).
+
+Illegal id characters will be replaced with "\_".
+
+    init : State
+    init =
+        initState (staticSelectIdentifier "someUniqueStaticId")
+
+-}
+staticSelectIdentifier : String -> SelectId
+staticSelectIdentifier =
+    Internal.removeIllegalChars
+        >> (\id_ -> SelectId id_)
 
 
 
