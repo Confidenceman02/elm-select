@@ -8,7 +8,8 @@ module Select.Styles exposing
     , setMenuControlBackgroundColor, setMenuControlBackgroundColorHover, setMenuControlBorderColor, setMenuMaxHeightPx, setMenuMaxHeightVh, setMenuPosition
     , setGroupStyles, setGroupColor, setGroupFontSizeLabel, setGroupFontWeightLabel, setGroupTextTransformationLabel
     , setMenuItemStyles, setMenuItemBackgroundColorMouseDown, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorHover, setMenuItemBackgroundColorHoverSelected
-    , setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColor, setMenuItemColorHoverSelected, setMenuItemInlinePadding
+    , setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemColorSelected, setMenuItemColorMouseDown, setMenuItemBackgroundColor
+    , setMenuItemColorHoverSelected, setMenuItemInlinePadding
     , setMenuItemColorHover, setMenuControlBorderColorFocus, setMenuControlBorderColorHover, setMenuControlBorderRadius, setMenuControlClearIndicatorColor
     , setMenuControlClearIndicatorColorHover, setMenuControlColor, setMenuControlDisabledOpacity, setMenuControlLoadingIndicatorColor, setMenuControlMinHeight, setMenuControlPlaceholderOpacity
     , setMenuControlSearchIndicatorColor
@@ -22,10 +23,11 @@ module Select.Styles exposing
     , getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
     , getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuPosition
     , getGroupConfig, getGroupColor, getGroupFontSizeLabel, getGroupFontWeightLabel, getGroupTextTransformationLabel
-    , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor
+    , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius
+    , getMenuItemColor, getMenuItemColorSelected, getMenuItemColorMouseDown
     , getMenuItemColorHover, getMenuItemColorHoverSelected, getMenuItemBackgroundColorHoverSelected, getMenuItemInlinePadding
     , getMenuItemBackgroundColor
-    , dracula
+    , dracula, bootstrap4
     )
 
 {-| Add custom styling to the Select control, menu and menu item.
@@ -72,7 +74,8 @@ Set styles
 # Menu item
 
 @docs setMenuItemStyles, setMenuItemBackgroundColorMouseDown, setMenuItemBackgroundColorSelected, setMenuItemBackgroundColorHover, setMenuItemBackgroundColorHoverSelected
-@docs setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemBackgroundColor, setMenuItemColorHoverSelected, setMenuItemInlinePadding
+@docs setMenuItemBlockPadding, setMenuItemBorderRadius, setMenuItemColor, setMenuItemColorSelected, setMenuItemColorMouseDown, setMenuItemBackgroundColor
+@docs setMenuItemColorHoverSelected, setMenuItemInlinePadding
 @docs setMenuItemColorHover, setMenuControlBorderColorFocus, setMenuControlBorderColorHover, setMenuControlBorderRadius, setMenuControlClearIndicatorColor
 @docs setMenuControlClearIndicatorColorHover, setMenuControlColor, setMenuControlDisabledOpacity, setMenuControlLoadingIndicatorColor, setMenuControlMinHeight, setMenuControlPlaceholderOpacity
 @docs setMenuControlSearchIndicatorColor
@@ -107,7 +110,8 @@ Get styles
 
 # Menu item
 
-@docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius, getMenuItemColor
+@docs getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius
+@docs getMenuItemColor, getMenuItemColorSelected, getMenuItemColorMouseDown
 @docs getMenuItemColorHover, getMenuItemColorHoverSelected, getMenuItemBackgroundColorHoverSelected, getMenuItemInlinePadding
 
 @docs getMenuItemBackgroundColor
@@ -115,7 +119,7 @@ Get styles
 
 # Theme
 
-@docs dracula
+@docs dracula, bootstrap4
 
 -}
 
@@ -169,8 +173,10 @@ type alias MenuItemConfiguration =
     , blockPadding : Float
     , borderRadius : Float
     , color : Css.Color
+    , colorSelected : Css.Color
     , colorHoverSelected : Css.Color
     , colorHover : Css.Color
+    , colorMouseDown : Css.Color
     , inlinePadding : Float
     }
 
@@ -258,7 +264,9 @@ defaultsMenuItem =
     , blockPadding = 8
     , borderRadius = 4
     , color = Css.hex "#000000"
+    , colorSelected = Css.hex "#000000"
     , colorHoverSelected = Css.hex "#0168B3"
+    , colorMouseDown = Css.hex "#000000"
     , colorHover = Css.hex "#0168B3"
     , inlinePadding = 8
     }
@@ -445,6 +453,12 @@ setMenuItemColor c (MenuItemConfig config) =
 
 
 {-| -}
+setMenuItemColorSelected : Css.Color -> MenuItemConfig -> MenuItemConfig
+setMenuItemColorSelected c (MenuItemConfig config) =
+    MenuItemConfig { config | colorSelected = c }
+
+
+{-| -}
 setMenuItemColorHoverSelected : Css.Color -> MenuItemConfig -> MenuItemConfig
 setMenuItemColorHoverSelected c (MenuItemConfig config) =
     MenuItemConfig { config | colorHoverSelected = c }
@@ -454,6 +468,12 @@ setMenuItemColorHoverSelected c (MenuItemConfig config) =
 setMenuItemColorHover : Css.Color -> MenuItemConfig -> MenuItemConfig
 setMenuItemColorHover c (MenuItemConfig config) =
     MenuItemConfig { config | colorHover = c }
+
+
+{-| -}
+setMenuItemColorMouseDown : Css.Color -> MenuItemConfig -> MenuItemConfig
+setMenuItemColorMouseDown c (MenuItemConfig config) =
+    MenuItemConfig { config | colorMouseDown = c }
 
 
 {-| -}
@@ -1074,6 +1094,12 @@ getMenuItemColor (MenuItemConfig config) =
 
 
 {-| -}
+getMenuItemColorSelected : MenuItemConfig -> Css.Color
+getMenuItemColorSelected (MenuItemConfig config) =
+    config.colorSelected
+
+
+{-| -}
 getMenuItemColorHoverSelected : MenuItemConfig -> Css.Color
 getMenuItemColorHoverSelected (MenuItemConfig config) =
     config.colorHoverSelected
@@ -1083,6 +1109,12 @@ getMenuItemColorHoverSelected (MenuItemConfig config) =
 getMenuItemColorHover : MenuItemConfig -> Css.Color
 getMenuItemColorHover (MenuItemConfig config) =
     config.colorHover
+
+
+{-| -}
+getMenuItemColorMouseDown : MenuItemConfig -> Css.Color
+getMenuItemColorMouseDown (MenuItemConfig config) =
+    config.colorMouseDown
 
 
 {-| -}
@@ -1489,6 +1521,16 @@ dracula =
         |> setMenuItemStyles draculaMenuItem
 
 
+{-| For the Bootstrap4 lovers
+-}
+bootstrap4 : Config
+bootstrap4 =
+    default
+        |> setControlStyles bootstrap4Control
+        |> setMenuStyles bootstrap4Menu
+        |> setMenuItemStyles bootstrap4MenuItem
+
+
 draculaControl : ControlConfig
 draculaControl =
     getControlConfig default
@@ -1505,6 +1547,18 @@ draculaControl =
         |> setControlColor (Css.hex "#ff79c6")
         |> setControlSelectedColor (Css.hex "#ff79c6")
         |> setControlLoadingIndicatorColor (Css.hex "#ff79c6")
+
+
+bootstrap4Control : ControlConfig
+bootstrap4Control =
+    getControlConfig default
+        |> setControlBorderColor (Css.hex "#ced4da")
+        |> setControlBorderRadius 4
+        |> setControlBorderColorHover (Css.hex "#80bdff")
+        |> setControlBorderColorFocus (Css.hex "#80bdff")
+        |> setControlBackgroundColor (Css.hex "#FFFFFF")
+        |> setControlBackgroundColorHover (Css.hex "#FFFFFF")
+        |> setControlMinHeight 38
 
 
 draculaMenu : MenuConfig
@@ -1524,6 +1578,12 @@ draculaMenu =
         |> setMenuControlSearchIndicatorColor (Css.hex "#ff79c6")
 
 
+bootstrap4Menu : MenuConfig
+bootstrap4Menu =
+    getMenuConfig default
+        |> setMenuBackgroundColor (Css.hex "#FFFFFF")
+
+
 draculaMenuItem : MenuItemConfig
 draculaMenuItem =
     getMenuItemConfig default
@@ -1531,3 +1591,16 @@ draculaMenuItem =
         |> setMenuItemBackgroundColorSelected (Css.hex "#ff79c6")
         |> setMenuItemBackgroundColorMouseDown (Css.hex "#44475a")
         |> setMenuItemColor (Css.hex "#aeaea9")
+
+
+bootstrap4MenuItem : MenuItemConfig
+bootstrap4MenuItem =
+    getMenuItemConfig default
+        |> setMenuItemBackgroundColorSelected (Css.hex "#007bff")
+        |> setMenuItemBackgroundColorHover (Css.hex "#f8f9fa")
+        |> setMenuItemBackgroundColorMouseDown (Css.hex "#007bff")
+        |> setMenuItemColor (Css.hex "#16181b")
+        |> setMenuItemColorHover (Css.hex "#16181b")
+        |> setMenuItemColorHoverSelected (Css.hex "#FFFFFF")
+        |> setMenuItemColorSelected (Css.hex "#FFFFFF")
+        |> setMenuItemColorMouseDown (Css.hex "#FFFFFF")
