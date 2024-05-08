@@ -2183,7 +2183,7 @@ view (Config config) =
                     variant
                     config.disabled
                 )
-                [ lazy viewCustomControl
+                ([ lazy viewCustomControl
                     (ViewCustomControlData
                         config.state
                         ctrlStyles
@@ -2199,7 +2199,7 @@ view (Config config) =
                         config.clearable
                         config.isLoading
                     )
-                , Internal.viewIf state_.menuOpen
+                 , Internal.viewIf state_.menuOpen
                     (if config.isLoading && List.isEmpty viewableMenuItems then
                         viewLoadingMenu
                             (ViewLoadingMenuData
@@ -2224,8 +2224,9 @@ view (Config config) =
                                 state_.controlUiFocused
                             )
                     )
-                , viewHiddenFormControl variant config.name
-                ]
+                 ]
+                    ++ viewHiddenFormControl variant config.name
+                )
 
 
 type alias ViewCustomControlData item =
@@ -2245,22 +2246,20 @@ type alias ViewCustomControlData item =
     }
 
 
-viewHiddenFormControl : CustomVariant item -> Maybe String -> Html msg
+viewHiddenFormControl : CustomVariant item -> Maybe String -> List (Html msg)
 viewHiddenFormControl variant maybeName =
-    -- This renders an input for a custom Single variant so that form submissions include the given selection.
+    -- This renders an input for a Custom variants so that form submissions include the given selection/s.
     -- Without this, the selections made will not be included in the submitted form.
     -- It's basically just how forms work!
     case ( variant, maybeName ) of
         ( Single (Just mi), Just n ) ->
-            Styled.input
-                [ StyledAttribs.type_ "hidden"
-                , StyledAttribs.name n
-                , StyledAttribs.value (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi))
-                ]
-                []
+            [ viewHiddenInput n (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi)) ]
+
+        ( Multi selected, Just n ) ->
+            List.map (\mi -> viewHiddenInput n (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi))) selected
 
         _ ->
-            text ""
+            [ text "" ]
 
 
 viewCustomControl : ViewCustomControlData item -> Html (Msg item)
@@ -3296,6 +3295,16 @@ type alias ViewDummyInputData item =
     , clearable : Bool
     , state : SelectState
     }
+
+
+viewHiddenInput : String -> String -> Html msg
+viewHiddenInput n value =
+    Styled.input
+        [ StyledAttribs.type_ "hidden"
+        , StyledAttribs.name n
+        , StyledAttribs.value value
+        ]
+        []
 
 
 viewDummyInput : ViewDummyInputData item -> Html (Msg item)
