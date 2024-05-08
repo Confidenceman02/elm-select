@@ -3,7 +3,7 @@
     "name": "Confidenceman02/elm-select",
     "summary": "A Handsome flexible select!",
     "license": "BSD-3-Clause",
-    "version": "10.4.0",
+    "version": "10.4.1",
     "exposed-modules": [
         "Select",
         "Select.Styles"
