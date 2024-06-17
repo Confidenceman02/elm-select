@@ -1559,6 +1559,11 @@ bootstrap4Control =
         |> setControlBackgroundColor (Css.hex "#FFFFFF")
         |> setControlBackgroundColorHover (Css.hex "#FFFFFF")
         |> setControlMinHeight 38
+        |> setControlMultiTagBorderRadius 4
+        |> setControlMultiTagBackgroundColor (Css.hex "e4e4e4")
+        |> setControlMultiTagDismissibleBackgroundColor (Css.hex "999")
+        |> setControlMultiTagDismissibleBackgroundColorHover (Css.hex "8a8a8a")
+        |> setControlMultiTagColor (Css.hex "555")
 
 
 draculaMenu : MenuConfig
