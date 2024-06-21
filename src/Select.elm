@@ -2279,7 +2279,13 @@ viewCustomControl data =
                             if 0 < List.length multiSelectedValues then
                                 [ StyledAttribs.css
                                     [ Css.marginRight (Css.rem 0.4375)
-                                    , Css.lineHeight (Css.num 1.9)
+                                    , Css.displayFlex
+                                    , Css.alignItems Css.center
+                                    , Css.flex3 (Css.int 1) (Css.int 1) (Css.pct 0)
+                                    , Css.flexWrap Css.wrap
+                                    , Css.position Css.relative
+                                    , Css.overflow Css.hidden
+                                    , Css.boxSizing Css.borderBox
                                     ]
                                 ]
 

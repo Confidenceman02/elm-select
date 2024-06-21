@@ -311,7 +311,7 @@ defaultsControl =
     , borderColor = Css.hex "#898BA9"
     , borderColorFocus = Css.hex "#0168b3"
     , borderColorHover = Css.hex "#4B4D68"
-    , borderRadius = 7
+    , borderRadius = 4
     , clearIndicatorColor = Css.rgb 102 102 102
     , clearIndicatorColorHover = Css.rgb 51 51 51
     , color = Css.hex "#000000"
@@ -319,7 +319,7 @@ defaultsControl =
     , dropdownIndicatorColor = Css.rgb 102 102 102
     , dropdownIndicatorColorHover = Css.rgb 51 51 51
     , loadingIndicatorColor = Css.rgb 102 102 102
-    , minHeight = 48
+    , minHeight = 38
     , multiTagBackgroundColor = Css.hex "#E1E2EA"
     , multiTagBorderRadius = 16
     , multiTagColor = Css.hex "#35374A"
@@ -1558,7 +1558,6 @@ bootstrap4Control =
         |> setControlBorderColorFocus (Css.hex "#80bdff")
         |> setControlBackgroundColor (Css.hex "#FFFFFF")
         |> setControlBackgroundColorHover (Css.hex "#FFFFFF")
-        |> setControlMinHeight 38
         |> setControlMultiTagBorderRadius 4
         |> setControlMultiTagBackgroundColor (Css.hex "e4e4e4")
         |> setControlMultiTagDismissibleBackgroundColor (Css.hex "999")
