@@ -1,3 +1,9 @@
+## [10.4.3] - 2024-06-21
+
+## Fixed
+
+- Native variant ugly border
+
 ## [10.4.2] - 2024-06-17
 
 ## Added
@@ -706,6 +712,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[10.4.3]: https://github.com/Confidenceman02/elm-select/compare/10.4.2...10.4.3
 [10.4.2]: https://github.com/Confidenceman02/elm-select/compare/10.4.1...10.4.2
 [10.4.1]: https://github.com/Confidenceman02/elm-select/compare/10.4.0...10.4.1
 [10.4.0]: https://github.com/Confidenceman02/elm-select/compare/10.3.0...10.4.0
