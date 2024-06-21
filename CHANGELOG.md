@@ -1,3 +1,14 @@
+## [10.4.4] - 2024-06-22
+
+## Fixed
+
+- Off center multi select tags
+- Wrapping multi select tags
+
+## Added
+
+- Default styles to match react-select
+
 ## [10.4.3] - 2024-06-21
 
 ## Fixed
@@ -712,6 +723,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[10.4.4]: https://github.com/Confidenceman02/elm-select/compare/10.4.3...10.4.4
 [10.4.3]: https://github.com/Confidenceman02/elm-select/compare/10.4.2...10.4.3
 [10.4.2]: https://github.com/Confidenceman02/elm-select/compare/10.4.1...10.4.2
 [10.4.1]: https://github.com/Confidenceman02/elm-select/compare/10.4.0...10.4.1
