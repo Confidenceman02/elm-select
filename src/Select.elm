@@ -2725,6 +2725,7 @@ viewNative data =
          , StyledAttribs.css
             [ Css.width (Css.pct 100)
             , Css.height (Css.px (Styles.getControlMinHeight data.controlStyles))
+            , Css.property "border" "none"
             , controlRadius (Styles.getControlBorderRadius data.controlStyles)
             , Css.backgroundColor (Styles.getControlBackgroundColor data.controlStyles)
             , controlBorder (Styles.getControlBorderColor data.controlStyles)
