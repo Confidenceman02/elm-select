@@ -10,7 +10,7 @@ module Select.Tag exposing
     )
 
 import Css
-import Html.Styled exposing (Html, button, div, span, text)
+import Html.Styled exposing (Html, button, div, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, type_)
 import Html.Styled.Events exposing (on, onClick, stopPropagationOn)
 import Json.Decode as Decode
@@ -93,45 +93,6 @@ dataTestId testId (Config config) =
 view : Config msg -> String -> Html msg
 view (Config config) value =
     let
-        resolveRightMargin =
-            if config.rightMargin then
-                Css.px 7
-
-            else
-                Css.px 0
-    in
-    div
-        -- root
-        [ StyledAttribs.css
-            [ Css.fontSize (Css.rem 0.875)
-            , Css.fontWeight (Css.int 400)
-            , Css.marginRight resolveRightMargin
-            , Css.color (Styles.getControlMultiTagColor config.controlStyles)
-            , Css.display Css.inlineBlock
-            , Css.border3 (Css.px 2) Css.solid Css.transparent
-            , Css.borderRadius (Css.px (Styles.getControlMultiTagBorderRadius config.controlStyles))
-            , Css.padding2 (Css.px 0) (Css.px 9.6)
-            , Css.boxSizing Css.borderBox
-            , Css.backgroundColor (Styles.getControlMultiTagBackgroundColor config.controlStyles)
-            , Css.height (Css.px 30)
-            , Css.lineHeight Css.initial
-            ]
-        , attribute "data-test-id" config.dataTestId
-        ]
-        [ div
-            -- layoutContainer
-            [ StyledAttribs.css
-                [ Css.height (Css.pct 100), Css.displayFlex, Css.alignItems Css.center ]
-            ]
-            [ viewTextContent config value
-            , viewClear config
-            ]
-        ]
-
-
-viewTextContent : Configuration msg -> String -> Html msg
-viewTextContent config value =
-    let
         resolveTruncation =
             case Styles.getControlMultiTagTruncationWidth config.controlStyles of
                 Just width ->
@@ -144,11 +105,35 @@ viewTextContent config value =
                 Nothing ->
                     []
     in
-    span
-        -- truncate
-        [ StyledAttribs.css resolveTruncation
+    div
+        -- root
+        [ StyledAttribs.css
+            [ Css.displayFlex
+            , Css.minWidth (Css.px 0)
+            , Css.backgroundColor (Styles.getControlMultiTagBackgroundColor config.controlStyles)
+            , Css.borderRadius (Css.px (Styles.getControlMultiTagBorderRadius config.controlStyles))
+            , Css.margin (Css.px 2)
+            , Css.boxSizing Css.borderBox
+            ]
+        , attribute "data-test-id" config.dataTestId
         ]
-        [ text value ]
+        [ div
+            [ StyledAttribs.css
+                ([ Css.overflow Css.hidden
+                 , Css.whiteSpace Css.noWrap
+                 , Css.borderRadius (Css.px 2)
+                 , Css.fontSize (Css.pct 90)
+                 , Css.fontWeight (Css.int 400)
+                 , Css.padding4 (Css.px 5) (Css.px 8) (Css.px 5) (Css.px 8)
+                 , Css.boxSizing Css.borderBox
+                 ]
+                    ++ resolveTruncation
+                )
+            ]
+            [ text value
+            ]
+        , viewClear config
+        ]
 
 
 viewClear : Configuration msg -> Html msg
@@ -178,16 +163,16 @@ viewClear config =
     in
     case config.onDismiss of
         Just _ ->
-            span
+            div
                 -- dismissIcon
                 (StyledAttribs.css
-                    [ Css.position Css.relative
-                    , Css.displayFlex
-                    , Css.height (Css.pct 100)
+                    [ Css.property "-moz-box-align" "center"
                     , Css.alignItems Css.center
-                    , Css.padding2 (Css.px 0) (Css.rem 0.375)
-                    , Css.marginRight (Css.rem -0.6625)
-                    , Css.marginLeft (Css.rem -0.225)
+                    , Css.displayFlex
+                    , Css.borderRadius (Css.px 2)
+                    , Css.paddingLeft (Css.px 4)
+                    , Css.paddingRight (Css.px 4)
+                    , Css.boxSizing Css.borderBox
                     , Css.color
                         (Styles.getControlMultiTagDismissibleBackgroundColor
                             config.controlStyles
@@ -201,20 +186,7 @@ viewClear config =
                     ]
                     :: (events ++ dataAttrib)
                 )
-                [ span
-                    [ -- background
-                      StyledAttribs.css
-                        [ Css.position Css.absolute
-                        , Css.display Css.inlineBlock
-                        , Css.width (Css.px 8)
-                        , Css.height (Css.px 8)
-                        , Css.backgroundColor (Css.hex "#FFFFFF")
-                        , Css.left (Css.px 10)
-                        , Css.top (Css.px 9)
-                        ]
-                    ]
-                    []
-                , button
+                [ button
                     [ StyledAttribs.css
                         [ Css.height (Css.px 16)
                         , Css.width (Css.px 16)
@@ -233,7 +205,7 @@ viewClear config =
                         ]
                     , type_ "button"
                     ]
-                    [ span [ StyledAttribs.css [ Css.displayFlex ] ] [ ClearIcon.view ] ]
+                    [ ClearIcon.view ]
                 ]
 
         _ ->
