@@ -1,3 +1,9 @@
+## [10.4.5] - 2024-07-13
+
+## Fixed
+
+- Tailwind box-shadow addition on search input
+
 ## [10.4.4] - 2024-06-22
 
 ## Fixed
@@ -723,6 +729,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[10.4.5]: https://github.com/Confidenceman02/elm-select/compare/10.4.4...10.4.5
 [10.4.4]: https://github.com/Confidenceman02/elm-select/compare/10.4.3...10.4.4
 [10.4.3]: https://github.com/Confidenceman02/elm-select/compare/10.4.2...10.4.3
 [10.4.2]: https://github.com/Confidenceman02/elm-select/compare/10.4.1...10.4.2
