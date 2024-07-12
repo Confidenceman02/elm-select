@@ -282,6 +282,7 @@ view (Config config) id_ =
             , style "outline" "0px"
             , style "padding" "0px"
             , style "color" "inherit"
+            , style "box-shadow" "none"
             ]
                 ++ inputWidthStyle
 
