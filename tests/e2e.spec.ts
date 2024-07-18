@@ -18,11 +18,11 @@ describe("examples", () => {
 
     await page.goto(BASE_URI);
     const singleSearchableVisible = await page.isVisible(
-      "text=SingleSearchable.elm"
+      "text=SingleSearchable.elm",
     );
     const nativeSingle = await page.isVisible("text=SingleNative.elm");
     const multiAsyncExampleVisible = await page.isVisible(
-      "text=MultiAsync.elm"
+      "text=MultiAsync.elm",
     );
     const multiExampleVisible = await page.isVisible("text=Multi.elm");
     const multiFilterable = await page.isVisible("text=MultiFilterable.elm");
@@ -31,12 +31,13 @@ describe("examples", () => {
     const singleGroupVisible = await page.isVisible("text=SingleGrouped.elm");
     const formVisible = await page.isVisible("text=Form.elm");
     const customMenuItemsVisible = await page.isVisible(
-      "text=CustomMenuItems.elm"
+      "text=CustomMenuItems.elm",
     );
     const singleMenuVisible = await page.isVisible("text=SingleMenu.elm");
     const singleMenuOpenVisible = await page.isVisible(
-      "text=SingleMenuOpen.elm"
+      "text=SingleMenuOpen.elm",
     );
+    const singleVirtualVisible = await page.isVisible("text=SingleVirtual.elm");
 
     expect(singleSearchableVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -50,6 +51,83 @@ describe("examples", () => {
     expect(customMenuItemsVisible).toBeTruthy();
     expect(singleMenuVisible).toBeTruthy();
     expect(singleMenuOpenVisible).toBeTruthy();
+    expect(singleVirtualVisible).toBeTruthy();
+  });
+});
+
+describe.only("SingleVirtual", () => {
+  // has 1000 menu items
+  it("Only renders the first 8 items", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleVirtual.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const options = page.getByRole("option");
+
+    expect(options).toHaveCount(8);
+  });
+
+  it("Jumps to the end of the list", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleVirtual.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("ArrowUp");
+    const lastItem = page.getByRole("option", { name: "1000" });
+
+    expect(lastItem).toBeVisible();
+  });
+
+  it("Jumps to start of the list", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleVirtual.elm`);
+    await page.click("[data-test-id=selectContainer]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("ArrowUp");
+    const lastItem = page.getByRole("option", { name: "1000" });
+
+    expect(lastItem).toBeVisible();
+
+    await page.keyboard.press("ArrowDown");
+    const firstItem = page.getByRole("option", { name: "0" });
+
+    expect(firstItem).toBeVisible();
+  });
+
+  it("loads more options on scroll", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenu.elm`);
+    await page.click("[data-test-id=dropdown]");
+    await page.waitForSelector("[data-test-id=selectInput]");
+    await page.locator("[data-test-id=selectContainer]").click();
+    await page.waitForSelector("[data-test-id=listBox]");
+    const listbox = page.locator("[data-test-id=listBox]");
+    const [x, y, width, height] = await listbox.evaluate((ele: HTMLElement) => {
+      const boundingRect = ele.getBoundingClientRect();
+      return [
+        boundingRect.x,
+        boundingRect.y,
+        ele.clientWidth,
+        ele.clientHeight,
+      ];
+    });
+
+    // Position mouse in the middle of listbox
+    await page.mouse.move((x + width) / 2, (y + height) / 2);
+    await page.mouse.wheel(0, 230);
+    await page.waitForTimeout(100);
+
+    const item = page.getByRole("option", { name: "11" });
+
+    expect(item).toBeVisible();
   });
 });
 
@@ -110,7 +188,7 @@ describe("SingleMenuOpen", () => {
     await page.locator("[data-test-id=selectContainer]").click();
     await page.waitForTimeout(100);
     const handle: HTMLElement = await page.evaluate(
-      "document.activeElement.tagName"
+      "document.activeElement.tagName",
     );
 
     expect(handle).toEqual("INPUT");
@@ -124,7 +202,7 @@ describe("SingleMenuOpen", () => {
     await page.locator("#select-menu-item-4-somestate__elm-select").click();
     await page.waitForTimeout(100);
     const handle: HTMLElement = await page.evaluate(
-      "document.activeElement.tagName"
+      "document.activeElement.tagName",
     );
 
     expect(handle).not.toEqual("INPUT");
@@ -285,7 +363,7 @@ describe("SingleMenu", () => {
     await page.click("[data-test-id=clear]");
     const inputValue = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
+      (el: HTMLInputElement) => el.value,
     );
 
     expect(inputValue).toEqual("");
@@ -330,7 +408,7 @@ describe("CustomMenuItems", () => {
     await page.waitForSelector("[data-test-id=listBox]");
     const listItemCount = await page.$$eval(
       "li",
-      (listItems) => listItems.length
+      (listItems) => listItems.length,
     );
 
     expect(listItemCount).toEqual(1);
@@ -371,7 +449,7 @@ describe("Multi", () => {
     await page.keyboard.press("Enter");
     await page.waitForTimeout(100);
     const multiItemVisible = await page.isVisible(
-      "[data-test-id=multi-select-tag-0]"
+      "[data-test-id=multi-select-tag-0]",
     );
 
     expect(multiItemVisible).toBeTruthy();
@@ -385,14 +463,14 @@ describe("Multi", () => {
 
     const initialItemCount = await page.$$eval(
       "li",
-      (listItems) => listItems.length
+      (listItems) => listItems.length,
     );
     await page.keyboard.press("Enter");
     await page.click("[data-test-id=selectContainer]");
     await page.waitForSelector("[data-test-id=listBox]");
     const currentItemCount = await page.$$eval(
       "li",
-      (listItems) => listItems.length
+      (listItems) => listItems.length,
     );
 
     expect(currentItemCount).toEqual(initialItemCount - 1);
@@ -408,7 +486,7 @@ describe("Multi", () => {
     await page.waitForSelector("[data-test-id=listBox]");
     const rows = page.locator("ul li");
     const texts = await rows.evaluateAll((list) =>
-      list.map((element) => element.textContent)
+      list.map((element) => element.textContent),
     );
 
     const matches = texts.map((it) => {
@@ -430,7 +508,7 @@ describe("MultiNative", () => {
     await page.type("[data-test-id=nativeMultiSelect]", "i");
     await page.waitForTimeout(100);
     const selectedIndex: number = await SUT.evaluate(
-      (el: HTMLSelectElement) => el.selectedIndex
+      (el: HTMLSelectElement) => el.selectedIndex,
     );
 
     expect(selectedIndex).toBe(1);
@@ -449,7 +527,7 @@ describe("MultiNative", () => {
     await page.keyboard.press("ArrowDown");
     await page.waitForTimeout(100);
     const selectedOptions: number = await SUT.evaluate(
-      (el: HTMLSelectElement) => el.selectedOptions.length
+      (el: HTMLSelectElement) => el.selectedOptions.length,
     );
 
     expect(selectedOptions).toBe(2);
@@ -505,7 +583,7 @@ describe("SingleSearchable", () => {
     await page.goto(`${BASE_URI}/SingleSearchable.elm`);
 
     const listBoxInitiallyVisible = await page.isVisible(
-      "[data-test-id=listBox]"
+      "[data-test-id=listBox]",
     );
     const inputVisible = await page.isVisible("[data-test-id=selectInput]");
 
@@ -533,7 +611,7 @@ describe("SingleSearchable", () => {
 
     await page.click("[data-test-id=selectContainer]");
     const listBoxVisibleAfterClick = await page.isVisible(
-      "[data-text-id=selectContainer]"
+      "[data-text-id=selectContainer]",
     );
     expect(listBoxVisibleAfterClick).toBeFalsy();
   });
@@ -547,7 +625,7 @@ describe("SingleSearchable", () => {
 
     const inputValue = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
+      (el: HTMLInputElement) => el.value,
     );
 
     expect(inputValue).toBe("e");
@@ -556,7 +634,7 @@ describe("SingleSearchable", () => {
     await page.waitForTimeout(100);
     const updatedInputValue = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
+      (el: HTMLInputElement) => el.value,
     );
 
     expect(updatedInputValue).toBe("");
@@ -571,7 +649,7 @@ describe("SingleSearchable", () => {
 
     const listItemCount = await page.$$eval(
       "li",
-      (listItems) => listItems.length
+      (listItems) => listItems.length,
     );
 
     expect(listItemCount).toEqual(1);
@@ -622,10 +700,10 @@ describe("SingleNativeGrouped", () => {
 
     const SUT = page.locator("[data-test-id=nativeSingleSelect]");
     const selectedIndex = await SUT.evaluate(
-      (el: HTMLSelectElement) => el.selectedIndex
+      (el: HTMLSelectElement) => el.selectedIndex,
     );
     const selectedText = await SUT.evaluate(
-      (el: HTMLSelectElement) => el.selectedOptions[0].innerText
+      (el: HTMLSelectElement) => el.selectedOptions[0].innerText,
     );
 
     expect([selectedIndex, selectedText]).toEqual([4, "Elm"]);
@@ -644,7 +722,7 @@ describe("SingleNativeGrouped", () => {
     await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
-      (el: HTMLSelectElement) => el.selectedIndex
+      (el: HTMLSelectElement) => el.selectedIndex,
     );
 
     expect(selectedIndex).toBe(0);
@@ -661,7 +739,7 @@ describe("SingleNative", () => {
 
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
-      (el: HTMLSelectElement) => el.selectedIndex
+      (el: HTMLSelectElement) => el.selectedIndex,
     );
 
     expect(selectedIndex).toBe(0);
@@ -679,7 +757,7 @@ describe("SingleNative", () => {
     await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
-      (el: HTMLSelectElement) => el.selectedIndex
+      (el: HTMLSelectElement) => el.selectedIndex,
     );
 
     expect(selectedIndex).toBe(0);
@@ -696,7 +774,7 @@ describe("SingleNative", () => {
     await page.waitForTimeout(200);
     const selectedIndex: number = await page.$eval(
       "[data-test-id=nativeSingleSelect]",
-      (el: HTMLSelectElement) => el.selectedIndex
+      (el: HTMLSelectElement) => el.selectedIndex,
     );
 
     expect(selectedIndex).toBe(3);
@@ -715,7 +793,7 @@ describe("SingleNative", () => {
       (el: HTMLSelectElement) => {
         const selectedIndex = el.selectedIndex;
         return el.options[selectedIndex].selected;
-      }
+      },
     );
 
     expect(isSelected).toBeTruthy();
@@ -743,7 +821,7 @@ describe("Keyboard ArrowDown", () => {
     await page.focus("[data-test-id=selectInput]");
 
     const listBoxInitiallyVisible = await page.isVisible(
-      "[data-test-id=listBox]"
+      "[data-test-id=listBox]",
     );
 
     expect(listBoxInitiallyVisible).toBeFalsy();
@@ -752,7 +830,7 @@ describe("Keyboard ArrowDown", () => {
     await page.waitForTimeout(100);
 
     const listBoxVisibleAfterAction = await page.isVisible(
-      "[data-test-id=listBox]"
+      "[data-test-id=listBox]",
     );
     expect(listBoxVisibleAfterAction).toBeTruthy();
   });
@@ -766,7 +844,7 @@ describe("Keyboard ArrowDown", () => {
     await page.waitForTimeout(100);
 
     const firstItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus0]"
+      "[data-test-id=listBoxItemTargetFocus0]",
     );
 
     expect(firstItemFocused).toBeTruthy();
@@ -781,7 +859,7 @@ describe("Keyboard ArrowDown", () => {
     await page.waitForTimeout(100);
 
     const firstItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus0]"
+      "[data-test-id=listBoxItemTargetFocus0]",
     );
 
     expect(firstItemFocused).toBeTruthy();
@@ -796,7 +874,7 @@ describe("Keyboard ArrowDown", () => {
     await page.waitForTimeout(100);
 
     const firstItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus0]"
+      "[data-test-id=listBoxItemTargetFocus0]",
     );
 
     expect(firstItemFocused).toBeTruthy();
@@ -811,7 +889,7 @@ describe("Keyboard ArrowDown", () => {
     await page.waitForTimeout(100);
 
     const lastItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus3]"
+      "[data-test-id=listBoxItemTargetFocus3]",
     );
 
     expect(lastItemFocused).toBeTruthy();
@@ -820,7 +898,7 @@ describe("Keyboard ArrowDown", () => {
     await page.waitForTimeout(100);
 
     const firstItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus0]"
+      "[data-test-id=listBoxItemTargetFocus0]",
     );
 
     expect(firstItemFocused).toBeTruthy();
@@ -837,7 +915,7 @@ describe("Keyboard ArrowUp", () => {
     await page.waitForTimeout(100);
 
     const lastItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus3]"
+      "[data-test-id=listBoxItemTargetFocus3]",
     );
 
     expect(lastItemFocused).toBeTruthy();
@@ -852,7 +930,7 @@ describe("Keyboard ArrowUp", () => {
     await page.waitForTimeout(100);
 
     const lastItemFocused = await page.isVisible(
-      "[data-test-id=listBoxItemTargetFocus3]"
+      "[data-test-id=listBoxItemTargetFocus3]",
     );
 
     expect(lastItemFocused).toBeTruthy();
@@ -870,13 +948,13 @@ describe("Keyboard Enter", () => {
     await page.waitForTimeout(100);
 
     const firstListItemSelected = await page.isVisible(
-      "[data-test-id=selectedItem]"
+      "[data-test-id=selectedItem]",
     );
 
     expect(firstListItemSelected).toBeTruthy();
 
     const selectedItemInnerText = await page.innerText(
-      "data-test-id=selectedItem"
+      "data-test-id=selectedItem",
     );
     // Assuming menu items are Elm, Is, Really, Great
     expect(selectedItemInnerText).toBe("Elm");
@@ -892,13 +970,13 @@ describe("Keyboard Enter", () => {
     await page.waitForTimeout(100);
 
     const firstListItemSelected = await page.isVisible(
-      "[data-test-id=selectedItem]"
+      "[data-test-id=selectedItem]",
     );
 
     expect(firstListItemSelected).toBeTruthy();
 
     const selectedItemInnerText = await page.innerText(
-      "data-test-id=selectedItem"
+      "data-test-id=selectedItem",
     );
     // Assuming menu items are Elm, Is, Really, Great
     expect(selectedItemInnerText).toBe("Elm");
@@ -914,7 +992,7 @@ describe("Keyboard Escape", () => {
 
     const inputValue = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
+      (el: HTMLInputElement) => el.value,
     );
 
     expect(inputValue).toBe("e");
@@ -923,7 +1001,7 @@ describe("Keyboard Escape", () => {
     await page.waitForTimeout(100);
     const updatedInputValue = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.value
+      (el: HTMLInputElement) => el.value,
     );
 
     expect(updatedInputValue).toBe("");
@@ -943,7 +1021,7 @@ describe("Keyboard Escape", () => {
 
     await page.keyboard.press("Escape");
     const listBoxVisibleAfterEscape = await page.isVisible(
-      "[data-test-id=listBox]"
+      "[data-test-id=listBox]",
     );
 
     expect(listBoxVisibleAfterEscape).toBeFalsy();
@@ -957,7 +1035,7 @@ describe("JsOptimized", () => {
     await page.goto(`${OPTIMIZED_BASE_URI}`);
 
     const dynamicAttribsVisibleBeforeFocus = await page.isVisible(
-      `[data-es-dynamic-select-input]`
+      `[data-es-dynamic-select-input]`,
     );
 
     expect(dynamicAttribsVisibleBeforeFocus).toBeFalsy();
@@ -965,7 +1043,7 @@ describe("JsOptimized", () => {
     await page.focus("[data-test-id=selectInput]");
     await page.waitForTimeout(15);
     const dynamicAttribsVisibleAfterFocus = await page.isVisible(
-      `[data-es-dynamic-select-input]`
+      `[data-es-dynamic-select-input]`,
     );
 
     expect(dynamicAttribsVisibleAfterFocus).toBeTruthy();
@@ -978,14 +1056,14 @@ describe("JsOptimized", () => {
 
     const defaultInputWidth = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.getBoundingClientRect().width
+      (el: HTMLInputElement) => el.getBoundingClientRect().width,
     );
 
     await page.type("[data-test-id=selectInput]", "JAIME");
     await page.waitForTimeout(300);
     const currentInputWidth = await page.$eval(
       "[data-test-id=selectInput]",
-      (el: HTMLInputElement) => el.getBoundingClientRect().width
+      (el: HTMLInputElement) => el.getBoundingClientRect().width,
     );
 
     expect(currentInputWidth).toBeGreaterThan(defaultInputWidth);
