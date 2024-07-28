@@ -1,5 +1,6 @@
 module Select.Styles exposing
     ( Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
+    , menuPaddingBottom, menuPaddingTop
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
     , setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagColor, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagDismissibleBackgroundColorHover
@@ -21,7 +22,7 @@ module Select.Styles exposing
     , getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor, getMenuDividerColor
     , getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
     , getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
-    , getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuPosition
+    , getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuMaxHeightRawType, getMenuPosition
     , getGroupConfig, getGroupColor, getGroupFontSizeLabel, getGroupFontWeightLabel, getGroupTextTransformationLabel
     , getMenuItemConfig, getMenuItemBackgroundColorSelected, getMenuItemBackgroundColorMouseDown, getMenuItemBackgroundColorHover, getMenuItemBlockPadding, getMenuItemBorderRadius
     , getMenuItemColor, getMenuItemColorSelected, getMenuItemColorMouseDown
@@ -45,6 +46,14 @@ NOTE: The [native](/packages/Confidenceman02/elm-select/latest/Select#singleNati
 only respects some of the styles.
 
 @docs Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
+
+
+# Constants
+
+
+## Menu
+
+@docs menuPaddingBottom, menuPaddingTop
 
 
 # Setters
@@ -100,7 +109,7 @@ Get styles
 @docs getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor, getMenuDividerColor
 @docs getMenuControlBorderColor, getMenuControlBorderColorFocus, getMenuControlBorderColorHover, getMenuControlBorderRadius, getMenuControlClearIndicatorColor, getMenuControlClearIndicatorColorHover
 @docs getMenuControlColor, getMenuControlDisabledOpacity, getMenuControlLoadingIndicatorColor, getMenuControlMinHeight, getMenuControlPlaceholderOpacity
-@docs getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuPosition
+@docs getMenuControlSearchIndicatorColor, getMenuMaxHeight, getMenuMaxHeightRawType, getMenuPosition
 
 
 # Group
@@ -124,6 +133,7 @@ Get styles
 -}
 
 import Css
+import Select.Internal
 
 
 {-| -}
@@ -139,6 +149,18 @@ type ControlConfig
 {-| -}
 type MenuConfig
     = MenuConfig MenuConfiguration
+
+
+{-| -}
+menuPaddingTop : Float
+menuPaddingTop =
+    4
+
+
+{-| -}
+menuPaddingBottom : Float
+menuPaddingBottom =
+    6
 
 
 {-| -}
@@ -181,11 +203,6 @@ type alias MenuItemConfiguration =
     }
 
 
-type LengthOrNoneOrMinMaxDimension
-    = Px (Css.LengthOrNoneOrMinMaxDimension Css.Px)
-    | Vh (Css.LengthOrNoneOrMinMaxDimension Css.Vh)
-
-
 type alias MenuConfiguration =
     { backgroundColor : Css.Color
     , borderRadius : Float
@@ -197,7 +214,7 @@ type alias MenuConfiguration =
     , dividerColor : Css.Color
     , control : MenuControlConfig BaseControlConfiguration
     , position : Css.Position {}
-    , maxHeight : LengthOrNoneOrMinMaxDimension
+    , maxHeight : Select.Internal.LengthOrNoneOrMinMaxDimension
     }
 
 
@@ -299,7 +316,7 @@ defaultsMenu =
             , placeholderOpacity = 0.5
             , searchIndicatorColor = Css.rgb 102 102 102
             }
-    , maxHeight = Px (Css.px 215)
+    , maxHeight = Select.Internal.Px (Css.px 215)
     , position = Css.absolute
     }
 
@@ -741,13 +758,13 @@ setMenuControlSearchIndicatorColor color (MenuConfig config) =
 {-| -}
 setMenuMaxHeightPx : Css.Px -> MenuConfig -> MenuConfig
 setMenuMaxHeightPx l (MenuConfig config) =
-    MenuConfig { config | maxHeight = Px l }
+    MenuConfig { config | maxHeight = Select.Internal.Px l }
 
 
 {-| -}
 setMenuMaxHeightVh : Css.Vh -> MenuConfig -> MenuConfig
 setMenuMaxHeightVh l (MenuConfig config) =
-    MenuConfig { config | maxHeight = Vh l }
+    MenuConfig { config | maxHeight = Select.Internal.Vh l }
 
 
 {-| -}
@@ -1336,11 +1353,17 @@ getMenuControlSearchIndicatorColor (MenuConfig config) =
 getMenuMaxHeight : MenuConfig -> String
 getMenuMaxHeight (MenuConfig config) =
     case config.maxHeight of
-        Px u ->
+        Select.Internal.Px u ->
             u.value
 
-        Vh u ->
+        Select.Internal.Vh u ->
             u.value
+
+
+{-| -}
+getMenuMaxHeightRawType : MenuConfig -> Select.Internal.LengthOrNoneOrMinMaxDimension
+getMenuMaxHeightRawType (MenuConfig config) =
+    config.maxHeight
 
 
 {-| -}

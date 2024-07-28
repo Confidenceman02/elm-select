@@ -1,9 +1,9 @@
 module Select exposing
-    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem
+    ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem, virtualFixedMenuItems
     , Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
-    , menuItems, clearable
-    , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, searchable, setStyles, name
-    , single
+    , menuItems, menuItemsVirtual, clearable
+    , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name
+    , single, singleVirtual
     , singleMenu, menu
     , multi
     , singleNative
@@ -17,15 +17,15 @@ module Select exposing
 
 # Set up
 
-@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem
+@docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem, virtualFixedMenuItems
 @docs Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
-@docs menuItems, clearable
-@docs placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, searchable, setStyles, name
+@docs menuItems, menuItemsVirtual, clearable
+@docs placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name
 
 
 # Single select
 
-@docs single
+@docs single, singleVirtual
 
 
 # Menu select
@@ -59,6 +59,7 @@ module Select exposing
 
 -}
 
+import Array
 import Browser.Dom as Dom
 import Css
 import Dict
@@ -82,8 +83,8 @@ import Task
 
 
 {-| -}
-type Config item
-    = Config (Configuration item)
+type Config item items
+    = Config (Configuration item items)
 
 
 {-| -}
@@ -103,8 +104,8 @@ type HeadlessState
 {-| -}
 type Msg item
     = InputChanged String
-    | InputChangedNativeSingle (List (MenuItem item)) Bool Int
-    | InputChangedNativeMulti (List (MenuItem item)) (List Int)
+    | InputChangedNativeSingle (MenuItems item) Bool Int
+    | InputChangedNativeMulti (MenuItems item) (List Int)
     | InputReceivedFocused (Variant item)
     | SelectedItem item
     | SelectedItemMulti item
@@ -124,6 +125,7 @@ type Msg item
     | OpenMenu
     | CloseMenu
     | FocusMenuViewport (Result Dom.Error ( MenuListElement, MenuItemElement ))
+    | FocusMenuViewportTop
     | SetMouseMenuNavigation
       --
     | MultiItemMousedown Int
@@ -225,12 +227,12 @@ type alias MenuListBoundaries =
     ( Float, Float )
 
 
-type alias Configuration item =
+type alias Configuration item items =
     { variant : Variant item
     , isLoading : Bool
     , loadingMessage : String
     , state : State
-    , menuItems : List (MenuItem item)
+    , menuItems : items
     , searchable : Bool
     , placeholder : String
     , disabled : Bool
@@ -249,7 +251,6 @@ type alias SelectState =
     , initialAction : Internal.InitialAction
     , controlUiFocused : Maybe Internal.UiFocused
     , activeTargetIndex : Int
-    , menuViewportFocusNodes : Maybe ( MenuListElement, MenuItemElement )
     , menuListScrollTop : Float
     , menuNavigation : MenuNavigation
     , jsOptimize : Bool
@@ -265,13 +266,35 @@ type MenuNavigation
 
 {-| -}
 type MenuItem item
-    = Basic (Internal.BaseMenuItem (BasicMenuItem item))
-    | Custom (Internal.BaseMenuItem (CustomMenuItem item))
+    = Basic (Internal.BaseMenuItem (BasicMenuItem item) Styles.GroupConfig Styles.MenuItemConfig)
+    | Custom (Internal.BaseMenuItem (CustomMenuItem item) Styles.GroupConfig Styles.MenuItemConfig)
+
+
+{-| -}
+type alias MenuItems item =
+    List (MenuItem item)
+
+
+type MenuItemsKind item
+    = MenuItems_ (MenuItems item)
+    | MenuItemsVirtual_ (VirtualConfig item)
+
+
+{-| -}
+type VirtualConfig item
+    = FixedSizeMenuItems (VirtualConfiguration item)
+
+
+type alias VirtualConfiguration item =
+    { height : Float
+    , overscanCount : Int
+    , menuItems : MenuItems item
+    }
 
 
 {-| -}
 type Group
-    = Group Internal.Group
+    = Group (Internal.Group Styles.GroupConfig)
 
 
 {-| A menu item that will be represented in the menu list.
@@ -425,7 +448,6 @@ initState id_ =
 
         -- Always focus the first menu item by default. This facilitates auto selecting the first item on Enter
         , activeTargetIndex = 0
-        , menuViewportFocusNodes = Nothing
         , menuListScrollTop = 0
         , menuNavigation = Mouse
         , jsOptimize = False
@@ -438,7 +460,25 @@ initState id_ =
 -- STATE MODIFIERS
 
 
-defaults : Configuration item
+defaultsVirtualVariant : Configuration item (VirtualConfig item)
+defaultsVirtualVariant =
+    { variant = CustomVariant (Single Nothing)
+    , isLoading = False
+    , loadingMessage = "Loading..."
+    , state = initState (selectIdentifier "elm-select")
+    , placeholder = "Select..."
+    , menuItems = FixedSizeMenuItems virtualMenuDefaults
+    , searchable = True
+    , clearable = False
+    , disabled = False
+    , labelledBy = Nothing
+    , ariaDescribedBy = Nothing
+    , styles = Styles.default
+    , name = Nothing
+    }
+
+
+defaults : Configuration item (List items)
 defaults =
     { variant = CustomVariant (Single Nothing)
     , isLoading = False
@@ -588,6 +628,7 @@ basicMenuItem bscItem =
         , styles = Nothing
         , group = Nothing
         , value = Nothing
+        , virtualConfig = Nothing
         }
 
 
@@ -620,7 +661,34 @@ customMenuItem i =
         , styles = Nothing
         , group = Nothing
         , value = Nothing
+        , virtualConfig = Nothing
         }
+
+
+{-| Create a menu with virtual menu items that are a fixed size.
+
+Use with virtual variants such as [singleVirtual](#singleVirtual)
+
+        type Tool
+            = Screwdriver
+            | Hammer
+            | Drill
+
+        virtualMenuItems : List (VirtualConfig Tool)
+        virtualMenuItems =
+            [ customMenuItem
+                { item = Screwdriver, label = "Screwdriver", view = text "Screwdriver" }
+            , customMenuItem
+                { item = Hammer, label = "Hammer", view = text "Hammer" }
+            , customMenuItem
+                { item = Drill, label = "Drill", view = text "Drill" }
+            ]
+                |>  virtualFixedMenuItems 35
+
+-}
+virtualFixedMenuItems : Float -> List (MenuItem item) -> VirtualConfig item
+virtualFixedMenuItems h items =
+    FixedSizeMenuItems { virtualMenuDefaults | menuItems = items, height = h }
 
 
 {-| Create a grouped [MenuItem](#MenuItem).
@@ -817,6 +885,41 @@ valueMenuItem v mi =
 
 
 
+-- VIRTUAL MENU MODIFIERS
+
+
+virtualMenuDefaults : VirtualConfiguration item
+virtualMenuDefaults =
+    { height = 35
+    , overscanCount = 2
+    , menuItems = []
+    }
+
+
+{-| Private modifier to set menu items on a virtual menu
+-}
+setVirtualMenuItems : VirtualConfig item -> MenuItems item -> VirtualConfig item
+setVirtualMenuItems c items =
+    case c of
+        FixedSizeMenuItems config ->
+            FixedSizeMenuItems { config | menuItems = items }
+
+
+
+-- PRIVATE MENU ITEM MODIFIERS
+
+
+applyVirtualConfigMenuItem : Int -> Float -> MenuItem item -> MenuItem item
+applyVirtualConfigMenuItem idx h item =
+    case item of
+        Basic i ->
+            Basic { i | virtualConfig = Just (Internal.VirtualItemConfig idx h) }
+
+        Custom i ->
+            Custom { i | virtualConfig = Just (Internal.VirtualItemConfig idx h) }
+
+
+
 -- MODIFIERS
 
 
@@ -848,7 +951,7 @@ color branding.
                   (single Nothing |> setStyles selectBranding)
 
 -}
-setStyles : Styles.Config -> Config item -> Config item
+setStyles : Styles.Config -> Config item items -> Config item items
 setStyles sc (Config config) =
     Config
         { config
@@ -867,7 +970,7 @@ NOTE: This doesn't affect the [Native single select](#native-single-select)
 variant.
 
 -}
-searchable : Bool -> Config item -> Config item
+searchable : Bool -> Config item items -> Config item items
 searchable pred (Config config) =
     Config { config | searchable = pred }
 
@@ -880,7 +983,7 @@ searchable pred (Config config) =
                   (single Nothing |> placeholder "some placeholder")
 
 -}
-placeholder : String -> Config item -> Config item
+placeholder : String -> Config item items -> Config item items
 placeholder plc (Config config) =
     Config { config | placeholder = plc }
 
@@ -902,7 +1005,7 @@ This is usually persisted in your model.
                   )
 
 -}
-state : State -> Config item -> Config item
+state : State -> Config item items -> Config item items
 state state_ (Config config) =
     Config { config | state = state_ }
 
@@ -919,11 +1022,34 @@ visually removed from the menu list.
 
       yourView =
           view
-              (Single Nothing |> menuItems items)
+              (single Nothing |> menuItems items)
 
 -}
-menuItems : List (MenuItem item) -> Config item -> Config item
+menuItems : MenuItems item -> Config item (MenuItems item) -> Config item (MenuItems item)
 menuItems items (Config config) =
+    Config { config | menuItems = items }
+
+
+{-| Turn your menu items to virtual menu items
+
+Used with virtual variants such as [singleVirtual](#singleVirtual)
+
+      items =
+          [ basicMenuItem
+              { item = SomeValue, label = "Some label" }
+          ]
+
+      yourView =
+          viewVirtual
+              (singleVirtual Nothing
+                  |> menuItemsVirtual (virtualFixedMenuItems 35 items)
+              )
+
+NOTE: 35 here represents a height in pixels.
+
+-}
+menuItemsVirtual : VirtualConfig item -> Config item (VirtualConfig item) -> Config item (VirtualConfig item)
+menuItemsVirtual items (Config config) =
     Config { config | menuItems = items }
 
 
@@ -945,7 +1071,7 @@ To handle a cleared item refer to the [ClearedSingleSelect](#Action ) action.
                     )
 
 -}
-clearable : Bool -> Config item -> Config item
+clearable : Bool -> Config item items -> Config item items
 clearable clear (Config config) =
     Config { config | clearable = clear }
 
@@ -958,7 +1084,7 @@ clearable clear (Config config) =
                     (single Nothing |> disabled True)
 
 -}
-disabled : Bool -> Config item -> Config item
+disabled : Bool -> Config item items -> Config item items
 disabled predicate (Config config) =
     Config { config | disabled = predicate }
 
@@ -973,7 +1099,7 @@ This would be useful if you are loading menu options asynchronously, like from a
                     (single Nothing |> loading True)
 
 -}
-loading : Bool -> Config item -> Config item
+loading : Bool -> Config item items -> Config item items
 loading predicate (Config config) =
     Config { config | isLoading = predicate }
 
@@ -986,7 +1112,7 @@ loading predicate (Config config) =
                     (single Nothing |> loadingMessage "Fetching items...")
 
 -}
-loadingMessage : String -> Config item -> Config item
+loadingMessage : String -> Config item items -> Config item items
 loadingMessage m (Config config) =
     Config { config | loadingMessage = m }
 
@@ -1005,7 +1131,7 @@ It is best practice to render the select with a label.
             ]
 
 -}
-labelledBy : String -> Config item -> Config item
+labelledBy : String -> Config item items -> Config item items
 labelledBy s (Config config) =
     Config { config | labelledBy = Just s }
 
@@ -1026,7 +1152,7 @@ labelledBy s (Config config) =
             ]
 
 -}
-ariaDescribedBy : String -> Config item -> Config item
+ariaDescribedBy : String -> Config item items -> Config item items
 ariaDescribedBy s (Config config) =
     Config { config | labelledBy = Just s }
 
@@ -1047,7 +1173,7 @@ A form will need this attribute to know how to label the data.
             ]
 
 -}
-name : String -> Config item -> Config item
+name : String -> Config item items -> Config item items
 name n (Config config) =
     Config { config | name = Just n }
 
@@ -1197,13 +1323,14 @@ type Variant item
 
 type CustomVariant item
     = Single (Maybe (MenuItem item))
-    | Multi (List (MenuItem item))
+    | SingleVirtual (Maybe (MenuItem item))
+    | Multi (MenuItems item)
     | SingleMenu (Maybe (MenuItem item))
 
 
 type NativeVariant item
     = SingleNative (Maybe (MenuItem item))
-    | MultiNative (List (MenuItem item))
+    | MultiNative (MenuItems item)
 
 
 {-| Select a single item.
@@ -1223,9 +1350,33 @@ type NativeVariant item
                   (single Nothing |> menuItems countries)
 
 -}
-single : Maybe (MenuItem item) -> Config item
+single : Maybe (MenuItem item) -> Config item (MenuItems item)
 single maybeSelectedItem =
     Config { defaults | variant = CustomVariant (Single maybeSelectedItem) }
+
+
+{-| Select a single virtual item.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ basicMenuItem
+              { item = Australia, label = "Australia" }
+          , basicMenuitem
+              { item = Taiwan, label = "Taiwan"
+            -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              viewVirtual
+                  (singleVirtual Nothing |>
+                      menuItemsVirtual (virtualFixedMenuItems 35 countries)
+                  )
+
+-}
+singleVirtual : Maybe (MenuItem item) -> Config item (VirtualConfig item)
+singleVirtual maybeSelectedItem =
+    Config { defaultsVirtualVariant | variant = CustomVariant (SingleVirtual maybeSelectedItem) }
 
 
 {-| Menu only single select.
@@ -1251,7 +1402,7 @@ You can use [focus](#focus) to open and focus the menu if you are
 using this variant as a dropdown.
 
 -}
-singleMenu : Maybe (MenuItem item) -> Config item
+singleMenu : Maybe (MenuItem item) -> Config item (MenuItems item)
 singleMenu mi =
     Config { defaults | variant = CustomVariant (SingleMenu mi) }
 
@@ -1285,7 +1436,7 @@ You can use [focus](#focus) to open and focus the menu if you are
 using this variant as a dropdown.
 
 -}
-menu : Config item
+menu : Config item (List items)
 menu =
     Config { defaults | variant = CustomVariant (SingleMenu Nothing) }
 
@@ -1317,7 +1468,7 @@ devices.
   - Some [Config](#Config) values will not take effect when using the single native variant
 
 -}
-singleNative : Maybe (MenuItem item) -> Config item
+singleNative : Maybe (MenuItem item) -> Config item (MenuItems item)
 singleNative mi =
     Config { defaults | variant = NativeVariant (SingleNative mi) }
 
@@ -1349,7 +1500,7 @@ devices.
   - Some [Config](#Config) values will not take effect when using the multi native variant
 
 -}
-multiNative : List (MenuItem item) -> Config item
+multiNative : MenuItems item -> Config item (MenuItems item)
 multiNative mis =
     Config { defaults | variant = NativeVariant (MultiNative mis) }
 
@@ -1366,7 +1517,7 @@ Selected items will render as tags and be visually removed from the menu list.
                 )
 
 -}
-multi : List (MenuItem item) -> Config item
+multi : MenuItems item -> Config item (MenuItems item)
 multi selectedItems =
     Config { defaults | variant = CustomVariant (Multi selectedItems) }
 
@@ -1612,12 +1763,15 @@ update msg ((State state_) as wrappedState) =
                     menuItemOrientationInViewport menuListElem menuItemElem
                         |> setMenuViewportPosition state_.selectId state_.menuListScrollTop menuListElem menuItemElem
             in
-            ( Nothing, State { state_ | menuViewportFocusNodes = Just ( menuListElem, menuItemElem ), menuListScrollTop = newViewportY }, viewportFocusCmd )
+            ( Nothing, State { state_ | menuListScrollTop = newViewportY }, viewportFocusCmd )
 
         -- If the menu list element was not found it likely has no viewable menu items.
         -- In this case the menu does not render therefore no id is present on menu element.
         FocusMenuViewport (Err _) ->
-            ( Nothing, State { state_ | menuViewportFocusNodes = Nothing }, Cmd.none )
+            ( Nothing, State state_, Cmd.none )
+
+        FocusMenuViewportTop ->
+            ( Nothing, State { state_ | menuListScrollTop = 0 }, Cmd.none )
 
         DoNothing ->
             ( Nothing, State state_, Cmd.none )
@@ -1886,7 +2040,11 @@ update msg ((State state_) as wrappedState) =
                     Internal.calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Internal.Down
 
                 nodeQueryForViewportFocus =
-                    if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
+                    if nextActiveTargetIndex <= 0 then
+                        -- Bypass querying menu elements and go straight to the top
+                        Task.attempt (\_ -> FocusMenuViewportTop) <| Dom.setViewportOf (menuListId state_.selectId) 0 0
+
+                    else if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
                         queryNodesForViewportFocus state_.selectId nextActiveTargetIndex
 
                     else
@@ -1910,7 +2068,11 @@ update msg ((State state_) as wrappedState) =
                     Internal.calculateNextActiveTarget state_.activeTargetIndex totalTargetCount Internal.Up
 
                 nodeQueryForViewportFocus =
-                    if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
+                    if nextActiveTargetIndex == (totalTargetCount - 1) then
+                        Task.attempt (\_ -> DoNothing)
+                            (Dom.setViewportOf (menuListId state_.selectId) 0 512000000)
+
+                    else if Internal.shouldQueryNextTargetElement nextActiveTargetIndex state_.activeTargetIndex then
                         queryNodesForViewportFocus state_.selectId nextActiveTargetIndex
 
                     else
@@ -1984,6 +2146,217 @@ update msg ((State state_) as wrappedState) =
                     )
 
 
+type alias BuildViewHelpData =
+    { state : SelectState
+    , selectId : SelectId
+    , ctrlStyles : Styles.ControlConfig
+    , menuStyles : Styles.MenuConfig
+    }
+
+
+viewDataHelp : Configuration item items -> BuildViewHelpData
+viewDataHelp config =
+    let
+        (State state_) =
+            config.state
+    in
+    { state = state_
+    , selectId = state_.selectId
+    , ctrlStyles = Styles.getControlConfig config.styles
+    , menuStyles = Styles.getMenuConfig config.styles
+    }
+
+
+{-| Render the select with a virtual scroll menu.
+
+Select inputs with a large number of menu items (>500) can degrade a user experience mostly due to
+the browser struggling to render all the items. This can result in a sluggish feeling select input.
+
+Virtualizing the menu allows you to work with thousands of menu items whilst keeping the
+select input feeling snappy and performant.
+
+NOTE: Only use if you absolutely need it as there are accessibility short falls by virtualizing the menu.
+
+      yourView model =
+          Html.map SelectMsg <|
+              viewVirtual (singleVirtual Nothing)
+
+-}
+viewVirtual : Config item (VirtualConfig item) -> Html (Msg item)
+viewVirtual (Config config) =
+    -- NOTE: When the combined virtual height is below the max-height, we have to manage
+    -- the height of the menu list manually as all virtual items are position absolute so the menu-list
+    -- wont snap to the desired height by itself.
+    --
+    -- example 1.
+    --
+    -- The max-height of the menu-list is 100px and the user has filtered the items via a search string.
+    -- The combined height of the items is 50px so We set the menu list height to 50px and account for padding.
+    let
+        viewData =
+            viewDataHelp config
+
+        (State state_) =
+            config.state
+
+        virtualConfig =
+            case config.menuItems of
+                FixedSizeMenuItems cfg ->
+                    cfg
+
+        maxHeight : Float
+        maxHeight =
+            case Styles.getMenuConfig config.styles |> Styles.getMenuMaxHeightRawType of
+                Internal.Px i ->
+                    i.numericValue
+
+                _ ->
+                    215
+
+        ( filteredMenuItems, filteredCount, filteredVirtualHeight ) =
+            case config.menuItems of
+                FixedSizeMenuItems cfg ->
+                    let
+                        items =
+                            getViewableMenuItems
+                                (BuildViewableMenuItemsData
+                                    config.searchable
+                                    viewData.state.inputValue
+                                    cfg.menuItems
+                                    config.variant
+                                )
+                    in
+                    ( items, List.length items, cfg.height * toFloat (List.length items) )
+
+        virtualizedMenuItemsUnwrapped =
+            case virtualizedMenuItems of
+                FixedSizeMenuItems cfg ->
+                    cfg.menuItems
+
+        calculateWindowHeight =
+            if
+                filteredVirtualHeight
+                    < (maxHeight
+                        - Styles.menuPaddingTop
+                        - Styles.menuPaddingBottom
+                        - ((Styles.getMenuConfig config.styles |> Styles.getMenuBorderWidth) * 2)
+                      )
+            then
+                filteredVirtualHeight
+
+            else
+                maxHeight
+                    - Styles.menuPaddingTop
+                    - Styles.menuPaddingBottom
+                    - ((Styles.getMenuConfig config.styles |> Styles.getMenuBorderWidth) * 2)
+
+        virtualizedMenuItems =
+            ListExtra.indexedFoldl
+                (\idx mi acc ->
+                    let
+                        adjustedItem =
+                            applyVirtualConfigMenuItem idx virtualConfig.height mi
+                    in
+                    Tuple.mapBoth ((::) adjustedItem) (Array.push adjustedItem) acc
+                )
+                ( [], Array.empty )
+                filteredMenuItems
+                |> sliceItems
+                |> Tuple.first
+                |> setVirtualMenuItems config.menuItems
+
+        sliceItems ( _, cache ) =
+            ( Array.slice startIndex (stopIndex + 1) cache |> Array.toList, cache )
+
+        startIndexForOffset : Int
+        startIndexForOffset =
+            max
+                0
+                (min (filteredCount - 1)
+                    (floor
+                        ((state_.menuListScrollTop
+                            + Styles.menuPaddingTop
+                            + (Styles.getMenuConfig config.styles |> Styles.getMenuBorderWidth)
+                         )
+                            / virtualConfig.height
+                        )
+                    )
+                )
+
+        offset : Float
+        offset =
+            toFloat startIndexForOffset * virtualConfig.height
+
+        numVisibleItems : Int
+        numVisibleItems =
+            ceiling
+                ((calculateWindowHeight
+                    + state_.menuListScrollTop
+                    - offset
+                 )
+                    / virtualConfig.height
+                )
+
+        stopIndexforStartIndex : Int
+        stopIndexforStartIndex =
+            max 0 (min (filteredCount - 1) (startIndexForOffset + numVisibleItems - 1))
+
+        overscan =
+            max 1 virtualConfig.overscanCount
+
+        startIndex =
+            max 0 (startIndexForOffset - overscan)
+
+        stopIndex =
+            max 0 (min (filteredCount - 1) (stopIndexforStartIndex + overscan))
+    in
+    case config.variant of
+        CustomVariant ((SingleVirtual _) as variant) ->
+            viewWrapper
+                (ViewWrapperData viewData.state
+                    config.searchable
+                    variant
+                    config.disabled
+                )
+                ([ lazy viewCustomControl
+                    (ViewCustomControlData
+                        config.state
+                        viewData.ctrlStyles
+                        config.styles
+                        (enterSelectTargetItem viewData.state virtualizedMenuItemsUnwrapped)
+                        filteredCount
+                        variant
+                        config.placeholder
+                        config.disabled
+                        config.searchable
+                        config.labelledBy
+                        config.ariaDescribedBy
+                        config.clearable
+                        config.isLoading
+                    )
+                 , lazy renderMenu
+                    (RenderMenuData viewData.state.menuOpen
+                        viewData.state.initialAction
+                        viewData.state.activeTargetIndex
+                        viewData.state.menuNavigation
+                        viewData.state.controlUiFocused
+                        config.isLoading
+                        (MenuItemsVirtual_ virtualizedMenuItems)
+                        variant
+                        config.loadingMessage
+                        config.styles
+                        viewData.selectId
+                        config.disabled
+                        filteredCount
+                    )
+                 ]
+                    ++ viewHiddenFormControl variant config.name
+                )
+
+        _ ->
+            text ""
+
+
 {-| Render the select
 
       yourView model =
@@ -1991,41 +2364,35 @@ update msg ((State state_) as wrappedState) =
               view (single Nothing)
 
 -}
-view : Config item -> Html (Msg item)
+view : Config item (MenuItems item) -> Html (Msg item)
 view (Config config) =
     let
-        (State state_) =
-            config.state
+        viewData =
+            viewDataHelp config
 
-        selectId =
-            state_.selectId
+        totalFilteredMenuItemsCount =
+            List.length filteredMenuItems
 
-        totalMenuItemsCount =
-            List.length viewableMenuItems
+        totalMenuItems =
+            List.length config.menuItems
 
-        viewableMenuItems =
-            filterViewableMenuItems
+        filteredMenuItems =
+            getViewableMenuItems
                 (BuildViewableMenuItemsData
                     config.searchable
-                    state_.inputValue
+                    viewData.state.inputValue
                     config.menuItems
                     config.variant
                 )
-
-        ctrlStyles =
-            Styles.getControlConfig config.styles
-
-        menuStyles =
-            Styles.getMenuConfig config.styles
     in
     case config.variant of
         NativeVariant variant ->
             div [ StyledAttribs.css [ Css.position Css.relative ] ]
                 [ viewNative
-                    (ViewNativeData ctrlStyles
+                    (ViewNativeData viewData.ctrlStyles
                         variant
                         config.menuItems
-                        selectId
+                        viewData.selectId
                         config.labelledBy
                         config.ariaDescribedBy
                         config.placeholder
@@ -2053,19 +2420,19 @@ view (Config config) =
                             )
                         , viewLoadingSpinner
                             (ViewLoadingSpinnerData config.isLoading
-                                (Styles.getControlLoadingIndicatorColor ctrlStyles)
+                                (Styles.getControlLoadingIndicatorColor viewData.ctrlStyles)
                             )
-                        , indicatorSeparator ctrlStyles
-                        , viewDropdownIndicator (ViewDropdownIndicatorData False ctrlStyles)
+                        , indicatorSeparator viewData.ctrlStyles
+                        , viewDropdownIndicator (ViewDropdownIndicatorData False viewData.ctrlStyles)
                         ]
                     ]
                 ]
 
         CustomVariant ((SingleMenu _) as singleVariant) ->
             -- Compose the SingleMenu variant, def can be improved
-            Internal.viewIf state_.menuOpen
+            Internal.viewIf viewData.state.menuOpen
                 (viewWrapper
-                    (ViewWrapperData state_
+                    (ViewWrapperData viewData.state
                         config.searchable
                         singleVariant
                         config.disabled
@@ -2078,14 +2445,14 @@ view (Config config) =
                                 (ViewDummyInputData
                                     (getSelectId config.state)
                                     singleVariant
-                                    (enterSelectTargetItem state_ viewableMenuItems)
-                                    totalMenuItemsCount
-                                    state_.menuOpen
+                                    (enterSelectTargetItem viewData.state filteredMenuItems)
+                                    totalFilteredMenuItemsCount
+                                    viewData.state.menuOpen
                                     config.labelledBy
                                     config.ariaDescribedBy
                                     config.disabled
                                     config.clearable
-                                    state_
+                                    viewData.state
                                 )
                             )
 
@@ -2100,25 +2467,25 @@ view (Config config) =
                                     singleVariant
                                     config.searchable
                                 )
-                                [ viewSearchIndicator (Styles.getMenuControlSearchIndicatorColor menuStyles)
+                                [ viewSearchIndicator (Styles.getMenuControlSearchIndicatorColor viewData.menuStyles)
                                 , viewInputWrapper config.disabled
                                     [ Internal.viewIf (not config.disabled)
                                         (lazy viewSelectInput
                                             (ViewSelectInputData
-                                                (enterSelectTargetItem state_ viewableMenuItems)
-                                                totalMenuItemsCount
+                                                (enterSelectTargetItem viewData.state filteredMenuItems)
+                                                totalFilteredMenuItemsCount
                                                 singleVariant
                                                 config.labelledBy
                                                 config.ariaDescribedBy
                                                 config.disabled
                                                 config.clearable
-                                                state_
+                                                viewData.state
                                             )
                                         )
                                     , buildPlaceholder
                                         (BuildPlaceholderData singleVariant
-                                            state_
-                                            ctrlStyles
+                                            viewData.state
+                                            viewData.ctrlStyles
                                             config.placeholder
                                         )
                                     ]
@@ -2133,7 +2500,7 @@ view (Config config) =
                                         )
                                     , viewLoadingSpinner
                                         (ViewLoadingSpinnerData config.isLoading
-                                            (Styles.getMenuControlLoadingIndicatorColor menuStyles)
+                                            (Styles.getMenuControlLoadingIndicatorColor viewData.menuStyles)
                                         )
                                     ]
                                 ]
@@ -2143,10 +2510,12 @@ view (Config config) =
                                 (ViewMenuItemsWrapperData
                                     singleVariant
                                     (Styles.getMenuConfig config.styles)
-                                    state_.menuNavigation
-                                    selectId
+                                    viewData.state.menuNavigation
+                                    viewData.selectId
+                                    (MenuItems_ filteredMenuItems)
+                                    totalMenuItems
                                 )
-                                (if config.isLoading && List.isEmpty viewableMenuItems then
+                                (if config.isLoading && List.isEmpty filteredMenuItems then
                                     [ ( "loading-menu"
                                       , viewLoadingMenu
                                             (ViewLoadingMenuData singleVariant
@@ -2161,14 +2530,15 @@ view (Config config) =
                                         (ViewMenuItemsData
                                             (Styles.getMenuItemConfig config.styles)
                                             (Styles.getGroupConfig config.styles)
-                                            selectId
+                                            viewData.selectId
                                             singleVariant
-                                            state_.initialAction
-                                            state_.activeTargetIndex
-                                            state_.menuNavigation
-                                            viewableMenuItems
+                                            viewData.state.initialAction
+                                            viewData.state.activeTargetIndex
+                                            viewData.state.menuNavigation
+                                            filteredMenuItems
                                             config.disabled
-                                            state_.controlUiFocused
+                                            viewData.state.controlUiFocused
+                                            totalMenuItems
                                         )
                                 )
                           )
@@ -2178,7 +2548,7 @@ view (Config config) =
 
         CustomVariant variant ->
             viewWrapper
-                (ViewWrapperData state_
+                (ViewWrapperData viewData.state
                     config.searchable
                     variant
                     config.disabled
@@ -2186,10 +2556,10 @@ view (Config config) =
                 ([ lazy viewCustomControl
                     (ViewCustomControlData
                         config.state
-                        ctrlStyles
+                        viewData.ctrlStyles
                         config.styles
-                        (enterSelectTargetItem state_ viewableMenuItems)
-                        totalMenuItemsCount
+                        (enterSelectTargetItem viewData.state filteredMenuItems)
+                        totalFilteredMenuItemsCount
                         variant
                         config.placeholder
                         config.disabled
@@ -2199,34 +2569,40 @@ view (Config config) =
                         config.clearable
                         config.isLoading
                     )
-                 , Internal.viewIf state_.menuOpen
-                    (if config.isLoading && List.isEmpty viewableMenuItems then
-                        viewLoadingMenu
-                            (ViewLoadingMenuData
-                                variant
-                                config.loadingMessage
-                                (Styles.getMenuConfig config.styles)
-                            )
-
-                     else
-                        lazy viewMenu
-                            (ViewMenuData
-                                variant
-                                selectId
-                                viewableMenuItems
-                                state_.initialAction
-                                state_.activeTargetIndex
-                                state_.menuNavigation
-                                (Styles.getMenuConfig config.styles)
-                                (Styles.getMenuItemConfig config.styles)
-                                (Styles.getGroupConfig config.styles)
-                                config.disabled
-                                state_.controlUiFocused
-                            )
+                 , lazy renderMenu
+                    (RenderMenuData viewData.state.menuOpen
+                        viewData.state.initialAction
+                        viewData.state.activeTargetIndex
+                        viewData.state.menuNavigation
+                        viewData.state.controlUiFocused
+                        config.isLoading
+                        (MenuItems_ filteredMenuItems)
+                        variant
+                        config.loadingMessage
+                        config.styles
+                        viewData.selectId
+                        config.disabled
+                        totalMenuItems
                     )
                  ]
                     ++ viewHiddenFormControl variant config.name
                 )
+
+
+viewHiddenFormControl : CustomVariant item -> Maybe String -> List (Html msg)
+viewHiddenFormControl variant maybeName =
+    -- This renders an input for a Custom variants so that form submissions include the given selection/s.
+    -- Without this, the selections made will not be included in the submitted form.
+    -- It's basically just how forms work!
+    case ( variant, maybeName ) of
+        ( Single (Just mi), Just n ) ->
+            [ viewHiddenInput n (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi)) ]
+
+        ( Multi selected, Just n ) ->
+            List.map (\mi -> viewHiddenInput n (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi))) selected
+
+        _ ->
+            [ text "" ]
 
 
 type alias ViewCustomControlData item =
@@ -2244,22 +2620,6 @@ type alias ViewCustomControlData item =
     , clearable : Bool
     , loading : Bool
     }
-
-
-viewHiddenFormControl : CustomVariant item -> Maybe String -> List (Html msg)
-viewHiddenFormControl variant maybeName =
-    -- This renders an input for a Custom variants so that form submissions include the given selection/s.
-    -- Without this, the selections made will not be included in the submitted form.
-    -- It's basically just how forms work!
-    case ( variant, maybeName ) of
-        ( Single (Just mi), Just n ) ->
-            [ viewHiddenInput n (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi)) ]
-
-        ( Multi selected, Just n ) ->
-            List.map (\mi -> viewHiddenInput n (Maybe.withDefault (getMenuItemLabel mi) (getMenuItemValue mi))) selected
-
-        _ ->
-            [ text "" ]
 
 
 viewCustomControl : ViewCustomControlData item -> Html (Msg item)
@@ -2310,6 +2670,9 @@ viewCustomControl data =
                 Single _ ->
                     buildInput
 
+                SingleVirtual _ ->
+                    buildInput
+
                 SingleMenu _ ->
                     buildInput
 
@@ -2353,8 +2716,6 @@ viewCustomControl data =
 
             else
                 text ""
-
-        -- resolveIndicators =
     in
     viewControlWrapper
         (ViewControlWrapperData
@@ -2600,7 +2961,7 @@ viewControlWrapper data =
 type alias ViewNativeData item =
     { controlStyles : Styles.ControlConfig
     , variant : NativeVariant item
-    , menuItems : List (MenuItem item)
+    , menuItems : MenuItems item
     , selectId : SelectId
     , labelledBy : Maybe String
     , ariaDescribedBy : Maybe String
@@ -2633,7 +2994,7 @@ viewNative data =
                     []
 
         buildGroupedViews :
-            ( String, ( List (MenuItem item), Internal.Group ) )
+            ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
             -> List (Html (Msg item))
             -> List (Html (Msg item))
         buildGroupedViews ( _, ( v, g ) ) acc =
@@ -2798,11 +3159,13 @@ type alias ViewMenuItemsWrapperData item =
     , menuStyles : Styles.MenuConfig
     , menuNavigation : MenuNavigation
     , selectId : SelectId
+    , menuItemsKind : MenuItemsKind item
+    , totalMenuItems : Int
     }
 
 
 viewMenuItemsWrapper : ViewMenuItemsWrapperData item -> List ( String, Html (Msg item) ) -> Html (Msg item)
-viewMenuItemsWrapper data =
+viewMenuItemsWrapper data items =
     let
         resolveAttributes =
             if data.menuNavigation == Keyboard then
@@ -2817,29 +3180,108 @@ viewMenuItemsWrapper data =
                     menuListStyles data.menuStyles
 
                 _ ->
-                    menuWrapperStyles data.menuStyles ++ menuListStyles data.menuStyles
+                    case data.menuItemsKind of
+                        MenuItemsVirtual_ itemsV ->
+                            case itemsV of
+                                FixedSizeMenuItems cfg ->
+                                    let
+                                        combinedVirtualHeight : Float
+                                        combinedVirtualHeight =
+                                            cfg.height * toFloat data.totalMenuItems
+
+                                        maxHeight : Float
+                                        maxHeight =
+                                            case Styles.getMenuMaxHeightRawType data.menuStyles of
+                                                Internal.Px i ->
+                                                    i.numericValue
+
+                                                _ ->
+                                                    215
+
+                                        adjustedMenuHeight : Css.Style
+                                        adjustedMenuHeight =
+                                            if
+                                                combinedVirtualHeight
+                                                    < (maxHeight
+                                                        - Styles.menuPaddingTop
+                                                        - Styles.menuPaddingBottom
+                                                        - (Styles.getMenuBorderWidth data.menuStyles * 2)
+                                                      )
+                                            then
+                                                Css.height
+                                                    (Css.px
+                                                        (combinedVirtualHeight
+                                                            + Styles.menuPaddingTop
+                                                            + Styles.menuPaddingBottom
+                                                            + (Styles.getMenuBorderWidth data.menuStyles * 2)
+                                                        )
+                                                    )
+
+                                            else
+                                                Css.batch []
+                                    in
+                                    adjustedMenuHeight :: menuWrapperStyles data.menuStyles ++ menuListStyles data.menuStyles
+
+                        _ ->
+                            menuWrapperStyles data.menuStyles ++ menuListStyles data.menuStyles
+
+        innerContainervirtualAttribs =
+            case data.menuItemsKind of
+                MenuItemsVirtual_ itemsV ->
+                    case itemsV of
+                        FixedSizeMenuItems cfg ->
+                            [ Css.position Css.relative
+                            , Css.height (Css.px (cfg.height * toFloat data.totalMenuItems))
+                            ]
+
+                _ ->
+                    []
     in
-    Keyed.lazyNode "ul"
-        ([ StyledAttribs.css resolveStyles
-         , id (menuListId data.selectId)
-         , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
-         , Internal.role "listbox"
-         , custom "mousedown"
-            (Decode.map
-                (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
-             <|
-                Decode.succeed DoNothing
-            )
-         ]
-            ++ resolveAttributes
-        )
-        identity
+    case data.menuItemsKind of
+        MenuItems_ _ ->
+            Keyed.lazyNode "ul"
+                ([ StyledAttribs.css resolveStyles
+                 , id (menuListId data.selectId)
+                 , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+                 , Internal.role "listbox"
+                 , custom "mousedown"
+                    (Decode.map
+                        (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
+                     <|
+                        Decode.succeed DoNothing
+                    )
+                 ]
+                    ++ resolveAttributes
+                )
+                identity
+                items
+
+        MenuItemsVirtual_ _ ->
+            Styled.ul
+                ([ StyledAttribs.css resolveStyles
+                 , id (menuListId data.selectId)
+                 , on "scroll" <| Decode.map MenuListScrollTop <| Decode.at [ "target", "scrollTop" ] Decode.float
+                 , Internal.role "listbox"
+                 , custom "mousedown"
+                    (Decode.map
+                        (\msg -> { message = msg, stopPropagation = True, preventDefault = True })
+                     <|
+                        Decode.succeed DoNothing
+                    )
+                 ]
+                    ++ resolveAttributes
+                )
+                [ Keyed.lazyNode "div"
+                    [ StyledAttribs.css innerContainervirtualAttribs ]
+                    identity
+                    items
+                ]
 
 
 type alias ViewMenuData item =
     { variant : CustomVariant item
     , selectId : SelectId
-    , viewableMenuItems : List (MenuItem item)
+    , menuItemsKind : MenuItemsKind item
     , initialAction : Internal.InitialAction
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
@@ -2848,6 +3290,7 @@ type alias ViewMenuData item =
     , menuItemGroupStyles : Styles.GroupConfig
     , disabled : Bool
     , controlUiFocused : Maybe Internal.UiFocused
+    , totalMenuItems : Int
     }
 
 
@@ -2859,20 +3302,43 @@ viewMenu data =
             data.menuStyles
             data.menuNavigation
             data.selectId
+            data.menuItemsKind
+            data.totalMenuItems
         )
-        (viewMenuItems
-            (ViewMenuItemsData
-                data.menuItemStyles
-                data.menuItemGroupStyles
-                data.selectId
-                data.variant
-                data.initialAction
-                data.activeTargetIndex
-                data.menuNavigation
-                data.viewableMenuItems
-                data.disabled
-                data.controlUiFocused
-            )
+        (case data.menuItemsKind of
+            MenuItemsVirtual_ itemsV ->
+                case itemsV of
+                    FixedSizeMenuItems cfg ->
+                        viewMenuItems
+                            (ViewMenuItemsData
+                                data.menuItemStyles
+                                data.menuItemGroupStyles
+                                data.selectId
+                                data.variant
+                                data.initialAction
+                                data.activeTargetIndex
+                                data.menuNavigation
+                                cfg.menuItems
+                                data.disabled
+                                data.controlUiFocused
+                                data.totalMenuItems
+                            )
+
+            MenuItems_ items ->
+                viewMenuItems
+                    (ViewMenuItemsData
+                        data.menuItemStyles
+                        data.menuItemGroupStyles
+                        data.selectId
+                        data.variant
+                        data.initialAction
+                        data.activeTargetIndex
+                        data.menuNavigation
+                        items
+                        data.disabled
+                        data.controlUiFocused
+                        data.totalMenuItems
+                    )
         )
 
 
@@ -2911,9 +3377,10 @@ type alias ViewMenuItemsData item =
     , initialAction : Internal.InitialAction
     , activeTargetIndex : Int
     , menuNavigation : MenuNavigation
-    , viewableMenuItems : List (MenuItem item)
+    , menuItems : MenuItems item
     , disabled : Bool
     , controlUiFocused : Maybe Internal.UiFocused
+    , totalMenuItems : Int
     }
 
 
@@ -2921,7 +3388,7 @@ viewMenuItems : ViewMenuItemsData item -> List ( String, Html (Msg item) )
 viewMenuItems data =
     let
         buildGroupedViews :
-            ( String, ( List (MenuItem item), Internal.Group ) )
+            ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
             -> ( Int, List ( String, Html (Msg item) ) )
             -> ( Int, List ( String, Html (Msg item) ) )
         buildGroupedViews ( _, ( v, g ) ) ( idx, acc ) =
@@ -2956,10 +3423,11 @@ viewMenuItems data =
                     data.menuNavigation
                     data.disabled
                     data.controlUiFocused
+                    data.totalMenuItems
                 )
 
         ( ungroupedViews, groupedItems ) =
-            sortMenuItemsHelp 0 data.viewableMenuItems ( [], Dict.empty )
+            sortMenuItemsHelp 0 data.menuItems ( [], Dict.empty )
 
         groupedViews =
             List.foldl buildGroupedViews
@@ -2972,7 +3440,7 @@ viewMenuItems data =
         ++ groupedViews
 
 
-viewSectionLabel : Styles.GroupConfig -> Internal.Group -> ( String, Html msg )
+viewSectionLabel : Styles.GroupConfig -> Internal.Group Styles.GroupConfig -> ( String, Html msg )
 viewSectionLabel styles g =
     ( g.name
     , div
@@ -3013,12 +3481,21 @@ type alias ViewMenuItemData item =
     , menuItemStyles : Styles.MenuItemConfig
     , disabled : Bool
     , controlUiFocused : Maybe Internal.UiFocused
+    , totalMenuItems : Int
     }
 
 
 viewMenuItem : ViewMenuItemData item -> List (Html (Msg item)) -> ( String, Html (Msg item) )
 viewMenuItem data content =
     let
+        virtualConfig =
+            case data.menuItem of
+                Basic cfg ->
+                    cfg.virtualConfig
+
+                Custom cfg ->
+                    cfg.virtualConfig
+
         resolveMouseLeave =
             if data.isClickFocused then
                 [ on "mouseleave" <| Decode.succeed ClearFocusedItem ]
@@ -3076,6 +3553,17 @@ viewMenuItem data content =
                     :: resolveMouseLeave
                     ++ resolveMouseUp
                     ++ resolveMouseover
+
+        virtualAttribs =
+            case virtualConfig of
+                Just cfg ->
+                    [ StyledAttribs.style "position" "absolute"
+                    , StyledAttribs.style "height" (String.fromFloat cfg.height ++ "px")
+                    , StyledAttribs.style "top" (String.fromFloat (cfg.height * toFloat cfg.index) ++ "px")
+                    ]
+
+                _ ->
+                    []
     in
     ( menuItemId data.selectId data.index
     , li
@@ -3088,6 +3576,7 @@ viewMenuItem data content =
             ++ resolveSelectedAriaAttribs
             ++ resolvePosinsetAriaAttrib
             ++ allEvents
+            ++ virtualAttribs
         )
         content
     )
@@ -3290,6 +3779,16 @@ viewSelectInput data =
         selectId
 
 
+viewHiddenInput : String -> String -> Html msg
+viewHiddenInput n value =
+    Styled.input
+        [ StyledAttribs.type_ "hidden"
+        , StyledAttribs.name n
+        , StyledAttribs.value value
+        ]
+        []
+
+
 type alias ViewDummyInputData item =
     { id : String
     , variant : CustomVariant item
@@ -3302,16 +3801,6 @@ type alias ViewDummyInputData item =
     , clearable : Bool
     , state : SelectState
     }
-
-
-viewHiddenInput : String -> String -> Html msg
-viewHiddenInput n value =
-    Styled.input
-        [ StyledAttribs.type_ "hidden"
-        , StyledAttribs.name n
-        , StyledAttribs.value value
-        ]
-        []
 
 
 viewDummyInput : ViewDummyInputData item -> Html (Msg item)
@@ -3527,24 +4016,82 @@ calculateMenuBoundaries (MenuListElement menuListElem) =
 -- UTILS
 
 
+type alias RenderMenuData item =
+    { menuOpen : Bool
+    , initialAction : Internal.InitialAction
+    , activeTargetIndex : Int
+    , menuNavigation : MenuNavigation
+    , controlUiFocused : Maybe Internal.UiFocused
+    , isLoading : Bool
+    , menuItemsKind : MenuItemsKind item
+    , variant : CustomVariant item
+    , loadingMessage : String
+    , styles : Styles.Config
+    , selectId : SelectId
+    , disabled : Bool
+    , totalMenuitems : Int
+    }
+
+
+renderMenu : RenderMenuData item -> Html (Msg item)
+renderMenu data =
+    let
+        unwrappedItems =
+            case data.menuItemsKind of
+                MenuItems_ items ->
+                    items
+
+                MenuItemsVirtual_ itemsV ->
+                    case itemsV of
+                        FixedSizeMenuItems cfg ->
+                            cfg.menuItems
+    in
+    Internal.viewIf data.menuOpen
+        (if data.isLoading && List.isEmpty unwrappedItems then
+            viewLoadingMenu
+                (ViewLoadingMenuData
+                    data.variant
+                    data.loadingMessage
+                    (Styles.getMenuConfig data.styles)
+                )
+
+         else
+            lazy viewMenu
+                (ViewMenuData
+                    data.variant
+                    data.selectId
+                    data.menuItemsKind
+                    data.initialAction
+                    data.activeTargetIndex
+                    data.menuNavigation
+                    (Styles.getMenuConfig data.styles)
+                    (Styles.getMenuItemConfig data.styles)
+                    (Styles.getGroupConfig data.styles)
+                    data.disabled
+                    data.controlUiFocused
+                    data.totalMenuitems
+                )
+        )
+
+
 sortMenuItemsHelp :
     Int
-    -> List (MenuItem item)
+    -> MenuItems item
     ->
-        ( List (MenuItem item)
-        , Dict.Dict String ( List (MenuItem item), Internal.Group )
+        ( MenuItems item
+        , Dict.Dict String ( MenuItems item, Internal.Group Styles.GroupConfig )
         )
     ->
-        ( List (MenuItem item)
-        , Dict.Dict String ( List (MenuItem item), Internal.Group )
+        ( MenuItems item
+        , Dict.Dict String ( MenuItems item, Internal.Group Styles.GroupConfig )
         )
 sortMenuItemsHelp =
     let
         updateGroupedItem :
-            Internal.Group
+            Internal.Group Styles.GroupConfig
             -> MenuItem item
-            -> Maybe ( List (MenuItem item), Internal.Group )
-            -> Maybe ( List (MenuItem item), Internal.Group )
+            -> Maybe ( MenuItems item, Internal.Group Styles.GroupConfig )
+            -> Maybe ( MenuItems item, Internal.Group Styles.GroupConfig )
         updateGroupedItem g mi maybeItems =
             case maybeItems of
                 Just i ->
@@ -3588,7 +4135,7 @@ sortMenuItemsHelp =
     sort
 
 
-getGroup : MenuItem item -> Maybe Internal.Group
+getGroup : MenuItem item -> Maybe (Internal.Group Styles.GroupConfig)
 getGroup mi =
     case mi of
         Basic cfg ->
@@ -3692,7 +4239,17 @@ buildPlaceholder data =
             Single (Just v) ->
                 viewSelectedPlaceholder data.controlStyles v
 
+            SingleVirtual (Just v) ->
+                viewSelectedPlaceholder data.controlStyles v
+
             Single Nothing ->
+                viewPlaceholder
+                    (ViewPlaceholderData
+                        (Styles.getControlPlaceholderOpacity data.controlStyles)
+                        data.placeholder
+                    )
+
+            SingleVirtual Nothing ->
                 viewPlaceholder
                     (ViewPlaceholderData
                         (Styles.getControlPlaceholderOpacity data.controlStyles)
@@ -3760,17 +4317,53 @@ resetState (State state_) =
         { state_
             | menuOpen = False
             , activeTargetIndex = 0
-            , menuViewportFocusNodes = Nothing
             , menuListScrollTop = 0
             , menuNavigation = Mouse
             , headlessEvent = Nothing
         }
 
 
-enterSelectTargetItem : SelectState -> List (MenuItem item) -> Maybe (MenuItem item)
+getTargetItem : Int -> MenuItem item -> ( Int, Maybe (MenuItem item) ) -> ListExtra.Step ( Int, Maybe (MenuItem item) )
+getTargetItem targetIndex item ( idx, _ ) =
+    case item of
+        Basic mi ->
+            case mi.virtualConfig of
+                Just cfg ->
+                    if targetIndex == cfg.index then
+                        ListExtra.Stop ( idx, Just item )
+
+                    else
+                        ListExtra.Continue ( idx + 1, Nothing )
+
+                _ ->
+                    if targetIndex == idx then
+                        ListExtra.Stop ( idx, Just item )
+
+                    else
+                        ListExtra.Continue ( idx + 1, Nothing )
+
+        Custom mi ->
+            case mi.virtualConfig of
+                Just cfg ->
+                    if targetIndex == cfg.index then
+                        ListExtra.Stop ( idx, Just item )
+
+                    else
+                        ListExtra.Continue ( idx + 1, Nothing )
+
+                _ ->
+                    if targetIndex == idx then
+                        ListExtra.Stop ( idx, Just item )
+
+                    else
+                        ListExtra.Continue ( idx + 1, Nothing )
+
+
+enterSelectTargetItem : SelectState -> MenuItems item -> Maybe (MenuItem item)
 enterSelectTargetItem state_ viewableMenuItems =
     if state_.menuOpen && not (List.isEmpty viewableMenuItems) then
-        ListExtra.getAt state_.activeTargetIndex viewableMenuItems
+        ListExtra.stoppableFoldl (getTargetItem state_.activeTargetIndex) ( 0, Nothing ) viewableMenuItems
+            |> Tuple.second
 
     else
         Nothing
@@ -3779,13 +4372,13 @@ enterSelectTargetItem state_ viewableMenuItems =
 type alias BuildViewableMenuItemsData item =
     { searchable : Bool
     , inputValue : Maybe String
-    , menuItems : List (MenuItem item)
+    , menuItems : MenuItems item
     , variant : Variant item
     }
 
 
-filterViewableMenuItems : BuildViewableMenuItemsData item -> List (MenuItem item)
-filterViewableMenuItems data =
+getViewableMenuItems : BuildViewableMenuItemsData item -> MenuItems item
+getViewableMenuItems data =
     let
         filterMenuItem : String -> MenuItem item -> Bool
         filterMenuItem query item =
@@ -3815,6 +4408,9 @@ filterViewableMenuItems data =
         CustomVariant (SingleMenu _) ->
             filteredMenuItems
 
+        CustomVariant (SingleVirtual _) ->
+            filteredMenuItems
+
         _ ->
             []
 
@@ -3828,10 +4424,11 @@ type alias BuildMenuItemData item =
     , menuNavigation : MenuNavigation
     , disabled : Bool
     , controlUiFocused : Maybe Internal.UiFocused
+    , totalMenuItems : Int
     }
 
 
-buildMenuItemNative : List (MenuItem item) -> MenuItem item -> Html (Msg item)
+buildMenuItemNative : MenuItems item -> MenuItem item -> Html (Msg item)
 buildMenuItemNative selectedItems menuItem =
     let
         withSelectedOption item =
@@ -3856,15 +4453,34 @@ buildMenuItem :
     -> ( String, Html (Msg item) )
 buildMenuItem data idx item =
     let
+        virtualConfig =
+            case item of
+                Basic cfg ->
+                    cfg.virtualConfig
+
+                Custom cfg ->
+                    cfg.virtualConfig
+
+        resolveIndex =
+            case virtualConfig of
+                Just cfg ->
+                    cfg.index
+
+                _ ->
+                    idx
+
         resolveIsSelected =
             (case data.variant of
                 Single maybeItem ->
                     maybeItem
 
+                SingleVirtual maybeItem ->
+                    maybeItem
+
                 SingleMenu maybeItem ->
                     maybeItem
 
-                _ ->
+                Multi _ ->
                     Nothing
             )
                 |> isSelected item
@@ -3881,10 +4497,10 @@ buildMenuItem data idx item =
         Basic _ ->
             viewMenuItem
                 (ViewMenuItemData
-                    idx
+                    resolveIndex
                     resolveIsSelected
-                    (isMenuItemClickFocused data.initialAction idx)
-                    (isTarget data.activeTargetIndex idx)
+                    (isMenuItemClickFocused data.initialAction resolveIndex)
+                    (isTarget data.activeTargetIndex resolveIndex)
                     data.selectId
                     item
                     data.menuNavigation
@@ -3893,16 +4509,17 @@ buildMenuItem data idx item =
                     (Maybe.withDefault data.menuItemStyles maybeIndividualStyles)
                     data.disabled
                     data.controlUiFocused
+                    data.totalMenuItems
                 )
                 [ text (getMenuItemLabel item) ]
 
         Custom ci ->
             viewMenuItem
                 (ViewMenuItemData
-                    idx
+                    resolveIndex
                     resolveIsSelected
-                    (isMenuItemClickFocused data.initialAction idx)
-                    (isTarget data.activeTargetIndex idx)
+                    (isMenuItemClickFocused data.initialAction resolveIndex)
+                    (isTarget data.activeTargetIndex resolveIndex)
                     data.selectId
                     item
                     data.menuNavigation
@@ -3911,11 +4528,12 @@ buildMenuItem data idx item =
                     (Maybe.withDefault data.menuItemStyles maybeIndividualStyles)
                     data.disabled
                     data.controlUiFocused
+                    data.totalMenuItems
                 )
                 [ Styled.map never ci.view ]
 
 
-filterMultiSelectedItems : List (MenuItem item) -> List (MenuItem item) -> List (MenuItem item)
+filterMultiSelectedItems : MenuItems item -> MenuItems item -> MenuItems item
 filterMultiSelectedItems selectedItems currentMenuItems =
     if List.isEmpty selectedItems then
         currentMenuItems
@@ -3976,7 +4594,7 @@ setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem)
         Above ->
             let
                 menuItemDistanceAbove =
-                    menuListElem.element.y - menuItemElem.element.y + listBoxPaddingTop + listBoxBorder
+                    menuListElem.element.y - menuItemElem.element.y + Styles.menuPaddingTop + listBoxBorder
             in
             ( Task.attempt (\_ -> DoNothing) <|
                 Dom.setViewportOf (menuListId selectId) 0 (menuListViewport - menuItemDistanceAbove)
@@ -3986,7 +4604,7 @@ setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem)
         Below ->
             let
                 menuItemDistanceBelow =
-                    (menuItemElem.element.y + menuItemElem.element.height + listBoxPaddingBottom + listBoxBorder) - (menuListElem.element.y + menuListElem.element.height)
+                    (menuItemElem.element.y + menuItemElem.element.height + Styles.menuPaddingBottom + listBoxBorder) - (menuListElem.element.y + menuListElem.element.height)
             in
             ( Task.attempt (\_ -> DoNothing) <|
                 Dom.setViewportOf (menuListId selectId) 0 (menuListViewport + menuItemDistanceBelow)
@@ -4143,8 +4761,8 @@ dropdownIndicator styles disabledInput =
 
 menuWrapperStyles : Styles.MenuConfig -> List Css.Style
 menuWrapperStyles menuStyles =
-    [ Css.paddingBottom (Css.px listBoxPaddingBottom)
-    , Css.paddingTop (Css.px listBoxPaddingTop)
+    [ Css.paddingBottom (Css.px Styles.menuPaddingBottom)
+    , Css.paddingTop (Css.px Styles.menuPaddingTop)
     , Css.boxSizing Css.borderBox
     , Css.top (Css.pct 100)
     , Css.backgroundColor (Styles.getMenuBackgroundColor menuStyles)
@@ -4266,16 +4884,6 @@ iconButtonStyles =
 menuMarginTop : Float
 menuMarginTop =
     8
-
-
-listBoxPaddingBottom : Float
-listBoxPaddingBottom =
-    6
-
-
-listBoxPaddingTop : Float
-listBoxPaddingTop =
-    4
 
 
 listBoxBorder : Float

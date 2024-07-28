@@ -3,7 +3,9 @@ module Select.Internal exposing
     , Direction(..)
     , Group
     , InitialAction(..)
+    , LengthOrNoneOrMinMaxDimension(..)
     , UiFocused(..)
+    , VirtualItemConfig
     , ariaActiveDescendant
     , ariaControls
     , ariaDescribedby
@@ -19,14 +21,19 @@ module Select.Internal exposing
     , viewIf
     )
 
+import Css
 import Html.Styled as Styled
 import Html.Styled.Attributes exposing (attribute)
-import Select.Styles exposing (GroupConfig, MenuItemConfig)
 
 
 type Direction
     = Up
     | Down
+
+
+type LengthOrNoneOrMinMaxDimension
+    = Px (Css.LengthOrNoneOrMinMaxDimension Css.Px)
+    | Vh (Css.LengthOrNoneOrMinMaxDimension Css.Vh)
 
 
 illegalChars : String
@@ -182,19 +189,26 @@ ariaActiveDescendant =
     attribute "aria-activedescendant"
 
 
-type alias BaseMenuItem comparable =
-    { comparable
-        | filterable : Bool
-        , dismissible : Bool
-        , styles : Maybe MenuItemConfig
-        , group : Maybe Group
-        , value : Maybe String
+type alias VirtualItemConfig =
+    { index : Int
+    , height : Float
     }
 
 
-type alias Group =
+type alias BaseMenuItem comparable groupConfig stylesConfig =
+    { comparable
+        | filterable : Bool
+        , dismissible : Bool
+        , styles : Maybe stylesConfig
+        , group : Maybe (Group groupConfig)
+        , value : Maybe String
+        , virtualConfig : Maybe VirtualItemConfig
+    }
+
+
+type alias Group config =
     { name : String
-    , styles : Maybe GroupConfig
+    , styles : Maybe config
     , view : Maybe (Styled.Html Never)
     }
 
