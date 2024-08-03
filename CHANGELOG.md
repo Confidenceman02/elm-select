@@ -1,3 +1,9 @@
+## [11.1.0] - 2024-08-03
+
+## Added
+
+- Virtual scroll multi variant
+
 ## [11.0.0] - 2024-07-28
 
 ## Added
@@ -758,6 +764,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[11.1.0]: https://github.com/Confidenceman02/elm-select/compare/11.0.0...11.1.0
 [11.0.0]: https://github.com/Confidenceman02/elm-select/compare/10.4.5...11.0.0
 [10.4.5]: https://github.com/Confidenceman02/elm-select/compare/10.4.4...10.4.5
 [10.4.4]: https://github.com/Confidenceman02/elm-select/compare/10.4.3...10.4.4
