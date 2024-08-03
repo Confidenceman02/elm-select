@@ -3,7 +3,7 @@ module Select exposing
     , Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
     , menuItems, menuItemsVirtual, clearable
     , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name
-    , single, singleVirtual
+    , single, singleVirtual, multiVirtual
     , singleMenu, menu
     , multi
     , singleNative
@@ -25,7 +25,7 @@ module Select exposing
 
 # Single select
 
-@docs single, singleVirtual
+@docs single, singleVirtual, multiVirtual
 
 
 # Menu select
@@ -1379,6 +1379,30 @@ singleVirtual maybeSelectedItem =
     Config { defaultsVirtualVariant | variant = CustomVariant (SingleVirtual maybeSelectedItem) }
 
 
+{-| Select a multi virtual item.
+
+      countries : List (MenuItem Country)
+      countries =
+          [ basicMenuItem
+              { item = Australia, label = "Australia" }
+          , basicMenuitem
+              { item = Taiwan, label = "Taiwan"
+            -- other countries
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              viewVirtual
+                  (multiVirtual [] |>
+                      menuItemsVirtual (virtualFixedMenuItems 35 countries)
+                  )
+
+-}
+multiVirtual : MenuItems item -> Config item (VirtualConfig item)
+multiVirtual selectedItems =
+    Config { defaultsVirtualVariant | variant = CustomVariant (Multi selectedItems) }
+
+
 {-| Menu only single select.
 
       countries : List (MenuItem Country)
@@ -2312,6 +2336,48 @@ viewVirtual (Config config) =
     in
     case config.variant of
         CustomVariant ((SingleVirtual _) as variant) ->
+            viewWrapper
+                (ViewWrapperData viewData.state
+                    config.searchable
+                    variant
+                    config.disabled
+                )
+                ([ lazy viewCustomControl
+                    (ViewCustomControlData
+                        config.state
+                        viewData.ctrlStyles
+                        config.styles
+                        (enterSelectTargetItem viewData.state virtualizedMenuItemsUnwrapped)
+                        filteredCount
+                        variant
+                        config.placeholder
+                        config.disabled
+                        config.searchable
+                        config.labelledBy
+                        config.ariaDescribedBy
+                        config.clearable
+                        config.isLoading
+                    )
+                 , lazy renderMenu
+                    (RenderMenuData viewData.state.menuOpen
+                        viewData.state.initialAction
+                        viewData.state.activeTargetIndex
+                        viewData.state.menuNavigation
+                        viewData.state.controlUiFocused
+                        config.isLoading
+                        (MenuItemsVirtual_ virtualizedMenuItems)
+                        variant
+                        config.loadingMessage
+                        config.styles
+                        viewData.selectId
+                        config.disabled
+                        filteredCount
+                    )
+                 ]
+                    ++ viewHiddenFormControl variant config.name
+                )
+
+        CustomVariant ((Multi _) as variant) ->
             viewWrapper
                 (ViewWrapperData viewData.state
                     config.searchable
