@@ -10,6 +10,7 @@ module Select.SelectInput exposing
     , onFocusMsg
     , onInput
     , onMousedown
+    , onRequired
     , preventKeydownOn
     , setAriaControls
     , setAriaDescribedBy
@@ -20,7 +21,7 @@ module Select.SelectInput exposing
     )
 
 import Html.Styled exposing (Html, div, input, text)
-import Html.Styled.Attributes exposing (attribute, id, size, style, type_, value)
+import Html.Styled.Attributes exposing (attribute, id, required, size, style, type_, value)
 import Html.Styled.Events exposing (onBlur, onFocus, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -57,6 +58,7 @@ type alias Configuration msg =
     , ariaLabelledBy : Maybe String
     , ariaDescribedBy : Maybe String
     , ariaExpanded : Bool
+    , required : Bool
     }
 
 
@@ -81,6 +83,7 @@ defaults =
     , ariaDescribedBy = Nothing
     , ariaControls = Nothing
     , ariaExpanded = False
+    , required = False
     }
 
 
@@ -174,6 +177,11 @@ currentValue value_ (Config config) =
 disabled : Bool -> Config msg -> Config msg
 disabled predicate (Config config) =
     Config { config | disabled = predicate }
+
+
+onRequired : Bool -> Config msg -> Config msg
+onRequired pred (Config config) =
+    Config { config | required = pred }
 
 
 view : Config msg -> String -> Html msg
@@ -325,6 +333,13 @@ view (Config config) id_ =
 
             else
                 [ Internal.ariaExpanded "false" ]
+
+        withFormControlAttrs =
+            if config.required then
+                [ required True ]
+
+            else
+                []
     in
     div (autoSizeInputContainerStyles ++ withAriaOwns ++ withAriaExpanded)
         [ input
@@ -343,6 +358,7 @@ view (Config config) id_ =
                 ++ withAriaControls
                 ++ withAriaLabelledBy
                 ++ withAriaDescribedBy
+                ++ withFormControlAttrs
             )
             []
 

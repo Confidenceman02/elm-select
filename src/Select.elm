@@ -2,7 +2,7 @@ module Select exposing
     ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem, virtualFixedMenuItems
     , Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
     , menuItems, menuItemsVirtual, clearable
-    , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name
+    , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name, required
     , single, singleVirtual, multiVirtual
     , singleMenu, menu
     , multi
@@ -20,7 +20,7 @@ module Select exposing
 @docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem, virtualFixedMenuItems
 @docs Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
 @docs menuItems, menuItemsVirtual, clearable
-@docs placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name
+@docs placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name, required
 
 
 # Single select
@@ -241,6 +241,7 @@ type alias Configuration item items =
     , ariaDescribedBy : Maybe String
     , styles : Styles.Config
     , name : Maybe String
+    , required : Bool
     }
 
 
@@ -475,6 +476,7 @@ defaultsVirtualVariant =
     , ariaDescribedBy = Nothing
     , styles = Styles.default
     , name = Nothing
+    , required = False
     }
 
 
@@ -493,6 +495,7 @@ defaults =
     , ariaDescribedBy = Nothing
     , styles = Styles.default
     , name = Nothing
+    , required = False
     }
 
 
@@ -1176,6 +1179,30 @@ A form will need this attribute to know how to label the data.
 name : String -> Config item items -> Config item items
 name n (Config config) =
     Config { config | name = Just n }
+
+
+{-| Make the input required within a form context.
+
+Form submissions will fail to submit and you will receive a native prompt when
+a select input value has not been selected when required = `True`
+
+Defaults to `False`
+
+    yourView model =
+        label
+            [ id "selectLabelId" ]
+            [ text "Select your country"
+            , Html.map SelectMsg <|
+                view
+                    (singleNative Nothing
+                        |> required True
+                    )
+            ]
+
+-}
+required : Bool -> Config item items -> Config item items
+required pred (Config config) =
+    Config { config | required = pred }
 
 
 
@@ -2357,6 +2384,7 @@ viewVirtual (Config config) =
                         config.ariaDescribedBy
                         config.clearable
                         config.isLoading
+                        config.required
                     )
                  , lazy renderMenu
                     (RenderMenuData viewData.state.menuOpen
@@ -2399,6 +2427,7 @@ viewVirtual (Config config) =
                         config.ariaDescribedBy
                         config.clearable
                         config.isLoading
+                        config.required
                     )
                  , lazy renderMenu
                     (RenderMenuData viewData.state.menuOpen
@@ -2464,6 +2493,7 @@ view (Config config) =
                         config.placeholder
                         config.disabled
                         config.name
+                        config.required
                     )
                 , span
                     [ StyledAttribs.css
@@ -2545,6 +2575,7 @@ view (Config config) =
                                                 config.ariaDescribedBy
                                                 config.disabled
                                                 config.clearable
+                                                config.required
                                                 viewData.state
                                             )
                                         )
@@ -2634,6 +2665,7 @@ view (Config config) =
                         config.ariaDescribedBy
                         config.clearable
                         config.isLoading
+                        config.required
                     )
                  , lazy renderMenu
                     (RenderMenuData viewData.state.menuOpen
@@ -2685,6 +2717,7 @@ type alias ViewCustomControlData item =
     , ariaDescribedBy : Maybe String
     , clearable : Bool
     , loading : Bool
+    , required : Bool
     }
 
 
@@ -2762,6 +2795,7 @@ viewCustomControl data =
                             data.ariaDescribedBy
                             data.disabled
                             data.clearable
+                            data.required
                             state_
                         )
 
@@ -3034,6 +3068,7 @@ type alias ViewNativeData item =
     , placeholder : String
     , disabled : Bool
     , name : Maybe String
+    , required : Bool
     }
 
 
@@ -3095,6 +3130,7 @@ viewNative data =
                                 [ StyledAttribs.hidden True
                                 , StyledAttribs.selected True
                                 , StyledAttribs.disabled True
+                                , StyledAttribs.attribute "value" ""
                                 ]
                                 [ text ("(" ++ data.placeholder ++ ")") ]
 
@@ -3153,6 +3189,7 @@ viewNative data =
          , StyledAttribs.attribute "data-test-id" resolveTestId
          , StyledAttribs.disabled data.disabled
          , resolveOnInputMsg
+         , StyledAttribs.required data.required
          , onFocus (InputReceivedFocused (NativeVariant data.variant))
          , onBlur (OnInputBlurred (NativeVariant data.variant))
          , StyledAttribs.css
@@ -3693,6 +3730,7 @@ type alias ViewSelectInputData item =
     , ariaDescribedBy : Maybe String
     , disabled : Bool
     , clearable : Bool
+    , required : Bool
     , state : SelectState
     }
 
@@ -3789,6 +3827,20 @@ viewSelectInput data =
         resolveAriaExpanded config =
             SelectInput.setAriaExpanded data.state.menuOpen config
 
+        resolveRequired config =
+            case data.variant of
+                Single Nothing ->
+                    SelectInput.onRequired data.required config
+
+                Multi [] ->
+                    SelectInput.onRequired data.required config
+
+                SingleVirtual Nothing ->
+                    SelectInput.onRequired data.required config
+
+                _ ->
+                    config
+
         clearButtonVisible =
             showClearButton
                 (ShowClearButtonData
@@ -3830,6 +3882,7 @@ viewSelectInput data =
             |> resolveAriaLabelledBy
             |> resolveAriaDescribedBy
             |> resolveAriaExpanded
+            |> resolveRequired
             |> (SelectInput.preventKeydownOn <|
                     ( (enterKeydownDecoder
                         |> spaceKeydownDecoder
