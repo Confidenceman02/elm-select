@@ -1,6 +1,6 @@
 module Select exposing
     ( SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem, virtualFixedMenuItems
-    , Action(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
+    , Action(..), ToggleAction(..), initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
     , menuItems, menuItemsVirtual, clearable
     , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name, required
     , single, singleVirtual, multiVirtual
@@ -18,7 +18,7 @@ module Select exposing
 # Set up
 
 @docs SelectId, Config, State, MenuItem, BasicMenuItem, basicMenuItem, CustomMenuItem, customMenuItem, Group, group, groupedMenuItem, groupStyles, groupView, filterableMenuItem, dismissibleMenuItemTag, stylesMenuItem, valueMenuItem, virtualFixedMenuItems
-@docs Action, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
+@docs Action, ToggleAction, initState, keepMenuOpen, focus, isFocused, isMenuOpen, Msg
 @docs menuItems, menuItemsVirtual, clearable
 @docs placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name, required
 
@@ -196,6 +196,14 @@ type Action item
     | FocusSet
     | Focus
     | Blur
+    | MenuToggle ToggleAction
+
+
+{-| Actions reflecting whether a menu will close or open as a result of some [Action](#Action)
+-}
+type ToggleAction
+    = MenuClose
+    | MenuOpen
 
 
 {-| -}
@@ -1217,7 +1225,7 @@ selections, or escape, or clicking away will not close it.
 -}
 keepMenuOpen : Bool -> State -> State
 keepMenuOpen pred (State state_) =
-    State { state_ | menuOpen = True, keepOpen = pred }
+    State { state_ | menuOpen = pred, keepOpen = pred }
 
 
 {-| Opt in to a Javascript optimization.
@@ -1967,69 +1975,70 @@ update msg ((State state_) as wrappedState) =
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
 
-                ( updatedState, updatedCmds ) =
+                ( updatedAction, updatedState, updatedCmds ) =
                     case state_.initialAction of
                         -- The MultiItemMousedown will blur the input if it is focused. We want to return
                         -- focus to the input. Might be better to experiment with preventDefault.
                         Internal.MultiItemMousedown _ ->
-                            case state_.controlUiFocused of
-                                Just Internal.ControlInput ->
-                                    ( state_, Cmd.none )
+                            if isFocused wrappedState then
+                                ( Nothing, state_, Cmd.none )
 
-                                Just Internal.Clearable ->
-                                    ( state_, Cmd.none )
-
-                                Nothing ->
-                                    ( state_, internalFocus idString OnInputFocused )
+                            else
+                                ( Nothing, state_, internalFocus idString OnInputFocused )
 
                         Internal.NothingMousedown ->
                             if state_.menuOpen then
                                 case variant of
                                     SingleMenu _ ->
                                         if state_.keepOpen && state_.controlUiFocused == Nothing then
-                                            ( { state_ | initialAction = Internal.ContainerMousedown }
+                                            ( Nothing
+                                            , { state_ | initialAction = Internal.ContainerMousedown }
                                             , internalFocus idString OnInputFocused
                                             )
 
                                         else
-                                            ( { state_ | initialAction = Internal.ContainerMousedown }, Cmd.none )
+                                            ( Nothing, { state_ | initialAction = Internal.ContainerMousedown }, Cmd.none )
 
                                     _ ->
-                                        ( { stateWithClosedMenu
+                                        ( Just (MenuToggle MenuClose)
+                                        , { stateWithClosedMenu
                                             | initialAction = Internal.ContainerMousedown
                                           }
                                         , Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ]
                                         )
 
                             else
-                                ( { stateWithOpenMenu | initialAction = Internal.ContainerMousedown }
+                                ( Just (MenuToggle MenuOpen)
+                                , { stateWithOpenMenu | initialAction = Internal.ContainerMousedown }
                                 , Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ]
                                 )
 
                         Internal.ContainerMousedown ->
                             case variant of
                                 SingleMenu _ ->
-                                    ( { state_ | initialAction = Internal.ContainerMousedown }, Cmd.none )
+                                    ( Nothing, { state_ | initialAction = Internal.ContainerMousedown }, Cmd.none )
 
                                 _ ->
                                     if state_.menuOpen then
-                                        ( { stateWithClosedMenu | initialAction = Internal.NothingMousedown }
+                                        ( Just (MenuToggle MenuClose)
+                                        , { stateWithClosedMenu | initialAction = Internal.NothingMousedown }
                                         , Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ]
                                         )
 
                                     else
-                                        ( { stateWithOpenMenu | initialAction = Internal.NothingMousedown }
+                                        ( Just (MenuToggle MenuOpen)
+                                        , { stateWithOpenMenu | initialAction = Internal.NothingMousedown }
                                         , Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ]
                                         )
 
                         _ ->
                             if state_.menuOpen then
-                                ( stateWithClosedMenu, Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ] )
+                                ( Nothing, stateWithClosedMenu, Cmd.batch [ cmdWithClosedMenu, internalFocus idString OnInputFocused ] )
 
                             else
-                                ( stateWithOpenMenu, Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ] )
+                                ( Nothing, stateWithOpenMenu, Cmd.batch [ cmdWithOpenMenu, internalFocus idString OnInputFocused ] )
             in
-            ( Nothing
+            ( updatedAction
             , State
                 { updatedState
                     | controlUiFocused = Just Internal.ControlInput
@@ -2883,10 +2892,11 @@ type alias ViewDropdownIndicatorData =
     }
 
 
-viewDropdownIndicator : ViewDropdownIndicatorData -> Html msg
+viewDropdownIndicator : ViewDropdownIndicatorData -> Html (Msg item)
 viewDropdownIndicator data =
     div
-        [ StyledAttribs.css indicatorContainerStyles ]
+        [ StyledAttribs.css indicatorContainerStyles
+        ]
         [ dropdownIndicator data.controlStyles data.disabled
         ]
 
@@ -4302,9 +4312,6 @@ containerClickedMsg data =
 
                                 _ ->
                                     False
-
-                Internal.ContainerMousedown ->
-                    True
 
                 _ ->
                     True
