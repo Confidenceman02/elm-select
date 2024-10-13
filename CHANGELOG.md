@@ -1,3 +1,22 @@
+## [12.0.0] - 2024-10-13
+
+## Breaking
+
+- Add MenuToggle Action
+
+Will need to handle the MenuToggle action if you are exhaustively matching all actions in your update.
+
+```elm
+case action of
+    -- ...  Other actions
+
+    Just (Select.MenuToggle Select.MenuClose) ->
+        -- Menu has been toggled and will close as a result
+
+    Just (Select.MenuToggle Select.MenuOpen) ->
+        -- Menu has been toggled and will open as a result
+```
+
 ## [11.2.0] - 2024-09-14
 
 ## Added
@@ -770,6 +789,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[12.0.0]: https://github.com/Confidenceman02/elm-select/compare/11.2.0...12.0.0
 [11.2.0]: https://github.com/Confidenceman02/elm-select/compare/11.1.0...11.2.0
 [11.1.0]: https://github.com/Confidenceman02/elm-select/compare/11.0.0...11.1.0
 [11.0.0]: https://github.com/Confidenceman02/elm-select/compare/10.4.5...11.0.0
