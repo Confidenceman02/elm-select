@@ -1951,13 +1951,13 @@ update msg ((State state_) as wrappedState) =
                 resolveAction =
                     case state_.inputValue of
                         Just "" ->
-                            Nothing
+                            Just (MenuToggle MenuClose)
 
                         Just _ ->
                             Just (InputChange "")
 
                         _ ->
-                            Nothing
+                            Just (MenuToggle MenuClose)
 
                 ( _, State stateWithClosedMenu, cmdWithClosedMenu ) =
                     update CloseMenu (State state_)
@@ -2068,8 +2068,15 @@ update msg ((State state_) as wrappedState) =
 
                         _ ->
                             internalFocus idString OnInputFocused
+
+                toggleAction =
+                    if state_.menuOpen then
+                        MenuToggle MenuClose
+
+                    else
+                        MenuToggle MenuOpen
             in
-            ( Nothing
+            ( Just toggleAction
             , State { updatedState | controlUiFocused = Just Internal.ControlInput }
             , focusCmd
             )
