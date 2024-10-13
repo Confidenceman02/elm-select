@@ -155,10 +155,10 @@ update msg model =
                             -- handle input blur
 
                         Just (MenuToggle MenuClose) ->
-                            -- menu dropdown indicator has been toggled and menu will close as a result
+                            -- menu has been toggled and menu will close as a result
 
                         Just (MenuToggle MenuOpen) ->
-                            -- menu dropdown indicator has been toggled and menu will open as a result
+                            -- menu  has been toggled and menu will open as a result
 
                         Nothing ->
                             model
