@@ -39,6 +39,7 @@ describe("examples", () => {
     );
     const singleVirtualVisible = await page.isVisible("text=SingleVirtual.elm");
     const multiVirtualVisible = await page.isVisible("text=MultiVirtual.elm");
+    const keepMenuOpenVisible = await page.isVisible("text=KeepMenuOpen.elm");
 
     expect(singleSearchableVisible).toBeTruthy();
     expect(nativeSingle).toBeTruthy();
@@ -53,6 +54,8 @@ describe("examples", () => {
     expect(singleMenuVisible).toBeTruthy();
     expect(singleMenuOpenVisible).toBeTruthy();
     expect(singleVirtualVisible).toBeTruthy();
+    expect(multiVirtualVisible).toBeTruthy();
+    expect(keepMenuOpenVisible).toBeTruthy();
   });
 });
 
