@@ -2,7 +2,7 @@ module Select.Styles exposing
     ( Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
     , menuPaddingBottom, menuPaddingTop
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
-    , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
+    , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover, setControlIndicatorPadding
     , setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagColor, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagDismissibleBackgroundColorHover
     , setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
     , setMenuStyles, setMenuBackgroundColor, setMenuBorderRadius, setMenuBorderWidth, setMenuBoxShadowBlur, setMenuBoxShadowColor, setMenuBoxShadowHOffset, setMenuBoxShadowVOffset, getMenuControlBackgroundColorHover
@@ -16,7 +16,7 @@ module Select.Styles exposing
     , setMenuControlSearchIndicatorColor
     , getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover
     , getControlBorderRadius, getControlClearIndicatorColor
-    , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
+    , getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover, getControlIndicatorPadding
     , getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagColor, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagDismissibleBackgroundColorHover, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
     , getMenuConfig, getMenuBackgroundColor, getMenuBorderRadius, getMenuBorderWidth, getMenuBoxShadowColor
     , getMenuBoxShadowHOffset, getMenuBoxShadowVOffset, getMenuBoxShadowBlur, getMenuControlBackgroundColor, getMenuDividerColor
@@ -64,7 +64,7 @@ Set styles
 ## Control
 
 @docs setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
-@docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover
+@docs setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover, setControlIndicatorPadding
 @docs setControlLoadingIndicatorColor, setControlMinHeight, setControlMultiTagBackgroundColor, setControlMultiTagBorderRadius, setControlMultiTagColor, setControlMultiTagDismissibleBackgroundColor, setControlMultiTagDismissibleBackgroundColorHover
 @docs setControlMultiTagTruncationWidth, setControlSelectedColor, setControlPlaceholderOpacity, setControlSeparatorColor
 
@@ -99,7 +99,7 @@ Get styles
 
 @docs getControlConfig, getControlBackgroundColor, getControlBackgroundColorHover, getControlBorderColor, getControlColor, getControlBorderColorFocus, getControlBorderColorHover
 @docs getControlBorderRadius, getControlClearIndicatorColor
-@docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover
+@docs getControlClearIndicatorColorHover, getControlDisabledOpacity, getControlDropdownIndicatorColor, getControlDropdownIndicatorColorHover, getControlIndicatorPadding
 @docs getControlLoadingIndicatorColor, getControlMinHeight, getControlMultiTagBackgroundColor, getControlMultiTagBorderRadius, getControlMultiTagColor, getControlMultiTagDismissibleBackgroundColor, getControlMultiTagDismissibleBackgroundColorHover, getControlMultiTagTruncationWidth, getControlPlaceholderOpacity, getControlSelectedColor, getControlSeparatorColor
 
 
@@ -233,6 +233,7 @@ type alias BaseControlConfiguration =
     , clearIndicatorColorHover : Css.Color
     , color : Css.Color
     , disabledOpacity : Float
+    , indicatorPadding : Float
     , loadingIndicatorColor : Css.Color
     , minHeight : Float
     , placeholderOpacity : Float
@@ -311,6 +312,7 @@ defaultsMenu =
             , clearIndicatorColorHover = Css.rgb 51 51 51
             , color = Css.hex "#000000"
             , disabledOpacity = 0.3
+            , indicatorPadding = 8
             , loadingIndicatorColor = Css.rgb 102 102 102
             , minHeight = 35
             , placeholderOpacity = 0.5
@@ -335,6 +337,7 @@ defaultsControl =
     , disabledOpacity = 0.3
     , dropdownIndicatorColor = Css.rgb 102 102 102
     , dropdownIndicatorColorHover = Css.rgb 51 51 51
+    , indicatorPadding = 8
     , loadingIndicatorColor = Css.rgb 102 102 102
     , minHeight = 38
     , multiTagBackgroundColor = Css.hex "#E1E2EA"
@@ -835,6 +838,12 @@ setControlColor c (ControlConfig config) =
 setControlDisabledOpacity : Float -> ControlConfig -> ControlConfig
 setControlDisabledOpacity f (ControlConfig config) =
     ControlConfig { config | disabledOpacity = f }
+
+
+{-| -}
+setControlIndicatorPadding : Float -> ControlConfig -> ControlConfig
+setControlIndicatorPadding f (ControlConfig config) =
+    ControlConfig { config | indicatorPadding = f }
 
 
 {-| -}
@@ -1529,6 +1538,12 @@ getControlLoadingIndicatorColor (ControlConfig config) =
 getControlDisabledOpacity : ControlConfig -> Float
 getControlDisabledOpacity (ControlConfig config) =
     config.disabledOpacity
+
+
+{-| -}
+getControlIndicatorPadding : ControlConfig -> Float
+getControlIndicatorPadding (ControlConfig config) =
+    config.indicatorPadding
 
 
 {-| A fun dark theme
