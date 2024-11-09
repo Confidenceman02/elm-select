@@ -2533,6 +2533,7 @@ view (Config config) =
                         , viewLoadingSpinner
                             (ViewLoadingSpinnerData config.isLoading
                                 (Styles.getControlLoadingIndicatorColor viewData.ctrlStyles)
+                                viewData.ctrlStyles
                             )
                         , indicatorSeparator viewData.ctrlStyles
                         , viewDropdownIndicator (ViewDropdownIndicatorData False viewData.ctrlStyles)
@@ -2614,6 +2615,7 @@ view (Config config) =
                                     , viewLoadingSpinner
                                         (ViewLoadingSpinnerData config.isLoading
                                             (Styles.getMenuControlLoadingIndicatorColor viewData.menuStyles)
+                                            viewData.ctrlStyles
                                         )
                                     ]
                                 ]
@@ -2859,6 +2861,7 @@ viewCustomControl data =
             , viewLoadingSpinner
                 (ViewLoadingSpinnerData data.loading
                     (Styles.getControlLoadingIndicatorColor data.controlStyles)
+                    data.controlStyles
                 )
             , indicatorSeparator data.controlStyles
             , viewDropdownIndicator
@@ -2902,7 +2905,7 @@ type alias ViewDropdownIndicatorData =
 viewDropdownIndicator : ViewDropdownIndicatorData -> Html (Msg item)
 viewDropdownIndicator data =
     div
-        [ StyledAttribs.css indicatorContainerStyles
+        [ StyledAttribs.css (indicatorContainerStyles data.controlStyles)
         ]
         [ dropdownIndicator data.controlStyles data.disabled
         ]
@@ -2911,6 +2914,7 @@ viewDropdownIndicator data =
 type alias ViewLoadingSpinnerData =
     { isLoading : Bool
     , loadingIndicatorColor : Css.Color
+    , controlStyles : Styles.ControlConfig
     }
 
 
@@ -2924,7 +2928,7 @@ viewLoadingSpinner data =
             else
                 text ""
     in
-    div [ StyledAttribs.css indicatorContainerStyles ]
+    div [ StyledAttribs.css (indicatorContainerStyles data.controlStyles) ]
         [ span
             [ StyledAttribs.css
                 [ Css.color data.loadingIndicatorColor
@@ -2999,7 +3003,7 @@ viewClearIndicator data =
     Internal.viewIf clearButtonVisible <|
         div
             [ StyledAttribs.css
-                (indicatorContainerStyles
+                (indicatorContainerStyles ctrlStyles
                     ++ [ Css.pointerEvents Css.auto ]
                 )
             ]
@@ -4998,9 +5002,12 @@ menuItemContainerStyles data =
     ]
 
 
-indicatorContainerStyles : List Css.Style
-indicatorContainerStyles =
-    [ Css.displayFlex, Css.boxSizing Css.borderBox, Css.padding (Css.px 8) ]
+indicatorContainerStyles : Styles.ControlConfig -> List Css.Style
+indicatorContainerStyles cc =
+    [ Css.displayFlex
+    , Css.boxSizing Css.borderBox
+    , Css.padding (Css.px (Styles.getControlIndicatorPadding cc))
+    ]
 
 
 iconButtonStyles : List Css.Style
