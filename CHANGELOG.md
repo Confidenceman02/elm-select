@@ -1,3 +1,9 @@
+## [12.1.0] - 2024-11-09
+
+## Added
+
+- Ability to configure indicator padding
+
 ## [12.0.1] - 2024-10-13
 
 ## Fixes
@@ -795,6 +801,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[12.1.0]: https://github.com/Confidenceman02/elm-select/compare/12.0.1...12.1.0
 [12.0.1]: https://github.com/Confidenceman02/elm-select/compare/11.2.0...12.0.1
 [12.0.0]: https://github.com/Confidenceman02/elm-select/compare/11.2.0...12.0.0
 [11.2.0]: https://github.com/Confidenceman02/elm-select/compare/11.1.0...11.2.0
