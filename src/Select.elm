@@ -2517,7 +2517,8 @@ view (Config config) =
                         , Css.right (Css.px 0)
                         , Css.top (Css.pct 50)
                         , Css.transform (Css.translateY (Css.pct -50))
-                        , Css.padding (Css.px 8)
+                        , Css.property "padding-block" (Css.px 8).value
+                        , Css.property "padding-inline" (Css.px 8).value
                         , Css.pointerEvents Css.none
                         ]
                     ]
@@ -2755,7 +2756,7 @@ viewCustomControl data =
                         resolveMultiValueStyles =
                             if 0 < List.length multiSelectedValues then
                                 [ StyledAttribs.css
-                                    [ Css.marginRight (Css.rem 0.4375)
+                                    [ Css.property "margin-inline-end" (Css.rem 0.4375).value
                                     , Css.displayFlex
                                     , Css.alignItems Css.center
                                     , Css.flex3 (Css.int 1) (Css.int 1) (Css.pct 0)
@@ -2888,7 +2889,8 @@ viewInputWrapper dsbl =
              , Css.alignItems Css.center
              , Css.boxSizing Css.borderBox
              , Css.flex (Css.int 1)
-             , Css.padding2 (Css.px 2) (Css.px 8)
+             , Css.property "padding-block" (Css.px 2).value
+             , Css.property "padding-inline" (Css.px 8).value
              , Css.overflow Css.hidden
              ]
                 ++ withDisabledStyles
@@ -3042,11 +3044,9 @@ viewControlWrapper data =
         resolveControlStyles =
             case data.variant of
                 SingleMenu _ ->
-                    [ Css.margin4
-                        (Css.px 6)
-                        (Css.px 6)
-                        (Css.px 0)
-                        (Css.px 6)
+                    [ Css.property "margin-block-start" (Css.px 6).value
+                    , Css.property "margin-inline" (Css.px 6).value
+                    , Css.property "margin-block-end" (Css.px 0).value
                     , Css.batch
                         (menuControlStyles data.menuStyles state_ data.disabled)
                     ]
@@ -3229,7 +3229,8 @@ viewNative data =
                         (Styles.getControlBackgroundColorHover data.controlStyles)
                         (Styles.getControlBorderColorHover data.controlStyles)
                     )
-            , Css.padding2 (Css.px 2) (Css.px 8)
+            , Css.property "padding-block" (Css.px 2).value
+            , Css.property "padding-inline" (Css.px 8).value
             , Css.property "appearance" "none"
             , Css.property "-webkit-appearance" "none"
             , Css.color (Styles.getControlColor data.controlStyles)
@@ -3573,10 +3574,10 @@ viewSectionLabel styles g =
                 (Styles.getGroupTextTransformationLabel styles)
             , Css.property "font-size" (Styles.getGroupFontSizeLabel styles)
             , Css.property "font-weight" (Styles.getGroupFontWeightLabel styles)
-            , Css.marginBottom (Css.em 0.25)
-            , Css.marginTop (Css.em 0.25)
-            , Css.paddingLeft (Css.px 8)
-            , Css.paddingRight (Css.px 8)
+            , Css.property "margin-block-end" (Css.em 0.25).value
+            , Css.property "margin-block-start" (Css.em 0.25).value
+            , Css.property "padding-inline-start" (Css.px 8).value
+            , Css.property "padding-inline-end" (Css.px 8).value
             , Css.boxSizing Css.borderBox
             , Css.color (Styles.getGroupColor styles)
             ]
@@ -4759,7 +4760,7 @@ setMenuViewportPosition selectId menuListViewport (MenuListElement menuListElem)
 basePlaceholderStyles : List Css.Style
 basePlaceholderStyles =
     [ Css.property "margin-inline-start" (Css.px 2).value
-    , Css.marginRight (Css.px 2)
+    , Css.property "margin-inline-end" (Css.px 2).value
     , Css.top (Css.pct 50)
     , Css.position Css.absolute
     , Css.boxSizing Css.borderBox
@@ -4863,8 +4864,8 @@ indicatorSeparator styles =
         [ StyledAttribs.css
             [ Css.alignSelf Css.stretch
             , Css.backgroundColor (Styles.getControlSeparatorColor styles)
-            , Css.marginBottom (Css.px 8)
-            , Css.marginTop (Css.px 8)
+            , Css.property "margin-block-end" (Css.px 8).value
+            , Css.property "margin-block-start" (Css.px 8).value
             , Css.width (Css.px 1)
             , Css.boxSizing Css.borderBox
             ]
@@ -4898,8 +4899,8 @@ dropdownIndicator styles disabledInput =
 
 menuWrapperStyles : Styles.MenuConfig -> List Css.Style
 menuWrapperStyles menuStyles =
-    [ Css.paddingBottom (Css.px Styles.menuPaddingBottom)
-    , Css.paddingTop (Css.px Styles.menuPaddingTop)
+    [ Css.property "padding-block-end" (Css.px Styles.menuPaddingBottom).value
+    , Css.property "padding-block-start" (Css.px Styles.menuPaddingTop).value
     , Css.boxSizing Css.borderBox
     , Css.top (Css.pct 100)
     , Css.backgroundColor (Styles.getMenuBackgroundColor menuStyles)
@@ -4912,7 +4913,7 @@ menuWrapperStyles menuStyles =
         (Css.px <| Styles.getMenuBoxShadowVOffset menuStyles)
         (Css.px <| Styles.getMenuBoxShadowBlur menuStyles)
         (Styles.getMenuBoxShadowColor menuStyles)
-    , Css.marginTop (Css.px menuMarginTop)
+    , Css.property "margin-block-start" (Css.px menuMarginTop).value
     , Css.zIndex (Css.int 2)
     ]
 
@@ -4928,8 +4929,8 @@ menuListStyles styles =
     menuWrapperBorderStyle styles
         ++ [ Css.property "max-height" (Styles.getMenuMaxHeight styles)
            , Css.overflowY Css.auto
-           , Css.paddingLeft (Css.px 0)
-           , Css.marginBottom (Css.px 8)
+           , Css.property "padding-inline-start" (Css.px 0).value
+           , Css.property "margin-block-end" (Css.px 8).value
            ]
 
 
@@ -4991,11 +4992,11 @@ menuItemContainerStyles data =
     , Css.property "user-select" "none"
     , Css.boxSizing Css.borderBox
     , Css.borderRadius (Css.px (Styles.getMenuItemBorderRadius data.menuItemStyles))
-    , Css.padding2
+    , Css.property "padding-block"
         (Css.px
             (Styles.getMenuItemBlockPadding data.menuItemStyles)
-        )
-        (Css.px (Styles.getMenuItemInlinePadding data.menuItemStyles))
+        ).value
+    , Css.property "padding-inline" (Css.px (Styles.getMenuItemInlinePadding data.menuItemStyles)).value
     , Css.outline Css.none
     , Css.color (Styles.getMenuItemColor data.menuItemStyles)
     , Css.batch allStyles
@@ -5006,7 +5007,8 @@ indicatorContainerStyles : Styles.ControlConfig -> List Css.Style
 indicatorContainerStyles cc =
     [ Css.displayFlex
     , Css.boxSizing Css.borderBox
-    , Css.padding (Css.px (Styles.getControlIndicatorPadding cc))
+    , Css.property "padding-block" (Css.px (Styles.getControlIndicatorPadding cc)).value
+    , Css.property "padding-inline" (Css.px (Styles.getControlIndicatorPadding cc)).value
     ]
 
 
@@ -5014,7 +5016,8 @@ iconButtonStyles : List Css.Style
 iconButtonStyles =
     [ Css.displayFlex
     , Css.backgroundColor Css.transparent
-    , Css.padding (Css.px 0)
+    , Css.property "padding-block" (Css.px 0).value
+    , Css.property "padding-inline" (Css.px 0).value
     , Css.borderColor (Css.rgba 0 0 0 0)
     , Css.border (Css.px 0)
     , Css.color Css.inherit

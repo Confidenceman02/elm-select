@@ -112,7 +112,8 @@ view (Config config) value =
             , Css.minWidth (Css.px 0)
             , Css.backgroundColor (Styles.getControlMultiTagBackgroundColor config.controlStyles)
             , Css.borderRadius (Css.px (Styles.getControlMultiTagBorderRadius config.controlStyles))
-            , Css.margin (Css.px 2)
+            , Css.property "margin-block" (Css.px 2).value
+            , Css.property "margin-inline" (Css.px 2).value
             , Css.boxSizing Css.borderBox
             ]
         , attribute "data-test-id" config.dataTestId
@@ -125,6 +126,8 @@ view (Config config) value =
                  , Css.fontSize (Css.pct 90)
                  , Css.fontWeight (Css.int 400)
                  , Css.padding4 (Css.px 5) (Css.px 8) (Css.px 5) (Css.px 8)
+                 , Css.property "padding-block" (Css.px 5).value
+                 , Css.property "padding-inline" (Css.px 8).value
                  , Css.boxSizing Css.borderBox
                  ]
                     ++ resolveTruncation
@@ -170,8 +173,7 @@ viewClear config =
                     , Css.alignItems Css.center
                     , Css.displayFlex
                     , Css.borderRadius (Css.px 2)
-                    , Css.paddingLeft (Css.px 4)
-                    , Css.paddingRight (Css.px 4)
+                    , Css.property "margin-inline" (Css.px 4).value
                     , Css.boxSizing Css.borderBox
                     , Css.color
                         (Styles.getControlMultiTagDismissibleBackgroundColor
@@ -193,7 +195,8 @@ viewClear config =
                         , Css.zIndex (Css.int 1)
                         , Css.displayFlex
                         , Css.color Css.inherit
-                        , Css.padding (Css.px 0)
+                        , Css.property "padding-inline" (Css.px 0).value
+                        , Css.property "padding-block" (Css.px 0).value
                         , Css.backgroundColor Css.transparent
                         , Css.borderColor (Css.rgba 0 0 0 0)
                         , Css.borderWidth (Css.px 1)
