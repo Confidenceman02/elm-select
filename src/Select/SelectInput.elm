@@ -210,7 +210,9 @@ view (Config config) id_ =
                         [ size <| String.length inputValue + config.minWidth ]
 
                 DynamicJsOptimized True ->
-                    [ style "width" (String.fromInt config.minWidth ++ "px"), attribute "data-es-dynamic-select-input" buildDynamicSelectInputProps ]
+                    [ style "width" (String.fromInt config.minWidth ++ "px")
+                    , attribute "data-es-dynamic-select-input" buildDynamicSelectInputProps
+                    ]
 
                 DynamicJsOptimized False ->
                     [ style "width" (String.fromInt config.minWidth ++ "px") ]
@@ -310,10 +312,11 @@ view (Config config) id_ =
             ]
 
         autoSizeInputContainerStyles =
-            [ style "padding-bottom" "2px"
-            , style "padding-top" "2px"
+            [ style "padding-block-end" "2px"
+            , style "padding-block-start" "2px"
             , style "box-sizing" "border-box"
-            , style "margin" "2px"
+            , style "margin-block" "2px"
+            , style "margin-inline" "2px"
             , style "display" "inline"
             , Internal.role "combobox"
             , Internal.ariaHasPopup "listbox"
