@@ -2324,16 +2324,15 @@ viewVirtual (Config config) =
                         adjustedItem =
                             applyVirtualConfigMenuItem idx virtualConfig.height mi
                     in
-                    Tuple.mapBoth ((::) adjustedItem) (Array.push adjustedItem) acc
+                    Array.push adjustedItem acc
                 )
-                ( [], Array.empty )
+                Array.empty
                 filteredMenuItems
                 |> sliceItems
-                |> Tuple.first
                 |> setVirtualMenuItems config.menuItems
 
-        sliceItems ( _, cache ) =
-            ( Array.slice startIndex (stopIndex + 1) cache |> Array.toList, cache )
+        sliceItems cache =
+            Array.slice startIndex (stopIndex + 1) cache |> Array.toList
 
         startIndexForOffset : Int
         startIndexForOffset =
