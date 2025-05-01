@@ -38,6 +38,9 @@ describe("examples", () => {
       "text=SingleMenuOpen.elm",
     );
     const singleVirtualVisible = await page.isVisible("text=SingleVirtual.elm");
+    const singleMenuVirtualVisible = await page.isVisible(
+      "text=SingleVirtual.elm",
+    );
     const multiVirtualVisible = await page.isVisible("text=MultiVirtual.elm");
     const keepMenuOpenVisible = await page.isVisible("text=KeepMenuOpen.elm");
 
@@ -48,6 +51,7 @@ describe("examples", () => {
     expect(multiExampleVisible).toBeTruthy();
     expect(multiNativeVisible).toBeTruthy();
     expect(singleVisible).toBeTruthy();
+    expect(singleMenuVirtualVisible).toBeTruthy();
     expect(singleGroupVisible).toBeTruthy();
     expect(formVisible).toBeTruthy();
     expect(customMenuItemsVisible).toBeTruthy();
@@ -56,6 +60,80 @@ describe("examples", () => {
     expect(singleVirtualVisible).toBeTruthy();
     expect(multiVirtualVisible).toBeTruthy();
     expect(keepMenuOpenVisible).toBeTruthy();
+  });
+});
+
+describe("SingleMenuVirtual", () => {
+  // has 1000 menu items
+  it("Only renders the first 8 items", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenuVirtual.elm`);
+    await page.click("[data-test-id=bold]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const options = page.getByRole("option");
+
+    expect(options).toHaveCount(8);
+  });
+
+  it("Jumps to the end of the list", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenuVirtual.elm`);
+    await page.click("[data-test-id=bold]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("ArrowUp");
+    const lastItem = page.getByRole("option", { name: "1000" });
+
+    expect(lastItem).toBeVisible();
+  });
+
+  it("Jumps to start of the list", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenuVirtual.elm`);
+    await page.click("[data-test-id=bold]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    await page.keyboard.press("ArrowUp");
+    const lastItem = page.getByRole("option", { name: "1000" });
+
+    expect(lastItem).toBeVisible();
+
+    await page.keyboard.press("ArrowDown");
+    const firstItem = page.getByRole("option", { name: "0" });
+
+    expect(firstItem).toBeVisible();
+  });
+
+  it("loads more options on scroll", async () => {
+    await browser.newContext();
+    const page = await browser.newPage();
+
+    await page.goto(`${BASE_URI}/SingleMenuVirtual.elm`);
+    await page.click("[data-test-id=bold]");
+    await page.waitForSelector("[data-test-id=listBox]");
+    const listbox = page.locator("[data-test-id=listBox]");
+    const [x, y, width, height] = await listbox.evaluate((ele: HTMLElement) => {
+      const boundingRect = ele.getBoundingClientRect();
+      return [
+        boundingRect.x,
+        boundingRect.y,
+        ele.clientWidth,
+        ele.clientHeight,
+      ];
+    });
+
+    // Position mouse in the middle of listbox
+    await page.mouse.move((x + width) / 2, (y + height) / 2);
+    await page.mouse.wheel(0, 230);
+    await page.waitForTimeout(100);
+
+    const item = page.getByRole("option", { name: "11" });
+
+    expect(item).toBeVisible();
   });
 });
 

@@ -4,7 +4,7 @@ module Select exposing
     , menuItems, menuItemsVirtual, clearable
     , placeholder, selectIdentifier, staticSelectIdentifier, state, update, view, viewVirtual, searchable, setStyles, name, required
     , single, singleVirtual, multiVirtual
-    , singleMenu, menu
+    , singleMenu, menu, menuVirtual
     , multi
     , singleNative
     , multiNative
@@ -30,7 +30,7 @@ module Select exposing
 
 # Menu select
 
-@docs singleMenu, menu
+@docs singleMenu, menu, menuVirtual
 
 
 # Multi select
@@ -1361,6 +1361,7 @@ type CustomVariant item
     | SingleVirtual (Maybe (MenuItem item))
     | Multi (MenuItems item)
     | SingleMenu (Maybe (MenuItem item))
+    | SingleMenuVirtual (Maybe (MenuItem item))
 
 
 type NativeVariant item
@@ -1498,6 +1499,34 @@ using this variant as a dropdown.
 menu : Config item (List items)
 menu =
     Config { defaults | variant = CustomVariant (SingleMenu Nothing) }
+
+
+{-| Menu only virtual select.
+
+Unlike a [singleMenu](#singleMenu) this variant does not
+accept or display options as selected.
+
+Useful when you want to know what someone has selected like
+a list of settings or options.
+
+      actions : List (MenuItem Actions)
+      actions =
+          [ basicMenuItem
+              { item = Update, label = "Update" }
+          , basicMenuitem
+              { item = Delete, label = "Delete"
+            -- other actions
+          ]
+
+      yourView =
+          Html.map SelectMsg <|
+              viewVirtual
+                (menuVirtual |> menuItemsVirtual (virtualFixedMenuItems 35 actions ))
+
+-}
+menuVirtual : Config item (VirtualConfig item)
+menuVirtual =
+    Config { defaultsVirtualVariant | variant = CustomVariant (SingleMenuVirtual Nothing) }
 
 
 {-| Select a single item with a native html [select](https://www.w3schools.com/tags/tag_select.asp) element.
@@ -2377,6 +2406,106 @@ viewVirtual (Config config) =
             max 0 (min (filteredCount - 1) (stopIndexforStartIndex + overscan))
     in
     case config.variant of
+        CustomVariant ((SingleMenuVirtual _) as variant) ->
+            -- Compose the SingleMenu variant, def can be improved
+            Internal.viewIf viewData.state.menuOpen
+                (viewWrapper
+                    (ViewWrapperData viewData.state
+                        config.searchable
+                        variant
+                        config.disabled
+                    )
+                    [ Keyed.node "div"
+                        [ StyledAttribs.css (menuWrapperStyles (Styles.getMenuConfig config.styles)) ]
+                        [ if not config.searchable then
+                            ( "dummy-input"
+                            , lazy viewDummyInput
+                                (ViewDummyInputData
+                                    (getSelectId config.state)
+                                    variant
+                                    (enterSelectTargetItem viewData.state virtualizedMenuItemsUnwrapped)
+                                    filteredCount
+                                    viewData.state.menuOpen
+                                    config.labelledBy
+                                    config.ariaDescribedBy
+                                    config.disabled
+                                    config.clearable
+                                    viewData.state
+                                )
+                            )
+
+                          else
+                            ( "controlled-input"
+                            , viewControlWrapper
+                                (ViewControlWrapperData
+                                    config.disabled
+                                    config.state
+                                    (Styles.getControlConfig config.styles)
+                                    (Styles.getMenuConfig config.styles)
+                                    variant
+                                    config.searchable
+                                )
+                                [ viewSearchIndicator (Styles.getMenuControlSearchIndicatorColor viewData.menuStyles)
+                                , viewInputWrapper config.disabled
+                                    [ Internal.viewIf (not config.disabled)
+                                        (lazy viewSelectInput
+                                            (ViewSelectInputData
+                                                (enterSelectTargetItem viewData.state virtualizedMenuItemsUnwrapped)
+                                                filteredCount
+                                                variant
+                                                config.labelledBy
+                                                config.ariaDescribedBy
+                                                config.disabled
+                                                config.clearable
+                                                config.required
+                                                viewData.state
+                                            )
+                                        )
+                                    , buildPlaceholder
+                                        (BuildPlaceholderData variant
+                                            viewData.state
+                                            viewData.ctrlStyles
+                                            config.placeholder
+                                        )
+                                    ]
+                                , viewIndicatorWrapper
+                                    [ viewClearIndicator
+                                        (ViewClearIndicatorData
+                                            config.disabled
+                                            config.clearable
+                                            config.variant
+                                            config.state
+                                            config.styles
+                                        )
+                                    , viewLoadingSpinner
+                                        (ViewLoadingSpinnerData config.isLoading
+                                            (Styles.getMenuControlLoadingIndicatorColor viewData.menuStyles)
+                                            viewData.ctrlStyles
+                                        )
+                                    ]
+                                ]
+                            )
+                        , ( "menu-list"
+                          , lazy renderMenu
+                                (RenderMenuData viewData.state.menuOpen
+                                    viewData.state.initialAction
+                                    viewData.state.activeTargetIndex
+                                    viewData.state.menuNavigation
+                                    viewData.state.controlUiFocused
+                                    config.isLoading
+                                    (MenuItemsVirtual_ virtualizedMenuItems)
+                                    variant
+                                    config.loadingMessage
+                                    config.styles
+                                    viewData.selectId
+                                    config.disabled
+                                    filteredCount
+                                )
+                          )
+                        ]
+                    ]
+                )
+
         CustomVariant ((SingleVirtual _) as variant) ->
             viewWrapper
                 (ViewWrapperData viewData.state
@@ -2793,6 +2922,9 @@ viewCustomControl data =
                 SingleMenu _ ->
                     buildInput
 
+                SingleMenuVirtual _ ->
+                    buildInput
+
         resolvePlaceholder =
             buildPlaceholder
                 (BuildPlaceholderData data.variant
@@ -3050,6 +3182,14 @@ viewControlWrapper data =
                         (menuControlStyles data.menuStyles state_ data.disabled)
                     ]
 
+                SingleMenuVirtual _ ->
+                    [ Css.property "margin-block-start" (Css.px 6).value
+                    , Css.property "margin-inline" (Css.px 6).value
+                    , Css.property "margin-block-end" (Css.px 0).value
+                    , Css.batch
+                        (menuControlStyles data.menuStyles state_ data.disabled)
+                    ]
+
                 _ ->
                     controlStyles data.controlStyles state_ data.disabled
     in
@@ -3064,6 +3204,14 @@ viewControlWrapper data =
                     attribute "data-test-id" "selectContainer"
                         :: (case data.variant of
                                 SingleMenu _ ->
+                                    containerClickedMsg
+                                        (ContainerClickedMsgData data.disabled
+                                            state_
+                                            data.variant
+                                            data.searchable
+                                        )
+
+                                SingleMenuVirtual _ ->
                                     containerClickedMsg
                                         (ContainerClickedMsgData data.disabled
                                             state_
@@ -3267,6 +3415,9 @@ viewWrapper data =
                     SingleMenu _ ->
                         []
 
+                    SingleMenuVirtual _ ->
+                        []
+
                     _ ->
                         containerClickedMsg
                             (ContainerClickedMsgData data.disabled
@@ -3301,6 +3452,9 @@ viewMenuItemsWrapper data items =
         resolveStyles =
             case data.variant of
                 SingleMenu _ ->
+                    menuListStyles data.menuStyles
+
+                SingleMenuVirtual _ ->
                     menuListStyles data.menuStyles
 
                 _ ->
@@ -3775,6 +3929,9 @@ viewSelectInput data =
                 SingleMenu _ ->
                     Events.isTab (OnMenuInputTabbed clearButtonVisible) :: decoders
 
+                SingleMenuVirtual _ ->
+                    Events.isTab (OnMenuInputTabbed clearButtonVisible) :: decoders
+
                 _ ->
                     decoders
 
@@ -3884,6 +4041,9 @@ viewSelectInput data =
                 SingleMenu _ ->
                     \msg -> ( msg, True )
 
+                SingleMenuVirtual _ ->
+                    \msg -> ( msg, True )
+
                 _ ->
                     \msg -> ( msg, False )
     in
@@ -3984,6 +4144,9 @@ viewDummyInput data =
         resolvePosition =
             case data.variant of
                 SingleMenu _ ->
+                    style "position" "absolute"
+
+                SingleMenuVirtual _ ->
                     style "position" "absolute"
 
                 _ ->
@@ -4400,6 +4563,13 @@ buildPlaceholder data =
                         data.placeholder
                     )
 
+            SingleMenuVirtual _ ->
+                viewPlaceholder
+                    (ViewPlaceholderData
+                        (Styles.getControlPlaceholderOpacity data.controlStyles)
+                        data.placeholder
+                    )
+
     else
         text ""
 
@@ -4548,6 +4718,9 @@ getViewableMenuItems data =
         CustomVariant (SingleVirtual _) ->
             filteredMenuItems
 
+        CustomVariant (SingleMenuVirtual _) ->
+            filteredMenuItems
+
         _ ->
             []
 
@@ -4615,6 +4788,9 @@ buildMenuItem data idx item =
                     maybeItem
 
                 SingleMenu maybeItem ->
+                    maybeItem
+
+                SingleMenuVirtual maybeItem ->
                     maybeItem
 
                 Multi _ ->

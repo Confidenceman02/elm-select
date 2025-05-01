@@ -43,46 +43,11 @@ init =
     ( { activeAction = Nothing
       , selectedAction = Nothing
       , items =
-            [ customMenuItem HideSettings "Hide settings"
-            , customMenuItem Duplicate "Duplicate"
-            , customMenuItem InsertBefore "Insert Before"
-            , customMenuItem InsertAfter "Insert After"
-            , customMenuItem EditAsHTML "Edit as HTML"
-            , customMenuItem AddToBlocks "Add to Blocks 1"
-            , customMenuItem AddToBlocks "Add to Blocks 2"
-            , customMenuItem AddToBlocks "Add to Blocks 3"
-            , customMenuItem AddToBlocks "Add to Blocks 4"
-            , customMenuItem AddToBlocks "Add to Blocks 5"
-            , customMenuItem AddToBlocks "Add to Blocks 6"
-            , customMenuItem AddToBlocks "Add to Blocks 7"
-            , customMenuItem AddToBlocks "Add to Blocks 8"
-            , customMenuItem AddToBlocks "Add to Blocks 9"
-            , customMenuItem AddToBlocks "Add to Blocks 10"
-            , customMenuItem AddToBlocks "Add to Blocks 11"
-            , customMenuItem AddToBlocks "Add to Blocks 12"
-            , customMenuItem AddToBlocks "Add to Blocks 13"
-            , customMenuItem AddToBlocks "Add to Blocks 14"
-            , customMenuItem AddToBlocks "Add to Blocks 15"
-            , customMenuItem AddToBlocks "Add to Blocks 16"
-            , customMenuItem AddToBlocks "Add to Blocks 17"
-            , customMenuItem AddToBlocks "Add to Blocks 18"
-            , customMenuItem AddToBlocks "Add to Blocks 19"
-            , customMenuItem AddToBlocks "Add to Blocks 20"
-            , customMenuItem AddToBlocks "Add to Blocks 21"
-            , customMenuItem AddToBlocks "Add to Blocks 22"
-            , customMenuItem AddToBlocks "Add to Blocks 23"
-            , customMenuItem AddToBlocks "Add to Blocks 24"
-            , customMenuItem AddToBlocks "Add to Blocks 25"
-            , customMenuItem AddToBlocks "Add to Blocks 26"
-            , customMenuItem AddToBlocks "Add to Blocks 27"
-            , customMenuItem AddToBlocks "Add to Blocks 28"
-            , customMenuItem AddToBlocks "Add to Blocks 29"
-            , customMenuItem AddToBlocks "Add to Blocks 30"
-            , customMenuItem AddToBlocks "Add to Blocks 31"
-            , customMenuItem AddToBlocks "Add to Blocks 32"
-            , customMenuItem AddToBlocks "Add to Blocks 33"
-            , customMenuItem AddToBlocks "Add to Blocks 34"
-            ]
+            List.range 0 1000
+                |> List.map
+                    (\i ->
+                        customMenuItem AddToBlocks (String.fromInt i)
+                    )
       }
     , Cmd.none
     )
