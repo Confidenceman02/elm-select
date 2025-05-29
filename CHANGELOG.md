@@ -1,3 +1,9 @@
+## [12.2.0] - 2025-05-29
+
+## Added
+
+- SingleMenuVirtual variant
+
 ## [12.1.2] - 2025-01-19
 
 ## Fixed
@@ -813,6 +819,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[12.2.0]: https://github.com/Confidenceman02/elm-select/compare/12.1.2...12.2.0
 [12.1.2]: https://github.com/Confidenceman02/elm-select/compare/12.1.1...12.1.2
 [12.1.1]: https://github.com/Confidenceman02/elm-select/compare/12.1.0...12.1.1
 [12.1.0]: https://github.com/Confidenceman02/elm-select/compare/12.0.1...12.1.0
