@@ -1,6 +1,6 @@
 {
   "name": "@confidenceman02/elm-select",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "JS optimizations for Confidenceman02/elm-select elm package",
   "main": "dist/dynamic.js",
   "module": "dist/dynamic.es.js",
@@ -18,6 +18,8 @@
     "@parcel/transformer-elm": "2.15.2",
     "@parcel/transformer-sass": "^2.15.2",
     "@playwright/test": "^1.32.2",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.0",
     "@tsconfig/node12": "^12.1.3",
     "@types/chai": "^5.2.2",

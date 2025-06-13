@@ -23,10 +23,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@confidenceman02/elm-select@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@confidenceman02/elm-select/-/elm-select-1.0.3.tgz#4f836b88ae6de03f35da2f07c3d2960604a2bd13"
-  integrity sha512-lQ8nNDKeNIlx3/C5lVTEFvDayqmeNVWaCLzRLer7HS9t0hgZZoXqwMCPaMm19IiuLUOTOBaLwfDIGUBLmzvKDw==
+"@confidenceman02/elm-select@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@confidenceman02/elm-select/-/elm-select-1.0.4.tgz#f0f8ecaee61750cf5425c257394a5c8336597d9c"
+  integrity sha512-liyiTq695lu6lRA/s6dsVSNqzKnqucgOApihfyE8MHAyRrCCHsBD+hZ/N+Bzl2oVFCvDzB5a2tXqkf8ayYZOWA==
   dependencies:
     "@icelab/defo" "^0.0.3"
 

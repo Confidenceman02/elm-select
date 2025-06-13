@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
-    "@confidenceman02/elm-select": "^1.0.3",
+    "@confidenceman02/elm-select": "^1.0.4",
     "@parcel/transformer-elm": "2.9.3",
     "elm": "^0.19.1-5",
     "parcel": "^2.9.3"
