@@ -11,4 +11,4 @@ const viewObservers_1 = require("./viewObservers");
  *    data-es-#{view-observer-name}={...}
  */
 const prefix = "es";
-defo_1.default({ prefix, views: viewObservers_1.viewObservers });
+(0, defo_1.default)({ prefix, views: viewObservers_1.viewObservers });
