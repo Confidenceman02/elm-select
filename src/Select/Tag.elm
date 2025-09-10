@@ -104,6 +104,14 @@ view (Config config) value =
 
                 Nothing ->
                     []
+
+        resolveTitleAttribute =
+            case Styles.getControlMultiTagTruncationWidth config.controlStyles of
+                Just _ ->
+                    [ attribute "title" value ]
+
+                Nothing ->
+                    []
     in
     div
         -- root
@@ -119,7 +127,7 @@ view (Config config) value =
         , attribute "data-test-id" config.dataTestId
         ]
         [ div
-            [ StyledAttribs.css
+            (StyledAttribs.css
                 ([ Css.overflow Css.hidden
                  , Css.whiteSpace Css.noWrap
                  , Css.borderRadius (Css.px 2)
@@ -132,7 +140,8 @@ view (Config config) value =
                  ]
                     ++ resolveTruncation
                 )
-            ]
+                :: resolveTitleAttribute
+            )
             [ text value
             ]
         , viewClear config
