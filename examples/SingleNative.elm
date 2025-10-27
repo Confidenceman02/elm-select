@@ -2,13 +2,15 @@ module SingleNative exposing (..)
 
 import Browser
 import Css
-import Html.Styled as Styled exposing (Html, div)
+import Html.Styled as Styled exposing (Html, div, button, text)
 import Html.Styled.Attributes as StyledAttribs
 import Select exposing (MenuItem, initState, selectIdentifier, update)
+import Html.Styled.Events exposing (onClick)
 
 
 type Msg
     = SelectMsg (Select.Msg String)
+    | Switch
 
 
 type alias Model =
@@ -60,6 +62,8 @@ update msg model =
                             model.selectedItem
             in
             ( { model | selectState = selectState, selectedItem = updatedSelectedItem }, Cmd.map SelectMsg cmds )
+        Switch ->
+            ( {model | selectState = initState (selectIdentifier "SingleSelectExample"), selectedItem = Just "Is"}, Cmd.none)
 
 
 view : Model -> Html Msg
@@ -78,7 +82,8 @@ view m =
             [ Css.margin (Css.px 20)
             ]
         ]
-        [ Styled.map SelectMsg <|
+        [ button [ onClick Switch ][ text "Select Is" ]
+        ,Styled.map SelectMsg <|
             Select.view
                 (Select.singleNative selectedItem
                     |> Select.state m.selectState
