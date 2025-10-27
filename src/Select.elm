@@ -63,7 +63,7 @@ import Array
 import Browser.Dom as Dom
 import Css
 import Dict
-import Html.Styled as Styled exposing (Html, button, div, input, li, optgroup, option, select, span, text)
+import Html.Styled as Styled exposing (Html, button, div, input, li, option, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
 import Html.Styled.Keyed as Keyed
@@ -3264,27 +3264,30 @@ viewNative data =
 
         buildGroupedViews :
             ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
-            -> List (Html (Msg item))
-            -> List (Html (Msg item))
+            -> List ( String, Html (Msg item) )
+            -> List ( String, Html (Msg item) )
         buildGroupedViews ( _, ( v, g ) ) acc =
             acc
-                ++ [ optgroup [ StyledAttribs.attribute "label" g.name ]
+                ++ [ ( "optgroup" ++ g.name
+                     , Keyed.node "optgroup"
+                        [ StyledAttribs.attribute "label" g.name ]
                         (List.map
                             buildList
                             v
                         )
+                     )
                    ]
 
         buildList menuItem =
             case data.variant of
                 SingleNative (Just selectedItem) ->
-                    buildMenuItemNative [ selectedItem ] menuItem
+                    ( "single-native-selected" ++ getMenuItemLabel selectedItem, buildMenuItemNative [ selectedItem ] menuItem )
 
                 SingleNative _ ->
-                    buildMenuItemNative [] menuItem
+                    ( "single-native-empty" ++ selectId, buildMenuItemNative [] menuItem )
 
                 MultiNative selectedItems ->
-                    buildMenuItemNative selectedItems menuItem
+                    ( "multi-native" ++ selectId, buildMenuItemNative selectedItems menuItem )
 
         withPlaceholder =
             case data.variant of
@@ -3352,7 +3355,7 @@ viewNative data =
                 _ ->
                     []
     in
-    select
+    Keyed.node "select"
         ([ id selectId
          , StyledAttribs.attribute "data-test-id" resolveTestId
          , StyledAttribs.disabled data.disabled
@@ -3391,7 +3394,7 @@ viewNative data =
             ++ onMultiple
             ++ resolveName
         )
-        (withPlaceholder
+        (( "placeholder" ++ selectId, withPlaceholder )
             :: (List.map buildList ungroupedItems
                     ++ groupedViews
                )
