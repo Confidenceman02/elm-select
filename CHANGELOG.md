@@ -1,3 +1,9 @@
+## [12.2.3] - 2025-11-17
+
+## Added
+
+- Grouped menu items ordered using insertion order
+
 ## [12.2.2] - 2025-10-27
 
 ## Fixed
@@ -830,6 +836,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[12.2.3]: https://github.com/Confidenceman02/elm-select/compare/12.2.2...12.2.3
 [12.2.2]: https://github.com/Confidenceman02/elm-select/compare/12.2.1...12.2.2
 [12.2.1]: https://github.com/Confidenceman02/elm-select/compare/12.2.0...12.2.1
 [12.2.0]: https://github.com/Confidenceman02/elm-select/compare/12.1.2...12.2.0
