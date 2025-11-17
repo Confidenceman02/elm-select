@@ -62,7 +62,6 @@ module Select exposing
 import Array
 import Browser.Dom as Dom
 import Css
-import Dict
 import Html.Styled as Styled exposing (Html, button, div, input, li, option, span, text)
 import Html.Styled.Attributes as StyledAttribs exposing (attribute, id, readonly, style, tabindex, type_, value)
 import Html.Styled.Events exposing (custom, on, onBlur, onFocus, preventDefaultOn)
@@ -79,6 +78,7 @@ import Select.SearchIcon as SearchIcon
 import Select.SelectInput as SelectInput
 import Select.Styles as Styles
 import Select.Tag as Tag
+import Select.Zipper as Zipper
 import Task
 
 
@@ -3309,16 +3309,16 @@ viewNative data =
                     text ""
 
         ( ungroupedItems, groupedItems ) =
-            sortMenuItemsHelp 0 data.menuItems ( [], Dict.empty )
+            sortMenuItemsHelp 0 data.menuItems ( [], [] )
 
         itemsInOrder =
             ungroupedItems
-                ++ List.concatMap (Tuple.second >> Tuple.first) (Dict.toList groupedItems)
+                ++ List.concatMap (Tuple.second >> Tuple.first) groupedItems
 
         groupedViews =
             List.foldl buildGroupedViews
                 []
-                (Dict.toList groupedItems)
+                groupedItems
 
         resolveOnInputMsg =
             case data.variant of
@@ -3708,12 +3708,12 @@ viewMenuItems data =
                 )
 
         ( ungroupedViews, groupedItems ) =
-            sortMenuItemsHelp 0 data.menuItems ( [], Dict.empty )
+            sortMenuItemsHelp 0 data.menuItems ( [], [] )
 
         groupedViews =
             List.foldl buildGroupedViews
                 ( List.length ungroupedViews - 1, [] )
-                (Dict.toList groupedItems)
+                groupedItems
                 |> Tuple.second
     in
     -- There is almost certainly a more performant way to do this.
@@ -4385,26 +4385,26 @@ sortMenuItemsHelp :
     -> MenuItems item
     ->
         ( MenuItems item
-        , Dict.Dict String ( MenuItems item, Internal.Group Styles.GroupConfig )
+        , List ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
         )
     ->
         ( MenuItems item
-        , Dict.Dict String ( MenuItems item, Internal.Group Styles.GroupConfig )
+        , List ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
         )
 sortMenuItemsHelp =
     let
         updateGroupedItem :
             Internal.Group Styles.GroupConfig
             -> MenuItem item
-            -> Maybe ( MenuItems item, Internal.Group Styles.GroupConfig )
-            -> Maybe ( MenuItems item, Internal.Group Styles.GroupConfig )
-        updateGroupedItem g mi maybeItems =
-            case maybeItems of
-                Just i ->
-                    Just (Tuple.mapFirst (\acc -> acc ++ [ mi ]) i)
+            -> List ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
+            -> List ( String, ( MenuItems item, Internal.Group Styles.GroupConfig ) )
+        updateGroupedItem g mi items =
+            case Zipper.findZipperBy Tuple.first g.name items of
+                Just ( xs, ( _, ( rs1, rs2 ) ), ys ) ->
+                    Zipper.fromZipper ( xs, ( g.name, ( rs1 ++ [ mi ], rs2 ) ), ys )
 
                 _ ->
-                    Just ( [ mi ], g )
+                    items ++ [ ( g.name, ( [ mi ], g ) ) ]
 
         sort idx items accum =
             case items of
@@ -4414,9 +4414,7 @@ sortMenuItemsHelp =
                 head :: [] ->
                     case getGroup head of
                         Just g ->
-                            Tuple.mapSecond
-                                (Dict.update g.name (updateGroupedItem g head))
-                                accum
+                            Tuple.mapSecond (updateGroupedItem g head) accum
 
                         _ ->
                             Tuple.mapFirst (\it -> it ++ [ head ]) accum
@@ -4427,10 +4425,7 @@ sortMenuItemsHelp =
                             sort
                                 (idx + 1)
                                 rest
-                                (Tuple.mapSecond
-                                    (Dict.update g.name (updateGroupedItem g head))
-                                    accum
-                                )
+                                (Tuple.mapSecond (updateGroupedItem g head) accum)
 
                         _ ->
                             sort
