@@ -134,7 +134,7 @@ view (Config config) value =
                  , Css.fontSize (Css.pct 90)
                  , Css.fontWeight (Css.int 400)
                  , Css.padding4 (Css.px 5) (Css.px 8) (Css.px 5) (Css.px 8)
-                 , Css.property "padding-block" (Css.px 5).value
+                 , Css.property "padding-block" (Css.px 3).value
                  , Css.property "padding-inline" (Css.px 8).value
                  , Css.boxSizing Css.borderBox
                  ]
