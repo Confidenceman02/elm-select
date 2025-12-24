@@ -1,3 +1,9 @@
+## [12.2.4] - 2025-12-24
+
+## Changed
+
+- Default padding in multi tag label was causing control to be taller than it's min-height at rest.
+
 ## [12.2.3] - 2025-11-17
 
 ## Added
@@ -836,6 +842,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[12.2.4]: https://github.com/Confidenceman02/elm-select/compare/12.2.3...12.2.4
 [12.2.3]: https://github.com/Confidenceman02/elm-select/compare/12.2.2...12.2.3
 [12.2.2]: https://github.com/Confidenceman02/elm-select/compare/12.2.1...12.2.2
 [12.2.1]: https://github.com/Confidenceman02/elm-select/compare/12.2.0...12.2.1
