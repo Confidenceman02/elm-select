@@ -3386,7 +3386,7 @@ viewNative data =
             , Css.color (Styles.getControlColor data.controlStyles)
             , Css.fontSize (Css.px 16)
             , Css.focus
-                [ controlBorderFocused (Styles.getControlBorderColorFocus data.controlStyles), Css.outline Css.none ]
+                [ controlBorder (Styles.getControlBorderColorFocus data.controlStyles), Css.outline Css.none ]
             ]
          ]
             ++ withLabelledBy
@@ -5213,7 +5213,7 @@ menuControlStyles styles state_ dsb =
         controlFocusedStyles =
             case state_.controlUiFocused of
                 Just _ ->
-                    [ controlBorderFocused (Styles.getMenuControlBorderColorFocus styles) ]
+                    [ controlBorder (Styles.getMenuControlBorderColorFocus styles) ]
 
                 _ ->
                     []
@@ -5250,7 +5250,7 @@ controlStyles styles state_ dsb =
         controlFocusedStyles =
             case state_.controlUiFocused of
                 Just Internal.ControlInput ->
-                    [ controlBorderFocused (Styles.getControlBorderColorFocus styles) ]
+                    [ controlBorder (Styles.getControlBorderColorFocus styles) ]
 
                 _ ->
                     []
@@ -5286,22 +5286,43 @@ controlRadius rad =
     Css.borderRadius <| Css.px rad
 
 
-controlBorder : Css.Color -> Css.Style
-controlBorder cb =
+controlBorder : Styles.BorderColorConfiguration -> Css.Style
+controlBorder bc =
+    let
+        groupedStyles =
+            [ "inset "
+                ++ (Css.px bc.inset.offsetX).value
+                ++ " "
+                ++ (Css.px bc.inset.offsetY).value
+                ++ " "
+                ++ (Css.px bc.inset.blurRadius).value
+                ++ " "
+                ++ (Css.px bc.inset.spreadRadius).value
+                ++ " "
+                ++ bc.inset.color.value
+            , "inset "
+                ++ (Css.px bc.activeBorder.offsetX).value
+                ++ " "
+                ++ (Css.px bc.activeBorder.offsetY).value
+                ++ " "
+                ++ (Css.px bc.activeBorder.blurRadius).value
+                ++ " "
+                ++ (Css.px bc.activeBorder.spreadRadius).value
+                ++ " "
+                ++ bc.activeBorder.color.value
+            , (Css.px bc.shadow.offsetX).value
+                ++ " "
+                ++ (Css.px bc.shadow.offsetY).value
+                ++ " "
+                ++ (Css.px bc.shadow.blurRadius).value
+                ++ " "
+                ++ (Css.px bc.shadow.spreadRadius).value
+                ++ " "
+                ++ bc.shadow.color.value
+            ]
+    in
     Css.property "box-shadow"
-        ("rgb(255, 255, 255) 0px 0px 0px 0px inset,"
-            ++ cb.value
-            ++ " 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px"
-        )
-
-
-controlBorderFocused : Css.Color -> Css.Style
-controlBorderFocused bcf =
-    Css.property "box-shadow"
-        ("rgb(255, 255, 255) 0px 0px 0px 0px inset,"
-            ++ bcf.value
-            ++ " 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px"
-        )
+        (String.join ", " groupedStyles)
 
 
 controlDisabled : Float -> Css.Style
