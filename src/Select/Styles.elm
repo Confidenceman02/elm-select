@@ -1,5 +1,5 @@
 module Select.Styles exposing
-    ( Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
+    ( Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, BorderColorConfiguration, default
     , menuPaddingBottom, menuPaddingTop
     , setControlStyles, setControlBackgroundColor, setControlBackgroundColorHover, setControlBorderColor, setControlBorderColorFocus, setControlBorderColorHover, setControlBorderRadius, setControlColor, setControlClearIndicatorColor
     , setControlClearIndicatorColorHover, setControlDisabledOpacity, setControlDropdownIndicatorColor, setControlDropdownIndicatorColorHover, setControlIndicatorPadding
@@ -45,7 +45,7 @@ This means when you are setting styles to the [MenuConfig](#MenuConfig) you can 
 NOTE: The [native](/packages/Confidenceman02/elm-select/latest/Select#singleNative) Select variant
 only respects some of the styles.
 
-@docs Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, default
+@docs Config, ControlConfig, MenuConfig, MenuControlConfig, GroupConfig, MenuItemConfig, BorderColorConfiguration, default
 
 
 # Constants
@@ -186,6 +186,42 @@ type alias GroupConfiguration =
     }
 
 
+{-| Borders are implemented using the "border-as-shadow" technique instead of standard border properties.
+
+Shadows don't affect a box models dimensions preventing annoying pixel jumps.
+
+Elm-select uses 3 box shadow layers to implement the border:
+
+    - The inset
+    - The active border
+    - The shadow
+
+-}
+type alias BorderColorConfiguration =
+    { inset :
+        { offsetX : Float
+        , offsetY : Float
+        , blurRadius : Float
+        , spreadRadius : Float
+        , color : Css.Color
+        }
+    , activeBorder :
+        { offsetX : Float
+        , offsetY : Float
+        , blurRadius : Float
+        , spreadRadius : Float
+        , color : Css.Color
+        }
+    , shadow :
+        { offsetX : Float
+        , offsetY : Float
+        , blurRadius : Float
+        , spreadRadius : Float
+        , color : Css.Color
+        }
+    }
+
+
 type alias MenuItemConfiguration =
     { backgroundColorMouseDown : Css.Color
     , backgroundColorSelected : Css.Color
@@ -225,8 +261,8 @@ type alias MenuControlConfiguration compatible =
 type alias BaseControlConfiguration =
     { backgroundColor : Css.Color
     , backgroundColorHover : Css.Color
-    , borderColor : Css.Color
-    , borderColorFocus : Css.Color
+    , borderColor : BorderColorConfiguration
+    , borderColorFocus : BorderColorConfiguration
     , borderColorHover : Css.Color
     , borderRadius : Float
     , clearIndicatorColor : Css.Color
@@ -304,8 +340,52 @@ defaultsMenu =
         MenuControlConfig
             { backgroundColor = Css.hex "#FFFFFF"
             , backgroundColorHover = Css.hex "#F0F1F4"
-            , borderColor = Css.hex "#898BA9"
-            , borderColorFocus = Css.hex "#0168b3"
+            , borderColor =
+                { inset =
+                    { offsetX = 0
+                    , offsetY = 0
+                    , blurRadius = 0
+                    , spreadRadius = 0
+                    , color = Css.rgb 255 255 255
+                    }
+                , activeBorder =
+                    { offsetX = 0
+                    , offsetY = 0
+                    , blurRadius = 0
+                    , spreadRadius = 1
+                    , color = Css.hex "#898BA9"
+                    }
+                , shadow =
+                    { offsetX = 0
+                    , offsetY = 1
+                    , blurRadius = 2
+                    , spreadRadius = 0
+                    , color = Css.rgba 0 0 0 0.05
+                    }
+                }
+            , borderColorFocus =
+                { inset =
+                    { offsetX = 0
+                    , offsetY = 0
+                    , blurRadius = 0
+                    , spreadRadius = 0
+                    , color = Css.rgb 255 255 255
+                    }
+                , activeBorder =
+                    { offsetX = 0
+                    , offsetY = 0
+                    , blurRadius = 0
+                    , spreadRadius = 2
+                    , color = Css.hex "#0168B3"
+                    }
+                , shadow =
+                    { offsetX = 0
+                    , offsetY = 1
+                    , blurRadius = 2
+                    , spreadRadius = 0
+                    , color = Css.rgba 0 0 0 0.05
+                    }
+                }
             , borderColorHover = Css.hex "#4B4D68"
             , borderRadius = 7
             , clearIndicatorColor = Css.rgb 102 102 102
@@ -327,8 +407,52 @@ defaultsControl : ControlConfiguration BaseControlConfiguration
 defaultsControl =
     { backgroundColor = Css.hex "#FFFFFF"
     , backgroundColorHover = Css.hex "#F0F1F4"
-    , borderColor = Css.hex "#898BA9"
-    , borderColorFocus = Css.hex "#0168b3"
+    , borderColor =
+        { inset =
+            { offsetX = 0
+            , offsetY = 0
+            , blurRadius = 0
+            , spreadRadius = 0
+            , color = Css.rgb 255 255 255
+            }
+        , activeBorder =
+            { offsetX = 0
+            , offsetY = 0
+            , blurRadius = 0
+            , spreadRadius = 1
+            , color = Css.hex "#898BA9"
+            }
+        , shadow =
+            { offsetX = 0
+            , offsetY = 1
+            , blurRadius = 2
+            , spreadRadius = 0
+            , color = Css.rgba 0 0 0 0.05
+            }
+        }
+    , borderColorFocus =
+        { inset =
+            { offsetX = 0
+            , offsetY = 0
+            , blurRadius = 0
+            , spreadRadius = 0
+            , color = Css.rgb 255 255 255
+            }
+        , activeBorder =
+            { offsetX = 0
+            , offsetY = 0
+            , blurRadius = 0
+            , spreadRadius = 2
+            , color = Css.hex "#0168B3"
+            }
+        , shadow =
+            { offsetX = 0
+            , offsetY = 1
+            , blurRadius = 2
+            , spreadRadius = 0
+            , color = Css.rgba 0 0 0 0.05
+            }
+        }
     , borderColorHover = Css.hex "#4B4D68"
     , borderRadius = 4
     , clearIndicatorColor = Css.rgb 102 102 102
@@ -579,7 +703,7 @@ setMenuControlBackgroundColorHover color (MenuConfig config) =
 
 
 {-| -}
-setMenuControlBorderColor : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBorderColor : BorderColorConfiguration -> MenuConfig -> MenuConfig
 setMenuControlBorderColor color (MenuConfig config) =
     let
         (MenuControlConfig mc) =
@@ -594,7 +718,7 @@ setMenuControlBorderColor color (MenuConfig config) =
 
 
 {-| -}
-setMenuControlBorderColorFocus : Css.Color -> MenuConfig -> MenuConfig
+setMenuControlBorderColorFocus : BorderColorConfiguration -> MenuConfig -> MenuConfig
 setMenuControlBorderColorFocus color (MenuConfig config) =
     let
         (MenuControlConfig mc) =
@@ -793,13 +917,13 @@ setControlBackgroundColorHover c (ControlConfig config) =
 
 
 {-| -}
-setControlBorderColor : Css.Color -> ControlConfig -> ControlConfig
+setControlBorderColor : BorderColorConfiguration -> ControlConfig -> ControlConfig
 setControlBorderColor c (ControlConfig config) =
     ControlConfig { config | borderColor = c }
 
 
 {-| -}
-setControlBorderColorFocus : Css.Color -> ControlConfig -> ControlConfig
+setControlBorderColorFocus : BorderColorConfiguration -> ControlConfig -> ControlConfig
 setControlBorderColorFocus c (ControlConfig config) =
     ControlConfig { config | borderColorFocus = c }
 
@@ -1239,7 +1363,7 @@ getMenuControlBackgroundColorHover (MenuConfig config) =
 
 
 {-| -}
-getMenuControlBorderColor : MenuConfig -> Css.Color
+getMenuControlBorderColor : MenuConfig -> BorderColorConfiguration
 getMenuControlBorderColor (MenuConfig config) =
     let
         (MenuControlConfig mc) =
@@ -1249,7 +1373,7 @@ getMenuControlBorderColor (MenuConfig config) =
 
 
 {-| -}
-getMenuControlBorderColorFocus : MenuConfig -> Css.Color
+getMenuControlBorderColorFocus : MenuConfig -> BorderColorConfiguration
 getMenuControlBorderColorFocus (MenuConfig config) =
     let
         (MenuControlConfig mc) =
@@ -1415,13 +1539,13 @@ getControlBackgroundColorHover (ControlConfig config) =
 
 
 {-| -}
-getControlBorderColor : ControlConfig -> Css.Color
+getControlBorderColor : ControlConfig -> BorderColorConfiguration
 getControlBorderColor (ControlConfig config) =
     config.borderColor
 
 
 {-| -}
-getControlBorderColorFocus : ControlConfig -> Css.Color
+getControlBorderColorFocus : ControlConfig -> BorderColorConfiguration
 getControlBorderColorFocus (ControlConfig config) =
     config.borderColorFocus
 
@@ -1572,9 +1696,53 @@ bootstrap4 =
 draculaControl : ControlConfig
 draculaControl =
     getControlConfig default
-        |> setControlBorderColor (Css.hex "#ff79c6")
+        |> setControlBorderColor
+            { inset =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 0
+                , color = Css.rgb 255 255 255
+                }
+            , activeBorder =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 1
+                , color = Css.hex "#ff79c6"
+                }
+            , shadow =
+                { offsetX = 0
+                , offsetY = 1
+                , blurRadius = 2
+                , spreadRadius = 0
+                , color = Css.rgba 0 0 0 0.05
+                }
+            }
         |> setControlBorderColorHover (Css.hex "#ff79c6")
-        |> setControlBorderColorFocus (Css.hex "#ff79c6")
+        |> setControlBorderColorFocus
+            { inset =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 0
+                , color = Css.rgb 255 255 255
+                }
+            , activeBorder =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 2
+                , color = Css.hex "#ff79c6"
+                }
+            , shadow =
+                { offsetX = 0
+                , offsetY = 1
+                , blurRadius = 2
+                , spreadRadius = 0
+                , color = Css.rgba 0 0 0 0.05
+                }
+            }
         |> setControlSeparatorColor (Css.hex "#ff79c6")
         |> setControlDropdownIndicatorColor (Css.hex "#ff79c6")
         |> setControlDropdownIndicatorColorHover (Css.hex "#e66db2")
@@ -1590,10 +1758,54 @@ draculaControl =
 bootstrap4Control : ControlConfig
 bootstrap4Control =
     getControlConfig default
-        |> setControlBorderColor (Css.hex "#ced4da")
+        |> setControlBorderColor
+            { inset =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 0
+                , color = Css.rgb 255 255 255
+                }
+            , activeBorder =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 1
+                , color = Css.hex "#ced4da"
+                }
+            , shadow =
+                { offsetX = 0
+                , offsetY = 1
+                , blurRadius = 2
+                , spreadRadius = 0
+                , color = Css.rgba 0 0 0 0.05
+                }
+            }
         |> setControlBorderRadius 4
         |> setControlBorderColorHover (Css.hex "#80bdff")
-        |> setControlBorderColorFocus (Css.hex "#80bdff")
+        |> setControlBorderColorFocus
+            { inset =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 0
+                , color = Css.rgb 255 255 255
+                }
+            , activeBorder =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 2
+                , color = Css.hex "#80bdff"
+                }
+            , shadow =
+                { offsetX = 0
+                , offsetY = 1
+                , blurRadius = 2
+                , spreadRadius = 0
+                , color = Css.rgba 0 0 0 0.05
+                }
+            }
         |> setControlBackgroundColor (Css.hex "#FFFFFF")
         |> setControlBackgroundColorHover (Css.hex "#FFFFFF")
         |> setControlMultiTagBorderRadius 4
@@ -1608,9 +1820,53 @@ draculaMenu =
     getMenuConfig default
         |> setMenuBoxShadowColor (Css.rgba 255 165 44 0.2)
         |> setMenuBackgroundColor (Css.hex "#282a36")
-        |> setMenuControlBorderColor (Css.hex "#ff79c6")
+        |> setMenuControlBorderColor
+            { inset =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 0
+                , color = Css.rgb 255 255 255
+                }
+            , activeBorder =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 1
+                , color = Css.hex "#ff79c6"
+                }
+            , shadow =
+                { offsetX = 0
+                , offsetY = 1
+                , blurRadius = 2
+                , spreadRadius = 0
+                , color = Css.rgba 0 0 0 0.05
+                }
+            }
         |> setMenuControlBorderColorHover (Css.hex "#ff79c6")
-        |> setMenuControlBorderColorFocus (Css.hex "#ff79c6")
+        |> setMenuControlBorderColorFocus
+            { inset =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 0
+                , color = Css.rgb 255 255 255
+                }
+            , activeBorder =
+                { offsetX = 0
+                , offsetY = 0
+                , blurRadius = 0
+                , spreadRadius = 2
+                , color = Css.hex "#ff79c6"
+                }
+            , shadow =
+                { offsetX = 0
+                , offsetY = 1
+                , blurRadius = 2
+                , spreadRadius = 0
+                , color = Css.rgba 0 0 0 0.05
+                }
+            }
         |> setMenuControlBackgroundColorHover (Css.hex "#282a36")
         |> setMenuControlBackgroundColor (Css.hex "#282a36")
         |> setMenuControlClearIndicatorColor (Css.hex "#ff79c6")
