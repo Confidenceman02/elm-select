@@ -1,3 +1,10 @@
+## [13.0.0] - 2026-04-20
+
+## Breaking
+
+- Setting a border color now requires an object which expresses a 3 layer box shadow property
+- You can use `BorderColorConfiguration` alias to create a border color configuration.
+
 ## [12.2.4] - 2025-12-24
 
 ## Changed
@@ -842,6 +849,7 @@ controlBranding
 
 - Project to elm packages [Confidenceman02/elm-select](https://package.elm-lang.org/packages/Confidenceman02/elm-select/1.0.0/)
 
+[13.0.0]: https://github.com/Confidenceman02/elm-select/compare/12.2.4...13.0.0
 [12.2.4]: https://github.com/Confidenceman02/elm-select/compare/12.2.3...12.2.4
 [12.2.3]: https://github.com/Confidenceman02/elm-select/compare/12.2.2...12.2.3
 [12.2.2]: https://github.com/Confidenceman02/elm-select/compare/12.2.1...12.2.2
